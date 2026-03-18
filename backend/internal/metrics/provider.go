@@ -1,5 +1,7 @@
 package metrics
 
+import "context"
+
 type Provider interface {
-	NamespaceValues() ([]string, error)
+	NamespaceValues(ctx context.Context) ([]string, error)
 }

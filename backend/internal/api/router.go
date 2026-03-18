@@ -1,32 +1,16 @@
 package api
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/FabioTavernini/spendemon/backend/internal/config"
 	"github.com/FabioTavernini/spendemon/backend/internal/metrics"
-	"github.com/FabioTavernini/spendemon/backend/internal/metrics/prometheus"
 )
 
-func NewRouter(cfg config.Config) http.Handler {
+func NewRouter(cfg config.Config, providers map[string]metrics.Provider) http.Handler {
 	mux := http.NewServeMux()
-	namespaces := make(map[string]metrics.Provider)
 
-	for _, metric := range cfg.Metrics {
-		if metric.Type != "prometheus" {
-			continue
-		}
-
-		client, err := prometheus.NewPrometheusClient(metric.Prometheus)
-		if err != nil {
-			log.Printf("prometheus client %q disabled: %v", metric.Name, err)
-		} else {
-			namespaces[metric.Name] = client
-		}
-	}
-
-	handler := NewHandler(cfg, namespaces)
+	handler := NewHandler(cfg, providers)
 
 	mux.HandleFunc("/healthz", handler.HealthHandler)
 	mux.HandleFunc("/api/v1/summary", handler.SummaryHandler)

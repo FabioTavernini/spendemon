@@ -38,7 +38,7 @@ func (h Handler) SummaryHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h Handler) NamespacesHandler(w http.ResponseWriter, r *http.Request) {
 	if len(h.namespaces) == 0 {
-		http.Error(w, "prometheus client not configured", http.StatusServiceUnavailable)
+		http.Error(w, "metrics provider not configured", http.StatusServiceUnavailable)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (h Handler) NamespacesHandler(w http.ResponseWriter, r *http.Request) {
 	sort.Strings(names)
 
 	for _, name := range names {
-		namespaces, err := h.namespaces[name].NamespaceValues()
+		namespaces, err := h.namespaces[name].NamespaceValues(r.Context())
 		if err != nil {
 			response[name] = models.NamespaceSourceResult{Error: err.Error()}
 			continue
