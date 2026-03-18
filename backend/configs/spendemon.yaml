@@ -1,0 +1,26 @@
+server:
+  address: ":8080"
+  logLevel: "info"
+
+metrics:
+  - name: "development"
+    type: "prometheus"
+    prometheus:
+      url: "http://localhost:9090"
+      timeout: "30s"
+      insecureSkipVerify: false
+  - name: "staging"
+    type: "prometheus"
+    prometheus:
+      url: "http://localhost:9090"
+      timeout: "30s"
+      insecureSkipVerify: false
+
+pricing:
+  currency: "CHF"
+  defaultCPUHourlyCost: 0.042
+  defaultMemoryGBHourlyCost: 0.006
+
+features:
+  enableIdleCost: true
+  enablePVCost: false

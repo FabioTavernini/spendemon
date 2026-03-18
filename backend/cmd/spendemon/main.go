@@ -12,7 +12,7 @@ import (
 func main() {
 	configPath := os.Getenv("SPENDEMON_CONFIG")
 	if configPath == "" {
-		configPath = "../../internal/config/spendemon.yaml"
+		configPath = "../../configs/spendemon.yaml"
 	}
 
 	cfg, err := config.Load(configPath)

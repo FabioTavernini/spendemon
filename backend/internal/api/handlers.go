@@ -5,19 +5,16 @@ import (
 	"sort"
 
 	"github.com/FabioTavernini/spendemon/backend/internal/config"
+	"github.com/FabioTavernini/spendemon/backend/internal/metrics"
 	"github.com/FabioTavernini/spendemon/backend/internal/models"
 )
 
-type NamespaceReader interface {
-	NamespaceValues() ([]string, error)
-}
-
 type Handler struct {
 	cfg        config.Config
-	namespaces map[string]NamespaceReader
+	namespaces map[string]metrics.Provider
 }
 
-func NewHandler(cfg config.Config, namespaces map[string]NamespaceReader) Handler {
+func NewHandler(cfg config.Config, namespaces map[string]metrics.Provider) Handler {
 	return Handler{
 		cfg:        cfg,
 		namespaces: namespaces,
