@@ -14,7 +14,6 @@ import { SidebarMenuButton } from "./ui/sidebar"
 
 export function ModeToggle() {
 
-
     const { setTheme } = useTheme()
     return (
         <DropdownMenu>
