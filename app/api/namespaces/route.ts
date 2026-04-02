@@ -1,27 +1,83 @@
-// app/api/namespaces/route.ts
-const PROMETHEUS_URL = process.env.PROMETHEUS_URL || 'http://localhost:9090';
-
-// app/api/namespaces/route.ts
 import { NextResponse } from 'next/server';
 
-export async function GET() {
-  try {
-    const query = 'kube_namespace_created'; // Prometheus metric
-    const res = await fetch(
-      `${PROMETHEUS_URL}/api/v1/query?query=${encodeURIComponent(query)}`
-    );
-    const data = await res.json();
+type Cluster = {
+  name: string;
+  prometheusUrl: string;
+};
 
-    if (data.status !== 'success') {
-      return NextResponse.json({ error: 'Failed to fetch from Prometheus' }, { status: 500 });
+async function getClusters(): Promise<Cluster[]> {
+  // In real life: fetch from your clusters endpoint
+  return [
+    { name: "cluster-1", prometheusUrl: "http://localhost:9090" },
+    { name: "cluster-2", prometheusUrl: "http://localhost:9090" },
+  ];
+}
+
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const clustersParam = searchParams.get('clusters');
+
+    const allClusters = await getClusters();
+
+    // ✅ Resolve which clusters to query
+    let selectedClusters: Cluster[];
+
+    if (!clustersParam) {
+      // 👉 default: ALL clusters
+      selectedClusters = allClusters;
+    } else {
+      const requested = clustersParam.split(',');
+      selectedClusters = allClusters.filter(c =>
+        requested.includes(c.name)
+      );
     }
 
-    // Extract namespaces
-    const namespaces: string[] = data.data.result.map((item: any) => item.metric);
+    const query = 'kube_namespace_created';
 
-    return NextResponse.json({ namespaces }, { status: 200 });
+    // ✅ Query all clusters in parallel
+    const responses = await Promise.all(
+      selectedClusters.map(async (cluster) => {
+        try {
+          const res = await fetch(
+            `${cluster.prometheusUrl}/api/v1/query?query=${encodeURIComponent(query)}`
+          );
+
+          const data = await res.json();
+
+          if (data.status !== 'success') return [];
+
+          return data.data.result.map((item: any) => ({
+            cluster: cluster.name,
+            namespace: item.metric.namespace, // ✅ FIXED
+          }));
+        } catch {
+          return [];
+        }
+      })
+    );
+
+    // ✅ Flatten + dedupe
+    const namespaceSet = new Set<string>();
+    const result: { cluster: string; namespace: string }[] = [];
+
+    for (const clusterResults of responses) {
+      for (const item of clusterResults) {
+        const key = `${item.cluster}:${item.namespace}`;
+        if (!namespaceSet.has(key)) {
+          namespaceSet.add(key);
+          result.push(item);
+        }
+      }
+    }
+
+    return NextResponse.json({ namespaces: result }, { status: 200 });
+
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
