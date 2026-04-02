@@ -1,3 +1,4 @@
+// app/api/namespaces/route.ts
 import { NextResponse } from 'next/server';
 
 type Cluster = {
@@ -6,11 +7,16 @@ type Cluster = {
 };
 
 async function getClusters(): Promise<Cluster[]> {
-  // In real life: fetch from your clusters endpoint
-  return [
-    { name: "cluster-1", prometheusUrl: "http://localhost:9090" },
-    { name: "cluster-2", prometheusUrl: "http://localhost:9090" },
-  ];
+  try {
+    const res = await fetch(`${process.env.BASE_URL || 'http://localhost:3000'}/api/clusters`);
+    if (!res.ok) throw new Error('Failed to fetch clusters');
+
+    const data: Cluster[] = await res.json();
+    return data;
+  } catch (err) {
+    console.error('Error fetching clusters:', err);
+    return [];
+  }
 }
 
 export async function GET(req: Request) {
@@ -20,36 +26,30 @@ export async function GET(req: Request) {
 
     const allClusters = await getClusters();
 
-    // ✅ Resolve which clusters to query
+    // Resolve which clusters to query
     let selectedClusters: Cluster[];
-
     if (!clustersParam) {
-      // 👉 default: ALL clusters
-      selectedClusters = allClusters;
+      selectedClusters = allClusters; // default: all clusters
     } else {
       const requested = clustersParam.split(',');
-      selectedClusters = allClusters.filter(c =>
-        requested.includes(c.name)
-      );
+      selectedClusters = allClusters.filter(c => requested.includes(c.name));
     }
 
     const query = 'kube_namespace_created';
 
-    // ✅ Query all clusters in parallel
+    // Query all clusters in parallel
     const responses = await Promise.all(
       selectedClusters.map(async (cluster) => {
         try {
           const res = await fetch(
             `${cluster.prometheusUrl}/api/v1/query?query=${encodeURIComponent(query)}`
           );
-
           const data = await res.json();
-
           if (data.status !== 'success') return [];
 
           return data.data.result.map((item: any) => ({
             cluster: cluster.name,
-            namespace: item.metric.namespace, // ✅ FIXED
+            namespace: item.metric.namespace,
           }));
         } catch {
           return [];
@@ -57,7 +57,7 @@ export async function GET(req: Request) {
       })
     );
 
-    // ✅ Flatten + dedupe
+    // Flatten + dedupe
     const namespaceSet = new Set<string>();
     const result: { cluster: string; namespace: string }[] = [];
 
@@ -72,12 +72,8 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({ namespaces: result }, { status: 200 });
-
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
