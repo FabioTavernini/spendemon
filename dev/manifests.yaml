@@ -1,0 +1,134 @@
+# full-prometheus-k8s.yaml
+
+# -------------------
+# 1️⃣ Prometheus Namespace
+# -------------------
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prometheus
+
+---
+# -------------------
+# 2️⃣ Prometheus ConfigMap
+# -------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-server-conf
+  namespace: prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    scrape_configs:
+    - job_name: 'kube-state-metrics'
+      static_configs:
+        - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
+
+---
+# -------------------
+# 3️⃣ Prometheus Deployment
+# -------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-server
+  namespace: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-server
+  template:
+    metadata:
+      labels:
+        app: prometheus-server
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:latest
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus
+      volumes:
+        - name: config-volume
+          configMap:
+            name: prometheus-server-conf
+            defaultMode: 420
+
+---
+# -------------------
+# 4️⃣ Prometheus Service
+# -------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: prometheus
+spec:
+  selector:
+    app: prometheus-server
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9090
+  type: ClusterIP
+
+---
+# -------------------
+# 5️⃣ kube-state-metrics Deployment
+# -------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-state-metrics
+  namespace: kube-system
+  labels:
+    app: kube-state-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kube-state-metrics
+  template:
+    metadata:
+      labels:
+        app: kube-state-metrics
+    spec:
+      containers:
+        - name: kube-state-metrics
+          image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.18.0
+          ports:
+            - containerPort: 8080
+              name: http-metrics
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+
+---
+# -------------------
+# 6️⃣ kube-state-metrics Service
+# -------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-state-metrics
+  namespace: kube-system
+spec:
+  selector:
+    app: kube-state-metrics
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080   # <- must match containerPort
+  type: ClusterIP
