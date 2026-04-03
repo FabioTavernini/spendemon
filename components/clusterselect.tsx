@@ -28,10 +28,17 @@ export function ClusterSelect() {
     ? selectedParam.split(",")
     : [] // empty = ALL
 
+  type ClustersResponse = {
+    totalClusters: number
+    clusters: Cluster[]
+  }
+
   useEffect(() => {
     fetch("/api/clusters")
-      .then(res => res.json())
-      .then(setClusters)
+      .then((res) => res.json())
+      .then((data: ClustersResponse) => {
+        setClusters(data.clusters ?? [])
+      })
   }, [])
 
   function updateClusters(newSelection: string[]) {

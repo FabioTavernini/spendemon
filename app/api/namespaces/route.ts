@@ -1,23 +1,18 @@
 // app/api/namespaces/route.ts
 import { NextResponse } from 'next/server';
+import { getClusters } from '@/lib/clusters';
+
 
 type Cluster = {
   name: string;
   prometheusUrl: string;
 };
 
-async function getClusters(): Promise<Cluster[]> {
-  try {
-    const res = await fetch(`${process.env.BASE_URL || 'http://localhost:3000'}/api/clusters`);
-    if (!res.ok) throw new Error('Failed to fetch clusters');
+type ClustersResponse = {
+  totalClusters: number;
+  clusters: Cluster[];
+};
 
-    const data: Cluster[] = await res.json();
-    return data;
-  } catch (err) {
-    console.error('Error fetching clusters:', err);
-    return [];
-  }
-}
 
 export async function GET(req: Request) {
   try {
@@ -26,24 +21,24 @@ export async function GET(req: Request) {
 
     const allClusters = await getClusters();
 
-    // Resolve which clusters to query
     let selectedClusters: Cluster[];
     if (!clustersParam) {
-      selectedClusters = allClusters; // default: all clusters
+      selectedClusters = allClusters;
     } else {
-      const requested = clustersParam.split(',');
-      selectedClusters = allClusters.filter(c => requested.includes(c.name));
+      const requested = clustersParam.split(',').map((c) => c.trim());
+      selectedClusters = allClusters.filter((c) => requested.includes(c.name));
     }
 
     const query = 'kube_namespace_created';
 
-    // Query all clusters in parallel
     const responses = await Promise.all(
       selectedClusters.map(async (cluster) => {
         try {
           const res = await fetch(
-            `${cluster.prometheusUrl}/api/v1/query?query=${encodeURIComponent(query)}`
+            `${cluster.prometheusUrl}/api/v1/query?query=${encodeURIComponent(query)}`,
+            { cache: 'no-store' }
           );
+
           const data = await res.json();
           if (data.status !== 'success') return [];
 
@@ -51,29 +46,59 @@ export async function GET(req: Request) {
             cluster: cluster.name,
             namespace: item.metric.namespace,
           }));
-        } catch {
+        } catch (err) {
+          console.error(`Error querying namespaces for ${cluster.name}:`, err);
           return [];
         }
       })
     );
 
-    // Flatten + dedupe
-    const namespaceSet = new Set<string>();
-    const result: { cluster: string; namespace: string }[] = [];
+    const flatResults = responses.flat();
 
-    for (const clusterResults of responses) {
-      for (const item of clusterResults) {
-        const key = `${item.cluster}:${item.namespace}`;
-        if (!namespaceSet.has(key)) {
-          namespaceSet.add(key);
-          result.push(item);
-        }
+    const seen = new Set<string>();
+    const uniqueNamespaces: { cluster: string; namespace: string }[] = [];
+
+    for (const item of flatResults) {
+      const key = `${item.cluster}:${item.namespace}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueNamespaces.push(item);
       }
     }
 
-    return NextResponse.json({ namespaces: result }, { status: 200 });
+    const grouped: Record<
+      string,
+      {
+        totalNamespaces: number;
+        namespaces: string[];
+      }
+    > = {};
+
+    for (const item of uniqueNamespaces) {
+      if (!grouped[item.cluster]) {
+        grouped[item.cluster] = {
+          totalNamespaces: 0,
+          namespaces: [],
+        };
+      }
+
+      grouped[item.cluster].namespaces.push(item.namespace);
+      grouped[item.cluster].totalNamespaces += 1;
+    }
+
+    return NextResponse.json(
+      {
+        totalNamespaces: uniqueNamespaces.length,
+        totalClusters: Object.keys(grouped).length,
+        clusters: grouped,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

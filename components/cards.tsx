@@ -1,6 +1,11 @@
-import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react"
+import {
+  IconBracketsContain,
+  IconBoxMultiple,
+  IconFolders,
+  IconTopologyStar3,
+} from "@tabler/icons-react";
 
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardAction,
@@ -8,95 +13,184 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 
-export function SectionCards() {
+import { getClusters } from "@/lib/clusters";
+
+type PodsResponse = {
+  totalPods: number;
+  totalClusters: number;
+  clusters: Record<
+    string,
+    {
+      totalPods: number;
+      namespaces: Record<string, string[]>;
+    }
+  >;
+};
+
+type Cluster = {
+  name: string;
+  prometheusUrl: string;
+};
+
+type ClusterResponse = {
+  totalClusters: number;
+  clusters: Cluster[];
+};
+
+type NamespacesResponse = {
+  totalNamespaces?: number;
+  namespaces?: Array<{
+    cluster: string;
+    namespace: string;
+  }>;
+  clusters?: Record<
+    string,
+    {
+      totalNamespaces?: number;
+      namespaces: string[] | Record<string, unknown>;
+    }
+  >;
+};
+
+export async function SectionCards() {
+  const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+
+  const [podsRes, clustersRes, namespacesRes] = await Promise.all([
+    fetch(`${baseUrl}/api/pods`, { cache: "no-store" }),
+    fetch(`${baseUrl}/api/clusters`, { cache: "no-store" }),
+    fetch(`${baseUrl}/api/namespaces`, { cache: "no-store" }),
+  ]);
+
+  const [pods, clusters, namespaces]: [
+    PodsResponse,
+    ClusterResponse,
+    NamespacesResponse
+  ] = await Promise.all([
+    podsRes.json(),
+    clustersRes.json(),
+    namespacesRes.json(),
+  ]);
+
+  const totalPods = pods?.totalPods ?? 0;
+  const totalClusters = clusters?.totalClusters ?? getClusters().length;
+
+  let totalNamespaces = 0;
+
+  if (typeof namespaces?.totalNamespaces === "number") {
+    totalNamespaces = namespaces.totalNamespaces;
+  } else if (Array.isArray(namespaces?.namespaces)) {
+    totalNamespaces = namespaces.namespaces.length;
+  } else if (namespaces?.clusters) {
+    totalNamespaces = Object.values(namespaces.clusters).reduce((acc, cluster) => {
+      if (Array.isArray(cluster.namespaces)) {
+        return acc + cluster.namespaces.length;
+      }
+
+      if (cluster.namespaces && typeof cluster.namespaces === "object") {
+        return acc + Object.keys(cluster.namespaces).length;
+      }
+
+      return acc;
+    }, 0);
+  }
+
+  const avgPodsPerCluster =
+    totalClusters > 0 ? (totalPods / totalClusters).toFixed(1) : "0";
+
+  const largestNamespace = Object.entries(pods?.clusters ?? {}).reduce(
+    (largest, [clusterName, clusterData]) => {
+      for (const [namespaceName, podList] of Object.entries(clusterData.namespaces)) {
+        if (podList.length > largest.count) {
+          largest = {
+            name: `${clusterName} / ${namespaceName}`,
+            count: podList.length,
+          };
+        }
+      }
+      return largest;
+    },
+    { name: "N/A", count: 0 }
+  );
+
   return (
-    <div className="grid grid-cols-1 gap-4 px-4 lg:grid-cols-2 xl:grid-cols-4 mt-5">
-      <Card className="">
+    <div className="grid grid-cols-1 gap-4 px-4 mt-5 md:grid-cols-2 xl:grid-cols-4">
+      <Card>
         <CardHeader>
-          <CardDescription>Total Revenue</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            $1,250.00
+          <CardDescription>Total Pods</CardDescription>
+          <CardTitle className="flex items-center gap-2 text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            <IconBoxMultiple className="size-5 text-muted-foreground" />
+            {totalPods}
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +12.5%
-            </Badge>
+            <Badge variant="outline">{totalClusters} cluster{totalClusters !== 1 ? "s" : ""}</Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Trending up this month <IconTrendingUp className="size-4" />
-          </div>
+          <div className="font-medium">Current pods across all connected clusters</div>
           <div className="text-muted-foreground">
-            Visitors for the last 6 months
+            Live count from Prometheus
           </div>
         </CardFooter>
       </Card>
-      <Card className="">
+
+      <Card>
         <CardHeader>
-          <CardDescription>New Customers</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            1,234
+          <CardDescription>Total Clusters</CardDescription>
+          <CardTitle className="flex items-center gap-2 text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            <IconTopologyStar3 className="size-5 text-muted-foreground" />
+            {totalClusters}
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">
-              <IconTrendingDown />
-              -20%
-            </Badge>
+            <Badge variant="outline">Connected</Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Down 20% this period <IconTrendingDown className="size-4" />
-          </div>
+          <div className="font-medium">Available cluster targets</div>
           <div className="text-muted-foreground">
-            Acquisition needs attention
+            Loaded from /api/clusters
           </div>
         </CardFooter>
       </Card>
-      <Card className="">
+
+      <Card>
         <CardHeader>
-          <CardDescription>Active Accounts</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            45,678
+          <CardDescription>Total Namespaces</CardDescription>
+          <CardTitle className="flex items-center gap-2 text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            <IconFolders className="size-5 text-muted-foreground" />
+            {totalNamespaces}
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +12.5%
-            </Badge>
+            <Badge variant="outline">Unique</Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Strong user retention <IconTrendingUp className="size-4" />
+          <div className="font-medium">Namespaces detected across clusters</div>
+          <div className="text-muted-foreground">
+            Useful for quick scope visibility
           </div>
-          <div className="text-muted-foreground">Engagement exceed targets</div>
         </CardFooter>
       </Card>
-      <Card className="">
+
+      <Card>
         <CardHeader>
-          <CardDescription>Growth Rate</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            4.5%
+          <CardDescription>Avg Pods / Cluster</CardDescription>
+          <CardTitle className="flex items-center gap-2 text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            <IconBracketsContain className="size-5 text-muted-foreground" />
+            {avgPodsPerCluster}
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +4.5%
-            </Badge>
+            <Badge variant="outline">{largestNamespace.count} max</Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Steady performance increase <IconTrendingUp className="size-4" />
+          <div className="font-medium">Largest namespace: {largestNamespace.name}</div>
+          <div className="text-muted-foreground">
+            {largestNamespace.count} pod{largestNamespace.count !== 1 ? "s" : ""}
           </div>
-          <div className="text-muted-foreground">Meets growth projections</div>
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }

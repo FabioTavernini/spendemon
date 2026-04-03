@@ -1,37 +1,109 @@
-// app/api/pods/route.ts
+// app/api/namespaces/route.ts
 import { NextResponse } from 'next/server';
+import { getClusters } from '@/lib/clusters';
 
-const PROMETHEUS_URL = process.env.PROMETHEUS_URL || 'http://localhost:9090';
+type Cluster = {
+  name: string;
+  prometheusUrl: string;
+};
 
-export async function GET(request: Request) {
+type PodItem = {
+  cluster: string;
+  namespace: string;
+  pod: string;
+};
+
+export async function GET(req: Request) {
   try {
-    // Get the "namespace" query parameter if provided
-    const url = new URL(request.url);
-    const namespace = url.searchParams.get('namespace'); // returns string | null
+    const { searchParams } = new URL(req.url);
+    const clustersParam = searchParams.get('clusters');
 
-    // Build Prometheus query
-    const query = namespace
-      ? `kube_pod_info{namespace="${namespace}"}`
-      : 'kube_pod_info';
+    const allClusters = await getClusters();
 
-    const res = await fetch(
-      `${PROMETHEUS_URL}/api/v1/query?query=${encodeURIComponent(query)}`
-    );
-    const data = await res.json();
-
-    if (data.status !== 'success') {
-      return NextResponse.json(
-        { error: 'Failed to fetch from Prometheus' },
-        { status: 500 }
-      );
+    let selectedClusters: Cluster[];
+    if (!clustersParam) {
+      selectedClusters = allClusters;
+    } else {
+      const requested = clustersParam.split(',').map(c => c.trim());
+      selectedClusters = allClusters.filter(c => requested.includes(c.name));
     }
 
-    // Extract pods
-    const pods: string[] = data.data.result.map((item: any) => item.metric);
+    const query = 'kube_pod_info';
 
-    return NextResponse.json({ pods }, { status: 200 });
+    const responses = await Promise.all(
+      selectedClusters.map(async (cluster): Promise<PodItem[]> => {
+        try {
+          const res = await fetch(
+            `${cluster.prometheusUrl}/api/v1/query?query=${encodeURIComponent(query)}`
+          );
+          const data = await res.json();
+
+          if (data.status !== 'success') return [];
+
+          return data.data.result.map((item: any) => ({
+            cluster: cluster.name,
+            namespace: item.metric.namespace,
+            pod: item.metric.pod,
+          }));
+        } catch (err) {
+          console.error(`Error querying cluster ${cluster.name}:`, err);
+          return [];
+        }
+      })
+    );
+
+    const flatResults = responses.flat();
+
+    // Dedupe by cluster + namespace + pod
+    const seen = new Set<string>();
+    const uniquePods: PodItem[] = [];
+
+    for (const item of flatResults) {
+      const key = `${item.cluster}:${item.namespace}:${item.pod}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniquePods.push(item);
+      }
+    }
+
+    // Group by cluster -> namespace -> pods[]
+    const grouped: Record<
+      string,
+      {
+        totalPods: number;
+        namespaces: Record<string, string[]>;
+      }
+    > = {};
+
+    for (const item of uniquePods) {
+      if (!grouped[item.cluster]) {
+        grouped[item.cluster] = {
+          totalPods: 0,
+          namespaces: {},
+        };
+      }
+
+      if (!grouped[item.cluster].namespaces[item.namespace]) {
+        grouped[item.cluster].namespaces[item.namespace] = [];
+      }
+
+      grouped[item.cluster].namespaces[item.namespace].push(item.pod);
+      grouped[item.cluster].totalPods += 1;
+    }
+
+    return NextResponse.json(
+      {
+        totalPods: uniquePods.length,
+        totalClusters: Object.keys(grouped).length,
+        clusters: grouped,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
