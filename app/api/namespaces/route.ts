@@ -8,10 +8,6 @@ type Cluster = {
   prometheusUrl: string;
 };
 
-type ClustersResponse = {
-  totalClusters: number;
-  clusters: Cluster[];
-};
 
 
 export async function GET(req: Request) {

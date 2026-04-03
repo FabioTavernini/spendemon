@@ -2,6 +2,7 @@ import { SectionCards } from "@/components/cards"
 import { SiteHeader } from "@/components/site-header"
 import { NamespacesTable } from "@/components/k8s/namespacestable"
 import { Separator } from "@/components/ui/separator"
+import { PodsTable } from "@/components/k8s/podstable";
 export const dynamic = "force-dynamic";
 
 
@@ -25,6 +26,9 @@ export default async function Page({
 
         <div className="overflow-x-auto rounded-lg border bg-card p-4">
           <NamespacesTable clusters={params.clusters} />
+        </div>
+        <div className="overflow-x-auto rounded-lg border bg-card p-4">
+          <PodsTable clusters={params.clusters} />
         </div>
       </div>
     </div>
