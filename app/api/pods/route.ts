@@ -11,6 +11,7 @@ type PodItem = {
   cluster: string;
   namespace: string;
   pod: string;
+  status: string;
 };
 
 export async function GET(req: Request) {
@@ -28,7 +29,7 @@ export async function GET(req: Request) {
       selectedClusters = allClusters.filter(c => requested.includes(c.name));
     }
 
-    const query = 'kube_pod_info';
+    const query = 'kube_pod_status_phase == 1';
 
     const responses = await Promise.all(
       selectedClusters.map(async (cluster): Promise<PodItem[]> => {
@@ -44,6 +45,7 @@ export async function GET(req: Request) {
             cluster: cluster.name,
             namespace: item.metric.namespace,
             pod: item.metric.pod,
+            status: item.metric.phase ?? 'Unknown',
           }));
         } catch (err) {
           console.error(`Error querying cluster ${cluster.name}:`, err);
@@ -71,7 +73,7 @@ export async function GET(req: Request) {
       string,
       {
         totalPods: number;
-        namespaces: Record<string, string[]>;
+        namespaces: Record<string, { pod: string; status: string }[]>;
       }
     > = {};
 
@@ -87,7 +89,10 @@ export async function GET(req: Request) {
         grouped[item.cluster].namespaces[item.namespace] = [];
       }
 
-      grouped[item.cluster].namespaces[item.namespace].push(item.pod);
+      grouped[item.cluster].namespaces[item.namespace].push({
+        pod: item.pod,
+        status: item.status,
+      });
       grouped[item.cluster].totalPods += 1;
     }
 

@@ -7,7 +7,7 @@ export type Cluster = {
 export function getClusters(): Cluster[] {
   return [
     { name: 'cluster-1', prometheusUrl: 'http://localhost:9090' },
-    { name: 'cluster-2', prometheusUrl: 'http://localhost:9091' },
-    { name: 'cluster-3', prometheusUrl: 'http://localhost:9092' },
+    { name: 'cluster-2', prometheusUrl: 'http://localhost:9090' },
+    // { name: 'cluster-3', prometheusUrl: 'http://localhost:9092' },
   ];
 }

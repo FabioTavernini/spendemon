@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: failing-pod
+spec:
+  restartPolicy: Never
+  containers:
+  - name: fail
+    image: ubuntu:24.04
+    command: ["/bin/sh", "-c"]
+    args: ["echo 'I will fail'; exit 1"]
