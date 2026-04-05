@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { ChevronDown, Check } from "lucide-react"
+import { ChevronDown, Check, Grid2X2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,10 +73,15 @@ export function ClusterSelect() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <SidebarMenuButton className="justify-between">
-          {selected.length === 0
-            ? "All Clusters"
-            : `${selected.length} selected`}
-          <ChevronDown className="ml-2" />
+          <div className="flex items-center gap-2">
+            <Grid2X2 className="h-4 w-4 shrink-0" />
+            <span>
+              {selected.length === 0
+                ? "All Clusters"
+                : `${selected.length} selected`}
+            </span>
+          </div>
+          <ChevronDown className="ml-2 h-4 w-4" />
         </SidebarMenuButton>
       </DropdownMenuTrigger>
 

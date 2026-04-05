@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/site-header"
 import { NamespacesTable } from "@/components/k8s/namespacestable"
 import { Separator } from "@/components/ui/separator"
 import { PodsTable } from "@/components/k8s/podstable";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 export const dynamic = "force-dynamic";
 
 
@@ -17,6 +18,7 @@ export default async function Page({
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-background">
+      <SidebarTrigger />
       <SiteHeader />
 
       <div className="flex flex-col flex-1 w-full px-4 py-6 space-y-8">

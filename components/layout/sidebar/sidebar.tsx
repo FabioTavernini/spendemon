@@ -3,21 +3,22 @@ import {
     SidebarHeader,
     SidebarMenu,
     SidebarMenuItem,
+    SidebarContent,
 } from "@/components/ui/sidebar"
 
-
 import { ModeToggle } from "@/components/themeselector"
-
 import { Separator } from "@/components/ui/separator"
-
 import { ClusterSelect } from "@/components/clusterselect"
+import { Glasses } from "lucide-react"
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="offcanvas">
-            
+        <Sidebar collapsible="icon">
             <SidebarHeader className="flex flex-col gap-4">
-                <h2 className="text-lg font-semibold truncate">Spendemon</h2>
+                <div className="flex items-center gap-2">
+                    <Glasses className="" />
+                    <h2 className="text-lg font-semibold truncate">Spendemon</h2>
+                </div>
 
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -28,11 +29,13 @@ export function AppSidebar() {
 
             <Separator className="my-4" />
 
-            <SidebarMenu className="px-2">
+            <SidebarContent>
+                <SidebarMenu className="px-2">
                     <SidebarMenuItem>
                         <ClusterSelect />
                     </SidebarMenuItem>
-            </SidebarMenu>
+                </SidebarMenu>
+            </SidebarContent>
         </Sidebar>
     )
 }
