@@ -14,27 +14,23 @@ export default async function Page({
 }) {
   const params = await searchParams;
 
-  console.log("PAGE params:", params); // 👈 debug
-
   return (
     <>
-
-
       <SidebarTrigger />
 
-      <div className="flex flex-col min-h-screen w-full bg-background m-5">
+      <div className="flex min-h-screen w-full min-w-0 flex-col bg-background px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5">
 
         <SiteHeader />
 
-        <div className="flex flex-col flex-1 w-full px-4 py-6 space-y-8">
+        <div className="flex min-w-0 flex-1 flex-col space-y-6 py-4 sm:py-6">
           <SectionCards />
 
           <Separator className="my-4" />
 
-          <div className="overflow-x-auto rounded-lg border bg-card p-4">
+          <div className="min-w-0 rounded-lg border bg-card p-3 sm:p-4">
             <NamespacesTable clusters={params.clusters} />
           </div>
-          <div className="overflow-x-auto rounded-lg border bg-card p-4">
+          <div className="min-w-0 rounded-lg border bg-card p-3 sm:p-4">
             <PodsTable clusters={params.clusters} />
           </div>
         </div>
