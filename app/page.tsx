@@ -17,22 +17,28 @@ export default async function Page({
   console.log("PAGE params:", params); // 👈 debug
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-background">
+    <>
+
+
       <SidebarTrigger />
-      <SiteHeader />
 
-      <div className="flex flex-col flex-1 w-full px-4 py-6 space-y-8">
-        <SectionCards />
+      <div className="flex flex-col min-h-screen w-full bg-background m-5">
 
-        <Separator className="my-4" />
+        <SiteHeader />
 
-        <div className="overflow-x-auto rounded-lg border bg-card p-4">
-          <NamespacesTable clusters={params.clusters} />
-        </div>
-        <div className="overflow-x-auto rounded-lg border bg-card p-4">
-          <PodsTable clusters={params.clusters} />
+        <div className="flex flex-col flex-1 w-full px-4 py-6 space-y-8">
+          <SectionCards />
+
+          <Separator className="my-4" />
+
+          <div className="overflow-x-auto rounded-lg border bg-card p-4">
+            <NamespacesTable clusters={params.clusters} />
+          </div>
+          <div className="overflow-x-auto rounded-lg border bg-card p-4">
+            <PodsTable clusters={params.clusters} />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
