@@ -1,4 +1,4 @@
-import Link from "next/link"
+
 import { Coins, Search, Settings } from "lucide-react"
 
 import { ClusterSelect } from "@/components/clusterselect"
@@ -14,6 +14,9 @@ import {
   SidebarMenuItem,
   SidebarTrigger
 } from "@/components/ui/sidebar"
+import { SpendemonLogo } from "@/components/logo"
+
+import Link from "next/link"
 
 export function AppSidebar() {
   return (
@@ -25,7 +28,8 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/">
-                  <Search className="h-4 w-4 shrink-0" />
+                  {/* <Search className="h-4 w-4 shrink-0" /> */}
+                  <SpendemonLogo className="h-4 w-4 shrink-0" />
                   <span className="truncate text-lg font-semibold">Spendemon</span>
                 </Link>
               </SidebarMenuButton>
