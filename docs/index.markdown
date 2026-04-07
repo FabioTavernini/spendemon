@@ -49,7 +49,7 @@ It is built for teams that want a fast answer to simple questions like:
 Pull the latest container image:
 
 ```bash
-docker pull ghcr.io/fabiotavernini/spendemon:latest
+docker run -p 3000:3000 ghcr.io/fabiotavernini/spendemon:latest
 ```
 
 Use the image when you want the fastest way to try Spendemon without a local Node.js setup.

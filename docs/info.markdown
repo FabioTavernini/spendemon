@@ -42,7 +42,7 @@ It connects to configured Prometheus endpoints, discovers clusters and workloads
 If you want the fastest way to try Spendemon, start with the published Docker image:
 
 ```bash
-docker pull ghcr.io/fabiotavernini/spendemon:latest
+docker run -p 3000:3000 ghcr.io/fabiotavernini/spendemon:latest
 ```
 
 After pulling the image, run it with the environment variables and configuration that fit your setup.
