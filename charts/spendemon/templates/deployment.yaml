@@ -12,9 +12,21 @@ spec:
       labels:
         app: {{ include "spendemon.name" . }}
     spec:
+      {{- if .Values.image.imagePullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.image.imagePullSecret }}
+      {{- end }}
+      volumes:
+      - name: settings
+        configMap:
+          name: {{ include "spendemon.fullname" . }}-settings
       containers:
         - name: spendemon
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 3000
+          volumeMounts:
+            - name: settings
+              mountPath: {{ .Values.settings.mountPath }}
+              subPath: settings.yaml
