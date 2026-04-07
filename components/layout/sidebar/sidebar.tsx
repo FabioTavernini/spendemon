@@ -1,6 +1,6 @@
 
 import { Coins, Search, Settings } from "lucide-react"
-
+import { Suspense } from "react"
 import { ClusterSelect } from "@/components/clusterselect"
 import { ModeToggle } from "@/components/themeselector"
 import { Separator } from "@/components/ui/separator"
@@ -44,10 +44,14 @@ export function AppSidebar() {
         <SidebarContent>
           <SidebarMenu className="px-2">
             <SidebarMenuItem>
-              <ClusterSelect />
+              <Suspense fallback={null}>
+                <ClusterSelect />
+              </Suspense>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <NamespaceSelect />
+              <Suspense fallback={null}>
+                <NamespaceSelect />
+              </Suspense>
             </SidebarMenuItem>
           </SidebarMenu>
 
