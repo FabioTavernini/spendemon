@@ -7,7 +7,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -19,21 +18,27 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Set lowercase image name
-        id: repo
-        run: echo "repo=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+      - name: Set lowercase names
+        id: vars
+        shell: bash
+        run: |
+          REPO_LC="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+          OWNER_LC="$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          echo "repo=${REPO_LC}" >> "$GITHUB_OUTPUT"
+          echo "owner=${OWNER_LC}" >> "$GITHUB_OUTPUT"
 
       - name: Extract version
         id: version
+        shell: bash
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
+            VERSION="${GITHUB_REF#refs/tags/v}"
           else
-            VERSION=latest
+            VERSION="latest"
           fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -48,33 +53,28 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}
-            ghcr.io/${{ steps.repo.outputs.repo }}:latest
+            ghcr.io/${{ steps.vars.outputs.repo }}:${{ steps.version.outputs.version }}
+            ghcr.io/${{ steps.vars.outputs.repo }}:latest
 
-      # 🛠 Setup Helm
       - name: Setup Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
 
-      # 🔐 Helm login
       - name: Helm login
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io \
-            --username ${{ github.actor }} \
+            --username "${{ github.actor }}" \
             --password-stdin
 
-      # ✏️ Update Chart.yaml version dynamically
       - name: Set chart version
         run: |
-          VERSION=${{ steps.version.outputs.version }}
+          VERSION="${{ steps.version.outputs.version }}"
           sed -i "s/^version:.*/version: ${VERSION}/" charts/spendemon/Chart.yaml
           sed -i "s/^appVersion:.*/appVersion: \"${VERSION}\"/" charts/spendemon/Chart.yaml
 
-      # 📦 Package chart
       - name: Package Helm chart
         run: helm package charts/spendemon
 
-      # 🚀 Push chart
       - name: Push Helm chart
         run: |
           helm push spendemon-${{ steps.version.outputs.version }}.tgz \
-            oci://ghcr.io/${{ github.repository_owner }}
+            oci://ghcr.io/${{ steps.vars.outputs.owner }}
