@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Columns3 } from "lucide-react"
+import { Columns3, Download } from "lucide-react"
 
 import {
-  ColumnVisibility,
+  Column,
   ColumnDef,
   flexRender,
   getCoreRowModel,
@@ -34,13 +34,15 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
 }
 
+type VisibilityState = Record<string, boolean>
+
 export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] =
-    React.useState<ColumnVisibility>({})
+    React.useState<VisibilityState>({})
 
   const table = useReactTable({
     data,
@@ -55,9 +57,61 @@ export function DataTable<TData, TValue>({
     },
   })
 
+  function getColumnLabel(column: Column<TData, unknown>) {
+    const header = column.columnDef.header
+
+    if (typeof header === "string") {
+      return header
+    }
+
+    return column.id
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+  }
+
+  function escapeCsvValue(value: unknown) {
+    const stringValue = String(value ?? "")
+    return `"${stringValue.replace(/"/g, '""')}"`
+  }
+
+  function handleExport() {
+    const visibleColumns = table
+      .getVisibleLeafColumns()
+      .filter((column) => typeof column.accessorFn !== "undefined")
+
+    const headerRow = visibleColumns
+      .map((column) => escapeCsvValue(getColumnLabel(column)))
+      .join(",")
+
+    const dataRows = table.getRowModel().rows.map((row) =>
+      visibleColumns
+        .map((column) => escapeCsvValue(row.getValue(column.id)))
+        .join(",")
+    )
+
+    const csvContent = [headerRow, ...dataRows].join("\n")
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+
+    const date = new Date().getFullYear() + "-" + String(new Date().getMonth() + 1).padStart(2, "0") + "-" + String(new Date().getDate()).padStart(2, "0")
+
+    link.href = url
+    link.download = `table-export-${date}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="overflow-hidden rounded-md border">
-      <div className="flex items-center justify-end border-b px-4 py-3">
+      <div className="flex items-center justify-end gap-2 border-b px-4 py-3">
+        <Button variant="outline" size="lg" className="w-fit" onClick={handleExport}>
+          <Download />
+          Export
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="lg" className="w-fit">
