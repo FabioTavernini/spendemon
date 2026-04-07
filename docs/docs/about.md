@@ -1,17 +1,5 @@
 ---
-layout: docs
-title: About
-permalink: /about/
-lead: A short summary of why Spendemon exists and the workflow it is built around.
-toc:
-  - title: About Spendemon
-    url: "#about-spendemon"
-  - title: Workflow
-    url: "#workflow"
-  - title: Stack
-    url: "#stack"
-  - title: Read Next
-    url: "#read-next"
+sidebar_position: 5
 ---
 
 ## About Spendemon

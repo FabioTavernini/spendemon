@@ -1,35 +1,8 @@
 ---
-layout: docs
 title: Info
-permalink: /info/
-sidebar_title: Spendemon Docs
-lead: The core reference for architecture, configuration, routes, and local development.
-toc:
-  - title: What Spendemon Is
-    url: "#what-spendemon-is"
-  - title: Quick Start
-    url: "#quick-start"
-  - title: Install
-    url: "#install"
-  - title: Core Features
-    url: "#core-features"
-  - title: How It Works
-    url: "#how-it-works"
-  - title: Configuration
-    url: "#configuration"
-  - title: Main Routes
-    url: "#main-routes"
-  - title: API Endpoints
-    url: "#api-endpoints"
-  - title: Prometheus Metrics
-    url: "#prometheus-metrics"
-  - title: Local Development
-    url: "#local-development"
-  - title: Project Notes
-    url: "#project-notes"
+description: The core reference for architecture, configuration, routes, and local development.
+slug: /info/
 ---
-
-# Info
 
 ## What Spendemon Is
 

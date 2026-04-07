@@ -1,21 +1,6 @@
 ---
-layout: docs
 title: Documentation
-permalink: /
-lead: Learn what Spendemon does, how it is configured, and where to go next.
-toc:
-  - title: Overview
-    url: "#overview"
-  - title: What You Can Do
-    url: "#what-you-can-do"
-  - title: Main Pages
-    url: "#main-pages"
-  - title: Quick Start
-    url: "#quick-start"
-  - title: Install
-    url: "#install"
-  - title: Next Reads
-    url: "#next-reads"
+description: Learn what Spendemon does, how it is configured, and where to go next.
 ---
 
 # Spendemon Docs
@@ -63,7 +48,6 @@ helm install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon --version 0
 ```
 
 Head to the [Info](/info/) page for the full install and configuration reference.
-
 
 ## Next Reads
 
