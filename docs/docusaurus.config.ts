@@ -10,7 +10,6 @@ const config: Config = {
   favicon: 'img/favicon.ico',
 
   onBrokenLinks: 'ignore', // or 'warn' to just warn
-  onBrokenMarkdownLinks: 'warn',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
