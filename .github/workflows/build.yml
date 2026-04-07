@@ -84,4 +84,4 @@ jobs:
       - name: Push Helm chart
         run: |
           helm push spendemon-${{ steps.version.outputs.chart_version }}.tgz \
-            oci://ghcr.io/${{ steps.vars.outputs.owner }}
+            oci://ghcr.io/${{ steps.vars.outputs.owner }}/charts
