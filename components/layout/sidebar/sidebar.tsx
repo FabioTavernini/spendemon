@@ -13,6 +13,8 @@ import { Separator } from "@/components/ui/separator"
 import { ClusterSelect } from "@/components/clusterselect"
 import { Search, Settings } from "lucide-react"
 
+import Link from "next/link"
+
 export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
@@ -26,7 +28,7 @@ export function AppSidebar() {
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
-                <Separator className="my-4" />
+          <Separator className="my-4" />
           <SidebarMenuItem>
             <ModeToggle />
           </SidebarMenuItem>
@@ -42,9 +44,30 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
 
-      <Separator className="my-4" />
+        <Separator className="my-4" />
+
+        <SidebarMenu className="px-2">
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link href="/">
+                <Settings className="h-4 w-4 shrink-0" />
+                <span className="truncate">Overview</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
 
 
+
+
+
+
+
+
+      </SidebarContent>
+
+
+      <SidebarFooter>
         <SidebarMenu className="px-2">
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
@@ -55,13 +78,10 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-
-
-      </SidebarContent>
+      </SidebarFooter>
 
 
 
-      
     </Sidebar>
   )
 }

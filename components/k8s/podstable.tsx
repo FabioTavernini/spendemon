@@ -6,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Separator } from "../ui/separator"
 
 type PodRow = {
   cluster: string
@@ -49,21 +50,23 @@ export async function PodsTable({ clusters }: { clusters?: string }) {
 
   const pods: PodRow[] = data?.clusters
     ? Object.entries(data.clusters).flatMap(([cluster, value]) =>
-        Object.entries(value.namespaces).flatMap(([namespace, podList]) =>
-          podList.map((podItem) => ({
-            cluster,
-            namespace,
-            pod: podItem.pod,
-            status: podItem.status,
-          }))
-        )
+      Object.entries(value.namespaces).flatMap(([namespace, podList]) =>
+        podList.map((podItem) => ({
+          cluster,
+          namespace,
+          pod: podItem.pod,
+          status: podItem.status,
+        }))
       )
+    )
     : []
 
   return (
     <div className="max-h-96 overflow-y-auto">
+      <h2 className="my-2 text-2xl">Pods</h2>
+      <Separator className="my-2" />
       <Table className="w-full">
-        <TableHeader className="bg-muted/80">
+        <TableHeader>
           <TableRow>
             <TableHead className="px-4 py-2">Cluster</TableHead>
             <TableHead className="px-4 py-2">Namespace</TableHead>
