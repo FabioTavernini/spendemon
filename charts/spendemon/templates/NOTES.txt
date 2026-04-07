@@ -3,4 +3,5 @@
 kubectl port-forward svc/{{ include "spendemon.fullname" . }} 3000:3000
 
 Then open http://localhost:3000/
-And enter prometheus url(s) in settings
+
+2. Enter prometheus url(s) in settings or configure it in values.yaml

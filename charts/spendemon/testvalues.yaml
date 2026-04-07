@@ -1,8 +1,8 @@
 image:
   repository: ghcr.io/fabiotavernini/spendemon
-  tag: "latest"
+  tag: "0.0.2"
   pullPolicy: IfNotPresent
-  imagePullSecret: ""
+  imagePullSecret: "ghcr-login-secret"
 
 service:
   type: ClusterIP
