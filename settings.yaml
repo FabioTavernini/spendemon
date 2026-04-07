@@ -4,3 +4,7 @@ clusters:
   - name: cluster-2
     prometheusUrl: http://localhost:9090
 
+costs:
+  cpuCore: 10
+  memoryGb: 20
+  storageGb: 5

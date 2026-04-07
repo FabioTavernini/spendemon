@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 import {
   getSettingsFilePath,
-  parseClustersFromSettings,
+  parseSettings,
   readSettingsFile,
   writeSettingsFile,
 } from '@/lib/settings'
@@ -13,13 +13,14 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
     const content = await readSettingsFile()
-    const clusters = parseClustersFromSettings(content)
+    const settings = parseSettings(content)
 
     return NextResponse.json(
       {
         path: getSettingsFilePath(),
         content,
-        clusters,
+        clusters: settings.clusters,
+        costs: settings.costs,
       },
       { status: 200 }
     )
@@ -45,12 +46,14 @@ export async function PUT(req: Request) {
     }
 
     await writeSettingsFile(body.content)
+    const settings = parseSettings(body.content)
 
     return NextResponse.json(
       {
         ok: true,
         path: getSettingsFilePath(),
-        clusters: parseClustersFromSettings(body.content),
+        clusters: settings.clusters,
+        costs: settings.costs,
       },
       { status: 200 }
     )

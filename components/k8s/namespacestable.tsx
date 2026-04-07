@@ -9,8 +9,16 @@ import {
 import { Separator } from "@/components/ui/separator"
 
 type NamespaceRow = {
-    cluster: string
-    namespace: string
+  cluster: string
+  namespace: string
+}
+
+type NamespaceApiCluster = {
+  namespaces?: string[]
+}
+
+type NamespaceApiResponse = {
+  clusters?: Record<string, NamespaceApiCluster>
 }
 
 export async function NamespacesTable({ clusters }: { clusters?: string }) {
@@ -21,12 +29,12 @@ export async function NamespacesTable({ clusters }: { clusters?: string }) {
     : `${baseUrl}/api/namespaces`
 
   const res = await fetch(url, { cache: "no-store" })
-  const data = await res.json()
+  const data = (await res.json()) as NamespaceApiResponse
 
   const namespaces: NamespaceRow[] = data?.clusters
     ? Object.entries(data.clusters).flatMap(
-        ([cluster, value]: [string, any]) =>
-          (value.namespaces || []).map((namespace: string) => ({
+        ([cluster, value]) =>
+          (value.namespaces ?? []).map((namespace) => ({
             cluster,
             namespace,
           }))

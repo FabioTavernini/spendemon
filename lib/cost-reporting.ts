@@ -1,0 +1,357 @@
+import { getClusters } from '@/lib/clusters'
+import { parseCostsFromSettings, readSettingsFile, type CostSettings } from '@/lib/settings'
+
+const BYTES_PER_GB = 1024 * 1024 * 1024
+
+type QueryResult = {
+  metric: {
+    namespace?: string
+    pod?: string
+    phase?: string
+  }
+  value: [number | string, string]
+}
+
+type PrometheusResponse = {
+  status?: string
+  data?: {
+    result?: QueryResult[]
+  }
+}
+
+export type PodCost = {
+  cluster: string
+  namespace: string
+  pod: string
+  status: string
+  cpuCores: number
+  memoryGb: number
+  storageGb: number
+  cpuCost: number
+  memoryCost: number
+  storageCost: number
+  totalCost: number
+}
+
+export type NamespaceCostSummary = {
+  totalPods: number
+  totalCpuCores: number
+  totalMemoryGb: number
+  totalStorageGb: number
+  totalCost: number
+  pods: PodCost[]
+}
+
+export type ClusterCostSummary = {
+  totalPods: number
+  totalNamespaces: number
+  totalCpuCores: number
+  totalMemoryGb: number
+  totalStorageGb: number
+  totalCost: number
+  namespaces: Record<string, NamespaceCostSummary>
+}
+
+export type CostReport = {
+  generatedAt: string
+  rates: CostSettings
+  totalClusters: number
+  totalNamespaces: number
+  totalPods: number
+  totalCpuCores: number
+  totalMemoryGb: number
+  totalStorageGb: number
+  totalCost: number
+  clusters: Record<string, ClusterCostSummary>
+}
+
+type ClusterPodState = {
+  cluster: string
+  namespace: string
+  pod: string
+  status: string
+  cpuCores: number
+  memoryGb: number
+  storageGb: number
+}
+
+type MetricValue = {
+  namespace: string
+  pod: string
+  value: number
+}
+
+async function queryPrometheusVector(prometheusUrl: string, query: string): Promise<QueryResult[]> {
+  const response = await fetch(
+    `${prometheusUrl}/api/v1/query?query=${encodeURIComponent(query)}`,
+    { cache: 'no-store' }
+  )
+
+  const payload = (await response.json()) as PrometheusResponse
+
+  if (!response.ok || payload.status !== 'success') {
+    return []
+  }
+
+  return payload.data?.result ?? []
+}
+
+function parseMetricValues(results: QueryResult[], transformer?: (value: number) => number): MetricValue[] {
+  return results.flatMap((item) => {
+    const namespace = item.metric.namespace
+    const pod = item.metric.pod
+    const rawValue = Number(item.value?.[1] ?? 0)
+
+    if (!namespace || !pod || !Number.isFinite(rawValue)) {
+      return []
+    }
+
+    return [
+      {
+        namespace,
+        pod,
+        value: transformer ? transformer(rawValue) : rawValue,
+      },
+    ]
+  })
+}
+
+function upsertPodState(
+  podMap: Map<string, ClusterPodState>,
+  cluster: string,
+  namespace: string,
+  pod: string
+): ClusterPodState {
+  const key = `${cluster}:${namespace}:${pod}`
+  const existing = podMap.get(key)
+
+  if (existing) {
+    return existing
+  }
+
+  const next = {
+    cluster,
+    namespace,
+    pod,
+    status: 'Unknown',
+    cpuCores: 0,
+    memoryGb: 0,
+    storageGb: 0,
+  }
+
+  podMap.set(key, next)
+  return next
+}
+
+async function queryStorageMetrics(prometheusUrl: string): Promise<MetricValue[]> {
+  const storageQueries = [
+    'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="ephemeral_storage",unit="byte"})',
+    'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="ephemeral-storage",unit="byte"})',
+    'sum by (namespace, pod) (kube_pod_ephemeral_storage_request_bytes)',
+  ]
+
+  for (const query of storageQueries) {
+    const results = await queryPrometheusVector(prometheusUrl, query)
+
+    if (results.length > 0) {
+      return parseMetricValues(results, (value) => value / BYTES_PER_GB)
+    }
+  }
+
+  return []
+}
+
+async function buildClusterPodStates(cluster: { name: string; prometheusUrl: string }) {
+  const podStatusQuery = 'kube_pod_status_phase == 1'
+  const cpuQuery =
+    'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="cpu",unit="core"})'
+  const memoryQuery =
+    'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="memory",unit="byte"})'
+
+  const [statusResults, cpuResults, memoryResults, storageResults] = await Promise.all([
+    queryPrometheusVector(cluster.prometheusUrl, podStatusQuery),
+    queryPrometheusVector(cluster.prometheusUrl, cpuQuery),
+    queryPrometheusVector(cluster.prometheusUrl, memoryQuery),
+    queryStorageMetrics(cluster.prometheusUrl),
+  ])
+
+  const podMap = new Map<string, ClusterPodState>()
+
+  for (const item of statusResults) {
+    const namespace = item.metric.namespace
+    const pod = item.metric.pod
+
+    if (!namespace || !pod) {
+      continue
+    }
+
+    const podState = upsertPodState(podMap, cluster.name, namespace, pod)
+    podState.status = item.metric.phase ?? 'Unknown'
+  }
+
+  for (const item of parseMetricValues(cpuResults)) {
+    const podState = upsertPodState(podMap, cluster.name, item.namespace, item.pod)
+    podState.cpuCores = item.value
+  }
+
+  for (const item of parseMetricValues(memoryResults, (value) => value / BYTES_PER_GB)) {
+    const podState = upsertPodState(podMap, cluster.name, item.namespace, item.pod)
+    podState.memoryGb = item.value
+  }
+
+  for (const item of storageResults) {
+    const podState = upsertPodState(podMap, cluster.name, item.namespace, item.pod)
+    podState.storageGb = item.value
+  }
+
+  return Array.from(podMap.values())
+}
+
+function round(value: number): number {
+  return Number(value.toFixed(4))
+}
+
+export async function getCostReport(clusterFilter?: string[]): Promise<CostReport> {
+  const [clusters, settingsContent] = await Promise.all([getClusters(), readSettingsFile()])
+  const rates = parseCostsFromSettings(settingsContent)
+
+  const selectedClusters =
+    clusterFilter && clusterFilter.length > 0
+      ? clusters.filter((cluster) => clusterFilter.includes(cluster.name))
+      : clusters
+
+  const clusterStates = await Promise.all(
+    selectedClusters.map(async (cluster) => {
+      try {
+        const podStates = await buildClusterPodStates(cluster)
+        return { clusterName: cluster.name, podStates }
+      } catch (error) {
+        console.error(`Error building cost report for ${cluster.name}:`, error)
+        return { clusterName: cluster.name, podStates: [] }
+      }
+    })
+  )
+
+  const grouped: Record<string, ClusterCostSummary> = {}
+
+  for (const { clusterName, podStates } of clusterStates) {
+    const namespaces: Record<string, NamespaceCostSummary> = {}
+
+    for (const podState of podStates.sort((a, b) => {
+      if (a.namespace === b.namespace) {
+        return a.pod.localeCompare(b.pod)
+      }
+
+      return a.namespace.localeCompare(b.namespace)
+    })) {
+      const cpuCost = podState.cpuCores * rates.cpuCore
+      const memoryCost = podState.memoryGb * rates.memoryGb
+      const storageCost = podState.storageGb * rates.storageGb
+      const totalCost = cpuCost + memoryCost + storageCost
+
+      const podCost: PodCost = {
+        cluster: podState.cluster,
+        namespace: podState.namespace,
+        pod: podState.pod,
+        status: podState.status,
+        cpuCores: round(podState.cpuCores),
+        memoryGb: round(podState.memoryGb),
+        storageGb: round(podState.storageGb),
+        cpuCost: round(cpuCost),
+        memoryCost: round(memoryCost),
+        storageCost: round(storageCost),
+        totalCost: round(totalCost),
+      }
+
+      if (!namespaces[podState.namespace]) {
+        namespaces[podState.namespace] = {
+          totalPods: 0,
+          totalCpuCores: 0,
+          totalMemoryGb: 0,
+          totalStorageGb: 0,
+          totalCost: 0,
+          pods: [],
+        }
+      }
+
+      const namespaceSummary = namespaces[podState.namespace]
+      namespaceSummary.totalPods += 1
+      namespaceSummary.totalCpuCores += podCost.cpuCores
+      namespaceSummary.totalMemoryGb += podCost.memoryGb
+      namespaceSummary.totalStorageGb += podCost.storageGb
+      namespaceSummary.totalCost += podCost.totalCost
+      namespaceSummary.pods.push(podCost)
+    }
+
+    const clusterSummary: ClusterCostSummary = {
+      totalPods: 0,
+      totalNamespaces: Object.keys(namespaces).length,
+      totalCpuCores: 0,
+      totalMemoryGb: 0,
+      totalStorageGb: 0,
+      totalCost: 0,
+      namespaces: {},
+    }
+
+    for (const [namespace, summary] of Object.entries(namespaces)) {
+      const normalizedSummary: NamespaceCostSummary = {
+        totalPods: summary.totalPods,
+        totalCpuCores: round(summary.totalCpuCores),
+        totalMemoryGb: round(summary.totalMemoryGb),
+        totalStorageGb: round(summary.totalStorageGb),
+        totalCost: round(summary.totalCost),
+        pods: summary.pods,
+      }
+
+      clusterSummary.totalPods += normalizedSummary.totalPods
+      clusterSummary.totalCpuCores += normalizedSummary.totalCpuCores
+      clusterSummary.totalMemoryGb += normalizedSummary.totalMemoryGb
+      clusterSummary.totalStorageGb += normalizedSummary.totalStorageGb
+      clusterSummary.totalCost += normalizedSummary.totalCost
+      clusterSummary.namespaces[namespace] = normalizedSummary
+    }
+
+    grouped[clusterName] = {
+      ...clusterSummary,
+      totalCpuCores: round(clusterSummary.totalCpuCores),
+      totalMemoryGb: round(clusterSummary.totalMemoryGb),
+      totalStorageGb: round(clusterSummary.totalStorageGb),
+      totalCost: round(clusterSummary.totalCost),
+    }
+  }
+
+  const report = Object.values(grouped).reduce(
+    (accumulator, cluster) => {
+      accumulator.totalClusters += 1
+      accumulator.totalNamespaces += cluster.totalNamespaces
+      accumulator.totalPods += cluster.totalPods
+      accumulator.totalCpuCores += cluster.totalCpuCores
+      accumulator.totalMemoryGb += cluster.totalMemoryGb
+      accumulator.totalStorageGb += cluster.totalStorageGb
+      accumulator.totalCost += cluster.totalCost
+      return accumulator
+    },
+    {
+      totalClusters: 0,
+      totalNamespaces: 0,
+      totalPods: 0,
+      totalCpuCores: 0,
+      totalMemoryGb: 0,
+      totalStorageGb: 0,
+      totalCost: 0,
+    }
+  )
+
+  return {
+    generatedAt: new Date().toISOString(),
+    rates,
+    totalClusters: report.totalClusters,
+    totalNamespaces: report.totalNamespaces,
+    totalPods: report.totalPods,
+    totalCpuCores: round(report.totalCpuCores),
+    totalMemoryGb: round(report.totalMemoryGb),
+    totalStorageGb: round(report.totalStorageGb),
+    totalCost: round(report.totalCost),
+    clusters: grouped,
+  }
+}

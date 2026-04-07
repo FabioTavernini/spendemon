@@ -1,4 +1,4 @@
-import { getSettingsFilePath, readSettingsFile } from '@/lib/settings'
+import { getSettingsFilePath, parseCostsFromSettings, readSettingsFile } from '@/lib/settings'
 
 import { SettingsEditor } from './settings-editor'
 
@@ -8,10 +8,12 @@ export const dynamic = 'force-dynamic'
 export default async function SettingsPage() {
   const initialContent = await readSettingsFile()
   const initialPath = getSettingsFilePath()
+  const initialCosts = parseCostsFromSettings(initialContent)
 
   return (
     <SettingsEditor
       initialContent={initialContent}
+      initialCosts={initialCosts}
       initialPath={initialPath}
     />
   )

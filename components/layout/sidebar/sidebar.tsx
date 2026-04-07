@@ -1,3 +1,9 @@
+import Link from "next/link"
+import { Coins, Search, Settings } from "lucide-react"
+
+import { ClusterSelect } from "@/components/clusterselect"
+import { ModeToggle } from "@/components/themeselector"
+import { Separator } from "@/components/ui/separator"
 import {
   Sidebar,
   SidebarContent,
@@ -8,13 +14,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-import { ModeToggle } from "@/components/themeselector"
-import { Separator } from "@/components/ui/separator"
-import { ClusterSelect } from "@/components/clusterselect"
-import { Search, Settings } from "lucide-react"
-
-import Link from "next/link"
-
 export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
@@ -22,10 +21,10 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href="/">
+              <Link href="/">
                 <Search className="h-4 w-4 shrink-0" />
-                <span className="text-lg font-semibold truncate">Spendemon</span>
-              </a>
+                <span className="truncate text-lg font-semibold">Spendemon</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <Separator className="my-4" />
@@ -55,33 +54,29 @@ export function AppSidebar() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link href="/costreporting">
+                <Coins className="h-4 w-4 shrink-0" />
+                <span className="truncate">Cost Reporting</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
-
-
-
-
-
-
-
-
       </SidebarContent>
-
 
       <SidebarFooter>
         <SidebarMenu className="px-2">
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href="/settings">
+              <Link href="/settings">
                 <Settings className="h-4 w-4 shrink-0" />
                 <span className="truncate">Settings</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-
-
-
     </Sidebar>
   )
 }

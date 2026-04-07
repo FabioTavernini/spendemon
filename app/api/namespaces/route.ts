@@ -11,6 +11,19 @@ type Cluster = {
   prometheusUrl: string
 }
 
+type PrometheusNamespaceResult = {
+  metric: {
+    namespace?: string
+  }
+}
+
+type PrometheusResponse = {
+  status?: string
+  data?: {
+    result?: PrometheusNamespaceResult[]
+  }
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
@@ -36,13 +49,19 @@ export async function GET(req: Request) {
             { cache: 'no-store' }
           )
 
-          const data = await res.json()
+          const data = (await res.json()) as PrometheusResponse
           if (data.status !== 'success') return []
 
-          return data.data.result.map((item: any) => ({
-            cluster: cluster.name,
-            namespace: item.metric.namespace,
-          }))
+          return (data.data?.result ?? []).flatMap((item) =>
+            item.metric.namespace
+              ? [
+                  {
+                    cluster: cluster.name,
+                    namespace: item.metric.namespace,
+                  },
+                ]
+              : []
+          )
         } catch (err) {
           console.error(`Error querying namespaces for ${cluster.name}:`, err)
           return []
