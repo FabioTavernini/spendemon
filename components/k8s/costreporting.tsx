@@ -1,3 +1,13 @@
+
+
+
+// Spendemon - K8s Cost monitoring
+// Copyright (c) 2026 Fabio Tavernini
+
+// This file is licensed under the Personal-Use Free License 1.0 for personal use.
+// Commercial use requires a separate commercial license. See LICENSE and COMMERCIAL_LICENSE.md
+
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { podCostColumns, type PodCostRow } from '@/components/k8s/cost-reporting-pods-table-columns'
 import { DataTable } from '@/components/k8s/pods-table/data-table'

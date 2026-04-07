@@ -145,4 +145,12 @@ If you want to simulate a failing or pending pod, just apply `dev/failing-pod.ya
 
 ## License
 
-[GNU Affero General Public License](./LICENSE)
+Spendemon is distributed under a **dual-license model**:
+
+1. **Personal Use**: Free for individuals for non-commercial purposes under the **Personal-Use Free License (PUFL 1.0)**. See [LICENSE](./LICENSE).
+
+2. **Commercial Use**: Corporations, organizations, or any commercial usage require a **Commercial License**. See [COMMERCIAL_LICENSE.md](./COMMERCIAL_LICENSE.md).
+
+### Why dual licensing?
+
+This approach allows individuals to use, modify, and enjoy the software freely, while ensuring companies pay for commercial usage. It also keeps the code source-available.
