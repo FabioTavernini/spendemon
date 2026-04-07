@@ -16,8 +16,6 @@ export default async function Page({
 
   return (
     <>
-      <SidebarTrigger />
-
       <div className="flex min-h-screen w-full min-w-0 flex-col bg-background px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5">
 
         <SiteHeader />
