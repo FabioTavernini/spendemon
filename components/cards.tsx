@@ -56,6 +56,7 @@ type NamespacesResponse = {
 
 export async function SectionCards() {
   const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+  const fallbackClusters = await getClusters();
 
   const [podsRes, clustersRes, namespacesRes] = await Promise.all([
     fetch(`${baseUrl}/api/pods`, { cache: "no-store" }),
@@ -74,7 +75,7 @@ export async function SectionCards() {
   ]);
 
   const totalPods = pods?.totalPods ?? 0;
-  const totalClusters = clusters?.totalClusters ?? getClusters().length;
+  const totalClusters = clusters?.totalClusters ?? fallbackClusters.length;
 
   let totalNamespaces = 0;
 

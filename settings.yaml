@@ -1,0 +1,5 @@
+clusters:
+  - name: cluster-1
+    prometheusUrl: http://localhost:9090
+  - name: cluster-2
+    prometheusUrl: http://localhost:9091

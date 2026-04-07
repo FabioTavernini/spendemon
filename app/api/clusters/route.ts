@@ -1,10 +1,13 @@
-// app/api/clusters/route.ts
-import { NextResponse } from "next/server";
-import { getClusters } from "@/lib/clusters";
+import { NextResponse } from 'next/server'
+
+import { getClusters } from '@/lib/clusters'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const clusters = getClusters();
+    const clusters = await getClusters()
 
     return NextResponse.json(
       {
@@ -12,12 +15,12 @@ export async function GET() {
         clusters,
       },
       { status: 200 }
-    );
+    )
   } catch (error) {
-    console.error(error);
+    console.error(error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 }
-    );
+    )
   }
 }

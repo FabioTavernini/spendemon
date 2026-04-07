@@ -1,10 +1,18 @@
-export default function SettingsPage() {
+import { getSettingsFilePath, readSettingsFile } from '@/lib/settings'
+
+import { SettingsEditor } from './settings-editor'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+export default async function SettingsPage() {
+  const initialContent = await readSettingsFile()
+  const initialPath = getSettingsFilePath()
+
   return (
-    <div className="flex flex-col min-h-screen w-full bg-background m-5">
-      <h1 className="text-2xl font-bold mb-4">Settings</h1>
-      <p className="text-muted-foreground">
-        Here you can configure your Spendemon preferences and settings.
-      </p>
-    </div>
+    <SettingsEditor
+      initialContent={initialContent}
+      initialPath={initialPath}
+    />
   )
 }
