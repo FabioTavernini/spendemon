@@ -73,7 +73,7 @@ export function ClusterSelect() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <SidebarMenuButton className="justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 hover:cursor-pointer">
             <Grid2X2 className="h-4 w-4 shrink-0" />
             <span>
               {selected.length === 0
