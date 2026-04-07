@@ -1,4 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { podCostColumns, type PodCostRow } from '@/components/k8s/cost-reporting-pods-table-columns'
+import { DataTable } from '@/components/k8s/pods-table/data-table'
 import {
   Table,
   TableBody,
@@ -125,7 +127,7 @@ function NamespaceSummaryTable({ report }: { report: CostReport }) {
 }
 
 function PodCostTable({ report }: { report: CostReport }) {
-  const rows = Object.entries(report.clusters).flatMap(([clusterName, cluster]) =>
+  const rows: PodCostRow[] = Object.entries(report.clusters).flatMap(([clusterName, cluster]) =>
     Object.entries(cluster.namespaces).flatMap(([namespaceName, namespace]) =>
       namespace.pods.map((pod) => ({
         clusterName,
@@ -140,40 +142,7 @@ function PodCostTable({ report }: { report: CostReport }) {
       <h2 className="text-xl font-semibold">Pod Costs</h2>
       <Separator className="my-3" />
       <div className="max-h-[36rem] overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Cluster</TableHead>
-              <TableHead>Namespace</TableHead>
-              <TableHead>Pod</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">CPU</TableHead>
-              <TableHead className="text-right">RAM GB</TableHead>
-              <TableHead className="text-right">Storage GB</TableHead>
-              <TableHead className="text-right">CPU Cost</TableHead>
-              <TableHead className="text-right">RAM Cost</TableHead>
-              <TableHead className="text-right">Storage Cost</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={`${row.clusterName}:${row.namespaceName}:${row.pod}`}>
-                <TableCell>{row.clusterName}</TableCell>
-                <TableCell>{row.namespaceName}</TableCell>
-                <TableCell className="font-medium">{row.pod}</TableCell>
-                <TableCell>{row.status}</TableCell>
-                <TableCell className="text-right">{formatNumber(row.cpuCores)}</TableCell>
-                <TableCell className="text-right">{formatNumber(row.memoryGb)}</TableCell>
-                <TableCell className="text-right">{formatNumber(row.storageGb)}</TableCell>
-                <TableCell className="text-right">{formatCost(row.cpuCost)}</TableCell>
-                <TableCell className="text-right">{formatCost(row.memoryCost)}</TableCell>
-                <TableCell className="text-right">{formatCost(row.storageCost)}</TableCell>
-                <TableCell className="text-right">{formatCost(row.totalCost)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable columns={podCostColumns} data={rows} />
       </div>
     </div>
   )
