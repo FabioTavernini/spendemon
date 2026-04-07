@@ -148,12 +148,24 @@ function PodCostTable({ report }: { report: CostReport }) {
   )
 }
 
-export async function CostReporting({ clusters }: { clusters?: string }) {
+export async function CostReporting({
+  clusters,
+  namespaces,
+}: {
+  clusters?: string
+  namespaces?: string
+}) {
   const report = await getCostReport(
     clusters
       ? clusters
           .split(',')
           .map((cluster) => cluster.trim())
+          .filter(Boolean)
+      : undefined,
+    namespaces
+      ? namespaces
+          .split(',')
+          .map((namespace) => namespace.trim())
           .filter(Boolean)
       : undefined
   )

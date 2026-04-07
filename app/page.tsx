@@ -3,14 +3,13 @@ import { SiteHeader } from "@/components/site-header"
 import { NamespacesTable } from "@/components/k8s/namespacestable"
 import { Separator } from "@/components/ui/separator"
 import { PodsTable } from "@/components/k8s/podstable";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 export const dynamic = "force-dynamic";
 
 
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ clusters?: string }>
+  searchParams: Promise<{ clusters?: string; namespaces?: string }>
 }) {
   const params = await searchParams;
 
@@ -21,15 +20,18 @@ export default async function Page({
         <SiteHeader />
 
         <div className="flex min-w-0 flex-1 flex-col space-y-6 py-4 sm:py-6">
-          <SectionCards />
+          <SectionCards clusters={params.clusters} namespaces={params.namespaces} />
 
           <Separator className="my-4" />
 
           <div className="min-w-0 rounded-lg border bg-card p-3 sm:p-4">
-            <NamespacesTable clusters={params.clusters} />
+            <NamespacesTable
+              clusters={params.clusters}
+              namespaces={params.namespaces}
+            />
           </div>
           <div className="min-w-0 rounded-lg border bg-card p-3 sm:p-4">
-            <PodsTable clusters={params.clusters} />
+            <PodsTable clusters={params.clusters} namespaces={params.namespaces} />
           </div>
         </div>
       </div>

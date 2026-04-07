@@ -17,6 +17,7 @@ import {
 import { SpendemonLogo } from "@/components/logo"
 
 import Link from "next/link"
+import { NamespaceSelect } from "@/components/namespaceselect"
 
 export function AppSidebar() {
   return (
@@ -44,6 +45,9 @@ export function AppSidebar() {
           <SidebarMenu className="px-2">
             <SidebarMenuItem>
               <ClusterSelect />
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <NamespaceSelect />
             </SidebarMenuItem>
           </SidebarMenu>
 

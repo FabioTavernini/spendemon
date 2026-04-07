@@ -38,11 +38,27 @@ function getStatusColor(status: string): string {
   }
 }
 
-export async function PodsTable({ clusters }: { clusters?: string }) {
+export async function PodsTable({
+  clusters,
+  namespaces,
+}: {
+  clusters?: string
+  namespaces?: string
+}) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+  const params = new URLSearchParams()
 
-  const url = clusters
-    ? `${baseUrl}/api/pods?clusters=${clusters}`
+  if (clusters) {
+    params.set("clusters", clusters)
+  }
+
+  if (namespaces) {
+    params.set("namespaces", namespaces)
+  }
+
+  const queryString = params.toString()
+  const url = queryString
+    ? `${baseUrl}/api/pods?${queryString}`
     : `${baseUrl}/api/pods`
 
   const res = await fetch(url, { cache: "no-store" })

@@ -28,6 +28,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
     const clustersParam = searchParams.get('clusters')
+    const namespacesParam = searchParams.get('namespaces')
 
     const allClusters = await getClusters()
 
@@ -38,6 +39,15 @@ export async function GET(req: Request) {
       const requested = clustersParam.split(',').map((c) => c.trim())
       selectedClusters = allClusters.filter((c) => requested.includes(c.name))
     }
+
+    const requestedNamespaces = namespacesParam
+      ? new Set(
+          namespacesParam
+            .split(',')
+            .map((value) => value.trim())
+            .filter(Boolean)
+        )
+      : null
 
     const query = 'kube_namespace_created'
 
@@ -69,7 +79,11 @@ export async function GET(req: Request) {
       })
     )
 
-    const flatResults = responses.flat()
+    const flatResults = responses.flat().filter((item) =>
+      requestedNamespaces
+        ? requestedNamespaces.has(`${item.cluster}:${item.namespace}`)
+        : true
+    )
 
     const seen = new Set<string>()
     const uniqueNamespaces: { cluster: string; namespace: string }[] = []

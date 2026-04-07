@@ -211,7 +211,10 @@ function round(value: number): number {
   return Number(value.toFixed(4))
 }
 
-export async function getCostReport(clusterFilter?: string[]): Promise<CostReport> {
+export async function getCostReport(
+  clusterFilter?: string[],
+  namespaceFilter?: string[]
+): Promise<CostReport> {
   const [clusters, settingsContent] = await Promise.all([getClusters(), readSettingsFile()])
   const rates = parseCostsFromSettings(settingsContent)
 
@@ -234,10 +237,19 @@ export async function getCostReport(clusterFilter?: string[]): Promise<CostRepor
 
   const grouped: Record<string, ClusterCostSummary> = {}
 
+  const requestedNamespaces =
+    namespaceFilter && namespaceFilter.length > 0 ? new Set(namespaceFilter) : null
+
   for (const { clusterName, podStates } of clusterStates) {
     const namespaces: Record<string, NamespaceCostSummary> = {}
 
-    for (const podState of podStates.sort((a, b) => {
+    for (const podState of podStates
+      .filter((item) =>
+        requestedNamespaces
+          ? requestedNamespaces.has(`${item.cluster}:${item.namespace}`)
+          : true
+      )
+      .sort((a, b) => {
       if (a.namespace === b.namespace) {
         return a.pod.localeCompare(b.pod)
       }

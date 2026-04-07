@@ -1,13 +1,12 @@
 import { CostReporting } from '@/components/k8s/costreporting'
 import { SiteHeader } from '@/components/site-header'
-import { SidebarTrigger } from '@/components/ui/sidebar'
 
 export const dynamic = 'force-dynamic'
 
 export default async function CostReportingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ clusters?: string }>
+  searchParams: Promise<{ clusters?: string; namespaces?: string }>
 }) {
   const params = await searchParams
 
@@ -17,7 +16,7 @@ export default async function CostReportingPage({
         <SiteHeader title="Cost Reporting" />
 
         <div className="flex min-w-0 flex-1 flex-col space-y-6 py-4 sm:py-6">
-          <CostReporting clusters={params.clusters} />
+          <CostReporting clusters={params.clusters} namespaces={params.namespaces} />
         </div>
       </div>
     </>

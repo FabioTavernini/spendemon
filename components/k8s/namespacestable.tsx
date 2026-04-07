@@ -21,17 +21,33 @@ type NamespaceApiResponse = {
   clusters?: Record<string, NamespaceApiCluster>
 }
 
-export async function NamespacesTable({ clusters }: { clusters?: string }) {
+export async function NamespacesTable({
+  clusters,
+  namespaces: namespaceFilter,
+}: {
+  clusters?: string
+  namespaces?: string
+}) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+  const params = new URLSearchParams()
 
-  const url = clusters
-    ? `${baseUrl}/api/namespaces?clusters=${clusters}`
+  if (clusters) {
+    params.set("clusters", clusters)
+  }
+
+  if (namespaceFilter) {
+    params.set("namespaces", namespaceFilter)
+  }
+
+  const queryString = params.toString()
+  const url = queryString
+    ? `${baseUrl}/api/namespaces?${queryString}`
     : `${baseUrl}/api/namespaces`
 
   const res = await fetch(url, { cache: "no-store" })
   const data = (await res.json()) as NamespaceApiResponse
 
-  const namespaces: NamespaceRow[] = data?.clusters
+  const rows: NamespaceRow[] = data?.clusters
     ? Object.entries(data.clusters).flatMap(
         ([cluster, value]) =>
           (value.namespaces ?? []).map((namespace) => ({
@@ -54,7 +70,7 @@ export async function NamespacesTable({ clusters }: { clusters?: string }) {
         </TableHeader>
 
         <TableBody>
-          {namespaces.map((ns, i) => (
+          {rows.map((ns, i) => (
             <TableRow
               key={`${ns.cluster}-${ns.namespace}-${i}`}
               className="mb-3 block overflow-hidden rounded-lg border last:mb-0 md:mb-0 md:table-row md:rounded-none md:border-x-0 md:border-t-0"

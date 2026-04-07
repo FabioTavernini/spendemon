@@ -40,6 +40,7 @@ type ClusterResponse = {
 };
 
 type NamespacesResponse = {
+  totalClusters?: number;
   totalNamespaces?: number;
   namespaces?: Array<{
     cluster: string;
@@ -54,17 +55,38 @@ type NamespacesResponse = {
   >;
 };
 
-export async function SectionCards() {
+export async function SectionCards({
+  clusters: clusterFilter,
+  namespaces: namespaceFilter,
+}: {
+  clusters?: string
+  namespaces?: string
+}) {
   const baseUrl = process.env.BASE_URL || "http://localhost:3000";
   const fallbackClusters = await getClusters();
+  const params = new URLSearchParams();
+
+  if (clusterFilter) {
+    params.set("clusters", clusterFilter);
+  }
+
+  if (namespaceFilter) {
+    params.set("namespaces", namespaceFilter);
+  }
+
+  const queryString = params.toString();
+  const podsUrl = queryString ? `${baseUrl}/api/pods?${queryString}` : `${baseUrl}/api/pods`;
+  const namespacesUrl = queryString
+    ? `${baseUrl}/api/namespaces?${queryString}`
+    : `${baseUrl}/api/namespaces`;
 
   const [podsRes, clustersRes, namespacesRes] = await Promise.all([
-    fetch(`${baseUrl}/api/pods`, { cache: "no-store" }),
+    fetch(podsUrl, { cache: "no-store" }),
     fetch(`${baseUrl}/api/clusters`, { cache: "no-store" }),
-    fetch(`${baseUrl}/api/namespaces`, { cache: "no-store" }),
+    fetch(namespacesUrl, { cache: "no-store" }),
   ]);
 
-  const [pods, clusters, namespaces]: [
+  const [pods, clustersResponse, namespacesResponse]: [
     PodsResponse,
     ClusterResponse,
     NamespacesResponse
@@ -75,16 +97,20 @@ export async function SectionCards() {
   ]);
 
   const totalPods = pods?.totalPods ?? 0;
-  const totalClusters = clusters?.totalClusters ?? fallbackClusters.length;
+  const totalClusters =
+    pods?.totalClusters ??
+    namespacesResponse?.totalClusters ??
+    clustersResponse?.totalClusters ??
+    fallbackClusters.length;
 
   let totalNamespaces = 0;
 
-  if (typeof namespaces?.totalNamespaces === "number") {
-    totalNamespaces = namespaces.totalNamespaces;
-  } else if (Array.isArray(namespaces?.namespaces)) {
-    totalNamespaces = namespaces.namespaces.length;
-  } else if (namespaces?.clusters) {
-    totalNamespaces = Object.values(namespaces.clusters).reduce((acc, cluster) => {
+  if (typeof namespacesResponse?.totalNamespaces === "number") {
+    totalNamespaces = namespacesResponse.totalNamespaces;
+  } else if (Array.isArray(namespacesResponse?.namespaces)) {
+    totalNamespaces = namespacesResponse.namespaces.length;
+  } else if (namespacesResponse?.clusters) {
+    totalNamespaces = Object.values(namespacesResponse.clusters).reduce((acc, cluster) => {
       if (Array.isArray(cluster.namespaces)) {
         return acc + cluster.namespaces.length;
       }
