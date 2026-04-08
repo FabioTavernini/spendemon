@@ -1,4 +1,4 @@
-import { Coins, Settings } from 'lucide-react'
+import { Binoculars, Coins, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
@@ -61,7 +61,7 @@ export async function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/">
-                  <Settings className="h-4 w-4 shrink-0" />
+                  <Binoculars className="h-4 w-4 shrink-0" />
                   <span className="">Overview</span>
                 </Link>
               </SidebarMenuButton>

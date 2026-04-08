@@ -1,6 +1,6 @@
 clusters:
-  - name: cluster-2
-    prometheusUrl: http://localhost:9090
+  - name: cluster-1
+    prometheusUrl: http://localhost:8080
 
 costs:
   cpuCore: 10
@@ -14,3 +14,6 @@ oidc:
   clientSecret: ${OIDC_CLIENT_SECRET}
   adminGroup: admin
   viewerGroup: viewer
+
+sharednamespaces:
+  - kube-system

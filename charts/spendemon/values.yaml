@@ -45,6 +45,8 @@ settings:
     cpuCore: 10
     memoryGb: 20
     storageGb: 5
+  sharednamespaces:
+    - kube-system
   oidc:
     enabled: false
     url: ""

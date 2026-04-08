@@ -18,6 +18,11 @@ costs:
   memoryGb: {{ .Values.settings.costs.memoryGb }}
   storageGb: {{ .Values.settings.costs.storageGb }}
 
+sharednamespaces:
+{{- range .Values.settings.sharednamespaces }}
+  - {{ . | quote }}
+{{- end }}
+
 oidc:
   enabled: {{ .Values.settings.oidc.enabled }}
 {{- if .Values.settings.oidc.enabled }}

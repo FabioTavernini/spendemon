@@ -18,6 +18,10 @@ costs:
   memoryGb: 20
   storageGb: 5
 
+sharednamespaces:
+  - kube-system
+  - monitoring
+
 oidc:
   enabled: false
   issuer: ${OIDC_ISSUER}
@@ -68,6 +72,23 @@ If you want authentication, enable the `oidc` block.
 - `viewerGroup`: group name that should receive read-only access
 
 The example uses environment variable placeholders for sensitive values. That is the recommended approach so secrets are not committed into source control.
+
+## Shared namespace configuration
+
+Use `sharednamespaces` when some namespaces represent platform or shared overhead that should be spread across the rest of the namespaces.
+
+- each entry is a namespace name such as `kube-system` or `monitoring`
+- matching namespaces are applied per cluster
+- their cost is redistributed evenly across the remaining namespaces in that cluster
+
+Example:
+
+```yaml
+sharednamespaces:
+  - kube-system
+  - istio-system
+  - monitoring
+```
 
 ## Practical tips
 

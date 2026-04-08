@@ -1,116 +1,140 @@
-'use client'
+"use client";
 
-import { startTransition, useEffect, useState } from 'react'
+import { startTransition, useEffect, useState } from "react";
 
-import { Input } from '@/components/ui/input'
+import { Input } from "@/components/ui/input";
 import {
   parseCostsFromSettings,
+  parseSharedNamespacesFromSettings,
   type CostSettings,
   upsertCostsInSettings,
-} from '@/lib/settings-config'
+  upsertSharedNamespacesInSettings,
+} from "@/lib/settings-config";
 
 type SettingsEditorProps = {
-  initialContent: string
-  initialCosts: CostSettings
-  initialPath: string
-}
+  initialContent: string;
+  initialCosts: CostSettings;
+  initialSharedNamespaces: string[];
+  initialPath: string;
+};
 
-type CostField = keyof CostSettings
+type CostField = keyof CostSettings;
 
 const COST_FIELDS: Array<{
-  key: CostField
-  label: string
-  description: string
-  step: string
+  key: CostField;
+  label: string;
+  description: string;
+  step: string;
 }> = [
   {
-    key: 'cpuCore',
-    label: 'Cost per CPU core',
-    description: 'Used against requested CPU cores per pod.',
-    step: '0.01',
+    key: "cpuCore",
+    label: "Cost per CPU core",
+    description: "Used against requested CPU cores per pod.",
+    step: "0.01",
   },
   {
-    key: 'memoryGb',
-    label: 'Cost per GB RAM',
-    description: 'Used against requested memory converted to GB.',
-    step: '0.01',
+    key: "memoryGb",
+    label: "Cost per GB RAM",
+    description: "Used against requested memory converted to GB.",
+    step: "0.01",
   },
   {
-    key: 'storageGb',
-    label: 'Cost per GB storage',
-    description: 'Used against requested ephemeral storage converted to GB.',
-    step: '0.01',
+    key: "storageGb",
+    label: "Cost per GB storage",
+    description: "Used against requested ephemeral storage converted to GB.",
+    step: "0.01",
   },
-]
+];
 
 export function SettingsEditor({
   initialContent,
   initialCosts,
+  initialSharedNamespaces,
   initialPath,
 }: SettingsEditorProps) {
-  const [content, setContent] = useState(initialContent)
-  const [costs, setCosts] = useState<CostSettings>(initialCosts)
-  const [status, setStatus] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
+  const [content, setContent] = useState(initialContent);
+  const [costs, setCosts] = useState<CostSettings>(initialCosts);
+  const [sharedNamespaces, setSharedNamespaces] = useState<string[]>(
+    initialSharedNamespaces,
+  );
+  const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     try {
-      setCosts(parseCostsFromSettings(content))
+      setCosts(parseCostsFromSettings(content));
+      setSharedNamespaces(parseSharedNamespacesFromSettings(content));
     } catch {
       // Ignore invalid intermediate YAML while the user is typing.
     }
-  }, [content])
+  }, [content]);
 
   function updateCostField(field: CostField, value: string) {
-    const nextValue = value === '' ? 0 : Number(value)
+    const nextValue = value === "" ? 0 : Number(value);
 
     if (!Number.isFinite(nextValue) || nextValue < 0) {
-      return
+      return;
     }
 
     const nextCosts = {
       ...costs,
       [field]: nextValue,
-    }
+    };
 
-    setCosts(nextCosts)
-    setContent((currentContent) => upsertCostsInSettings(currentContent, nextCosts))
-    setStatus(null)
-    setError(null)
+    setCosts(nextCosts);
+    setContent((currentContent) =>
+      upsertCostsInSettings(currentContent, nextCosts),
+    );
+    setStatus(null);
+    setError(null);
+  }
+
+  function updateSharedNamespaces(value: string) {
+    const nextSharedNamespaces = value
+      .split("\n")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    setSharedNamespaces(nextSharedNamespaces);
+    setContent((currentContent) =>
+      upsertSharedNamespacesInSettings(currentContent, nextSharedNamespaces),
+    );
+    setStatus(null);
+    setError(null);
   }
 
   async function saveSettings() {
-    setIsSaving(true)
-    setStatus(null)
-    setError(null)
+    setIsSaving(true);
+    setStatus(null);
+    setError(null);
 
     try {
-      const response = await fetch('/api/settings', {
-        method: 'PUT',
+      const response = await fetch("/api/settings", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ content }),
-      })
+      });
 
-      const payload = (await response.json()) as { error?: string }
+      const payload = (await response.json()) as { error?: string };
 
       if (!response.ok) {
-        throw new Error(payload.error ?? 'Failed to save settings.')
+        throw new Error(payload.error ?? "Failed to save settings.");
       }
 
       startTransition(() => {
-        setStatus('Saved settings.yaml successfully.')
-      })
+        setStatus("Saved settings.yaml successfully.");
+      });
     } catch (saveError) {
       setError(
         saveError instanceof Error
           ? saveError.message
-          : 'Failed to save settings.'
-      )
+          : "Failed to save settings.",
+      );
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
   }
 
@@ -125,6 +149,10 @@ export function SettingsEditor({
           The optional <code>oidc:</code> block lets you enable or disable OIDC
           authorization for the app.
         </p>
+        <p className="text-sm text-muted-foreground">
+          Namespaces listed in <code>sharednamespaces:</code> have their costs
+          split evenly across the remaining namespaces in the same cluster.
+        </p>
         <p className="font-mono text-xs text-muted-foreground">{initialPath}</p>
       </div>
 
@@ -132,7 +160,8 @@ export function SettingsEditor({
         <div className="space-y-1">
           <h2 className="text-lg font-semibold">Cost Inputs</h2>
           <p className="text-sm text-muted-foreground">
-            These values are written into the top-level <code>costs:</code> block in
+            These values are written into the top-level <code>costs:</code>{" "}
+            block in
             <code> settings.yaml</code>.
           </p>
         </div>
@@ -146,7 +175,9 @@ export function SettingsEditor({
                 step={field.step}
                 type="number"
                 value={costs[field.key]}
-                onChange={(event) => updateCostField(field.key, event.target.value)}
+                onChange={(event) =>
+                  updateCostField(field.key, event.target.value)
+                }
               />
               <span className="block text-xs text-muted-foreground">
                 {field.description}
@@ -156,12 +187,31 @@ export function SettingsEditor({
         </div>
       </section>
 
+      <section className="rounded-xl border bg-card p-5">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold">Shared Namespaces</h2>
+          <p className="text-sm text-muted-foreground">
+            Enter one namespace name per line. Matching namespaces are treated
+            as shared overhead and redistributed evenly to the other namespaces
+            in the same cluster.
+          </p>
+        </div>
+
+        <textarea
+          className="mt-4 min-h-40 w-full resize-y rounded-md border border-border bg-background p-4 font-mono text-sm outline-none"
+          placeholder={`kube-system\nmonitoring\ningress-nginx`}
+          spellCheck={false}
+          value={sharedNamespaces.join("\n")}
+          onChange={(event) => updateSharedNamespaces(event.target.value)}
+        />
+      </section>
+
       <section className="space-y-3">
         <div className="space-y-1">
           <h2 className="text-lg font-semibold">Raw YAML</h2>
           <p className="text-sm text-muted-foreground">
-            Manual edits are still supported. When the YAML remains valid, the pricing
-            fields above will refresh automatically.
+            Manual edits are still supported. When the YAML remains valid, the
+            pricing fields above will refresh automatically.
           </p>
         </div>
 
@@ -170,9 +220,9 @@ export function SettingsEditor({
           spellCheck={false}
           value={content}
           onChange={(event) => {
-            setContent(event.target.value)
-            setStatus(null)
-            setError(null)
+            setContent(event.target.value);
+            setStatus(null);
+            setError(null);
           }}
         />
       </section>
@@ -184,12 +234,12 @@ export function SettingsEditor({
           onClick={saveSettings}
           type="button"
         >
-          {isSaving ? 'Saving...' : 'Save Settings'}
+          {isSaving ? "Saving..." : "Save Settings"}
         </button>
 
         {status ? <p className="text-sm text-emerald-600">{status}</p> : null}
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
       </div>
     </div>
-  )
+  );
 }

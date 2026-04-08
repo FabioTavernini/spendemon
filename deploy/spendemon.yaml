@@ -13,6 +13,9 @@ data:
       memoryGb: 20
       storageGb: 5
 
+    sharednamespaces:
+      - "kube-system"
+
     oidc:
       enabled: false
       issuer: ""
