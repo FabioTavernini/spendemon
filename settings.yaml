@@ -1,6 +1,6 @@
 clusters:
   - name: cluster-1
-    prometheusUrl: http://localhost:9090
+    prometheusUrl: http://prometheus-service.prometheus.svc.cluster.local:80
   - name: cluster-2
     prometheusUrl: http://localhost:9090
 

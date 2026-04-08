@@ -7,10 +7,10 @@ export function SiteHeader({ title = "Overview" }: { title?: string }) {
         <h1 className="text-base font-medium">{title}</h1>
         <div className="ml-auto flex items-center gap-2">
 
-          <Link href={"/wiki"} >
+          <Link href={"https://spendemon.netlify.app"} target="_blank" >
 
             <Button variant="outline" size="sm" className="hover:cursor-pointer">
-              Wiki
+              Docs
             </Button>
           </Link>
         </div>

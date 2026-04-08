@@ -42,13 +42,13 @@ export function AppSidebar() {
         <Separator className="my-4" />
 
         <SidebarContent>
-          <SidebarMenu className="px-2">
-            <SidebarMenuItem>
+          <SidebarMenu className="px-2 mt-2">
+            <SidebarMenuItem className="mt-2">
               <Suspense fallback={null}>
                 <ClusterSelect />
               </Suspense>
             </SidebarMenuItem>
-            <SidebarMenuItem>
+            <SidebarMenuItem className="mt-2">
               <Suspense fallback={null}>
                 <NamespaceSelect />
               </Suspense>
