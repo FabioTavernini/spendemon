@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Separator } from "../ui/separator"
+import { fetchInternalApi } from "@/lib/internal-api"
 
 type PodRow = {
   cluster: string
@@ -45,7 +46,6 @@ export async function PodsTable({
   clusters?: string
   namespaces?: string
 }) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
   const params = new URLSearchParams()
 
   if (clusters) {
@@ -58,10 +58,10 @@ export async function PodsTable({
 
   const queryString = params.toString()
   const url = queryString
-    ? `${baseUrl}/api/pods?${queryString}`
-    : `${baseUrl}/api/pods`
+    ? `/api/pods?${queryString}`
+    : `/api/pods`
 
-  const res = await fetch(url, { cache: "no-store" })
+  const res = await fetchInternalApi(url, { cache: "no-store" })
   const data: PodsApiResponse = await res.json()
 
   const pods: PodRow[] = data?.clusters

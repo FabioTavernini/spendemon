@@ -1,6 +1,6 @@
 clusters:
-  - name: cluster-1
-    prometheusUrl: http://prometheus-service.prometheus.svc.cluster.local:80
+#  - name: cluster-1
+#    prometheusUrl: http://prometheus-service.prometheus.svc.cluster.local:80
   - name: cluster-2
     prometheusUrl: http://localhost:9090
 
@@ -8,3 +8,11 @@ costs:
   cpuCore: 10
   memoryGb: 20
   storageGb: 5
+
+oidc:
+  enabled: false
+  issuer: 'http://localhost:8080/realms/spendemon'
+  clientId: 'spendemon'
+  clientSecret: ''
+  adminGroup: admin
+  viewerGroup: viewer

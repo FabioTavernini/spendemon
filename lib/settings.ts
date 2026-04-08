@@ -1,4 +1,5 @@
 import { access, readFile, writeFile } from 'node:fs/promises'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { parseSettings } from '@/lib/settings-config'
@@ -16,6 +17,14 @@ costs:
   cpuCore: 0
   memoryGb: 0
   storageGb: 0
+
+oidc:
+  enabled: false
+  issuer: ''
+  clientId: ''
+  clientSecret: ''
+  adminGroup: admin
+  viewerGroup: viewer
 `
 
 export async function ensureSettingsFile(): Promise<void> {
@@ -29,6 +38,17 @@ export async function ensureSettingsFile(): Promise<void> {
 export async function readSettingsFile(): Promise<string> {
   await ensureSettingsFile()
   return readFile(SETTINGS_FILE, 'utf8')
+}
+
+export function ensureSettingsFileSync(): void {
+  if (!existsSync(SETTINGS_FILE)) {
+    writeFileSync(SETTINGS_FILE, DEFAULT_SETTINGS, 'utf8')
+  }
+}
+
+export function readSettingsFileSync(): string {
+  ensureSettingsFileSync()
+  return readFileSync(SETTINGS_FILE, 'utf8')
 }
 
 export async function writeSettingsFile(content: string): Promise<void> {

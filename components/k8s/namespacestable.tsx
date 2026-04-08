@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Separator } from "@/components/ui/separator"
+import { fetchInternalApi } from "@/lib/internal-api"
 
 type NamespaceRow = {
   cluster: string
@@ -28,7 +29,6 @@ export async function NamespacesTable({
   clusters?: string
   namespaces?: string
 }) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
   const params = new URLSearchParams()
 
   if (clusters) {
@@ -41,10 +41,10 @@ export async function NamespacesTable({
 
   const queryString = params.toString()
   const url = queryString
-    ? `${baseUrl}/api/namespaces?${queryString}`
-    : `${baseUrl}/api/namespaces`
+    ? `/api/namespaces?${queryString}`
+    : `/api/namespaces`
 
-  const res = await fetch(url, { cache: "no-store" })
+  const res = await fetchInternalApi(url, { cache: "no-store" })
   const data = (await res.json()) as NamespaceApiResponse
 
   const rows: NamespaceRow[] = data?.clusters

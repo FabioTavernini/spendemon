@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 
 import { getClusters } from "@/lib/clusters";
+import { fetchInternalApi } from "@/lib/internal-api";
 
 type PodsResponse = {
   totalPods: number;
@@ -62,7 +63,6 @@ export async function SectionCards({
   clusters?: string
   namespaces?: string
 }) {
-  const baseUrl = process.env.BASE_URL || "http://localhost:3000";
   const fallbackClusters = await getClusters();
   const params = new URLSearchParams();
 
@@ -75,15 +75,15 @@ export async function SectionCards({
   }
 
   const queryString = params.toString();
-  const podsUrl = queryString ? `${baseUrl}/api/pods?${queryString}` : `${baseUrl}/api/pods`;
+  const podsUrl = queryString ? `/api/pods?${queryString}` : `/api/pods`;
   const namespacesUrl = queryString
-    ? `${baseUrl}/api/namespaces?${queryString}`
-    : `${baseUrl}/api/namespaces`;
+    ? `/api/namespaces?${queryString}`
+    : `/api/namespaces`;
 
   const [podsRes, clustersRes, namespacesRes] = await Promise.all([
-    fetch(podsUrl, { cache: "no-store" }),
-    fetch(`${baseUrl}/api/clusters`, { cache: "no-store" }),
-    fetch(namespacesUrl, { cache: "no-store" }),
+    fetchInternalApi(podsUrl, { cache: "no-store" }),
+    fetchInternalApi('/api/clusters', { cache: "no-store" }),
+    fetchInternalApi(namespacesUrl, { cache: "no-store" }),
   ]);
 
   const [pods, clustersResponse, namespacesResponse]: [

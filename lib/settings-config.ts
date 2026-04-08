@@ -12,6 +12,16 @@ export type CostSettings = {
 export type ParsedSettings = {
   clusters: ClusterSettings[]
   costs: CostSettings
+  oidc: OidcSettings
+}
+
+export type OidcSettings = {
+  enabled: boolean
+  issuer: string
+  clientId: string
+  clientSecret: string
+  adminGroup: string
+  viewerGroup: string
 }
 
 type ParsedProperty = {
@@ -25,6 +35,17 @@ function isClusterKey(key: string): key is keyof ClusterSettings {
 
 function isCostKey(key: string): key is keyof CostSettings {
   return key === 'cpuCore' || key === 'memoryGb' || key === 'storageGb'
+}
+
+function isOidcKey(key: string): key is keyof OidcSettings {
+  return (
+    key === 'enabled' ||
+    key === 'issuer' ||
+    key === 'clientId' ||
+    key === 'clientSecret' ||
+    key === 'adminGroup' ||
+    key === 'viewerGroup'
+  )
 }
 
 function normalizeScalar(value: string): string {
@@ -80,6 +101,18 @@ function parseNonNegativeNumber(value: string, key: string): number {
   }
 
   return parsed
+}
+
+function parseBoolean(value: string, key: string): boolean {
+  if (value === 'true') {
+    return true
+  }
+
+  if (value === 'false') {
+    return false
+  }
+
+  throw new Error(`"${key}" must be either true or false.`)
 }
 
 export function parseClustersFromSettings(content: string): ClusterSettings[] {
@@ -237,7 +270,86 @@ export function parseSettings(content: string): ParsedSettings {
   return {
     clusters: parseClustersFromSettings(content),
     costs: parseCostsFromSettings(content),
+    oidc: parseOidcFromSettings(content),
   }
+}
+
+export function parseOidcFromSettings(content: string): OidcSettings {
+  const lines = content.replace(/\r\n/g, '\n').split('\n')
+  const oidcIndex = findTopLevelSectionIndex(lines, 'oidc')
+
+  if (oidcIndex === -1) {
+    return {
+      enabled: false,
+      issuer: '',
+      clientId: '',
+      clientSecret: '',
+      adminGroup: 'admin',
+      viewerGroup: 'viewer',
+    }
+  }
+
+  const oidcIndent = getIndentation(lines[oidcIndex])
+  const parsedOidc: Partial<OidcSettings> = {}
+
+  for (let index = oidcIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index]
+    const trimmed = line.trim()
+
+    if (!trimmed || trimmed.startsWith('#')) {
+      continue
+    }
+
+    const indentation = getIndentation(line)
+
+    if (indentation <= oidcIndent) {
+      break
+    }
+
+    const property = parseProperty(trimmed)
+
+    if (!property) {
+      throw new Error(`Invalid OIDC property on line ${index + 1}.`)
+    }
+
+    if (!isOidcKey(property.key)) {
+      throw new Error(`Unknown OIDC property "${property.key}" on line ${index + 1}.`)
+    }
+
+    if (property.key === 'enabled') {
+      parsedOidc.enabled = parseBoolean(property.value, property.key)
+      continue
+    }
+
+    parsedOidc[property.key] = property.value
+  }
+
+  const oidc = {
+    enabled: parsedOidc.enabled ?? false,
+    issuer: parsedOidc.issuer ?? '',
+    clientId: parsedOidc.clientId ?? '',
+    clientSecret: parsedOidc.clientSecret ?? '',
+    adminGroup: parsedOidc.adminGroup ?? 'admin',
+    viewerGroup: parsedOidc.viewerGroup ?? 'viewer',
+  }
+
+  if (oidc.enabled) {
+    const missing = [
+      !oidc.issuer && 'issuer',
+      !oidc.clientId && 'clientId',
+      !oidc.clientSecret && 'clientSecret',
+      !oidc.adminGroup && 'adminGroup',
+      !oidc.viewerGroup && 'viewerGroup',
+    ].filter(Boolean)
+
+    if (missing.length > 0) {
+      throw new Error(
+        `OIDC is enabled but these settings are missing: ${missing.join(', ')}.`
+      )
+    }
+  }
+
+  return oidc
 }
 
 export function stringifyCostsSection(costs: CostSettings): string {

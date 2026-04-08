@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { requireApiRole } from '@/lib/authorization'
 import {
   getSettingsFilePath,
   parseSettings,
@@ -11,6 +12,12 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  const session = await requireApiRole('admin')
+
+  if (session instanceof NextResponse) {
+    return session
+  }
+
   try {
     const content = await readSettingsFile()
     const settings = parseSettings(content)
@@ -21,6 +28,7 @@ export async function GET() {
         content,
         clusters: settings.clusters,
         costs: settings.costs,
+        oidc: settings.oidc,
       },
       { status: 200 }
     )
@@ -35,6 +43,12 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
+  const session = await requireApiRole('admin')
+
+  if (session instanceof NextResponse) {
+    return session
+  }
+
   try {
     const body = (await req.json()) as { content?: string }
 
@@ -54,6 +68,7 @@ export async function PUT(req: Request) {
         path: getSettingsFilePath(),
         clusters: settings.clusters,
         costs: settings.costs,
+        oidc: settings.oidc,
       },
       { status: 200 }
     )

@@ -121,6 +121,10 @@ export function SettingsEditor({
         <p className="text-sm text-muted-foreground">
           Configure pricing inputs and edit the raw YAML used by the app.
         </p>
+        <p className="text-sm text-muted-foreground">
+          The optional <code>oidc:</code> block lets you enable or disable Keycloak
+          authorization for the app.
+        </p>
         <p className="font-mono text-xs text-muted-foreground">{initialPath}</p>
       </div>
 

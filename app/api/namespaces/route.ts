@@ -1,6 +1,7 @@
 // app/api/namespaces/route.ts
 import { NextResponse } from 'next/server'
 
+import { requireApiRole } from '@/lib/authorization'
 import { getClusters } from '@/lib/clusters'
 
 export const runtime = 'nodejs'
@@ -25,6 +26,12 @@ type PrometheusResponse = {
 }
 
 export async function GET(req: Request) {
+  const session = await requireApiRole('viewer')
+
+  if (session instanceof NextResponse) {
+    return session
+  }
+
   try {
     const { searchParams } = new URL(req.url)
     const clustersParam = searchParams.get('clusters')
