@@ -81,7 +81,7 @@ function getIndentation(line: string): number {
   return line.length - line.trimStart().length
 }
 
-function parseProperty(text: string): ParsedProperty | null {
+function parseProperty(text: string, options?: { resolveEnv?: boolean }): ParsedProperty | null {
   const separatorIndex = text.indexOf(':')
 
   if (separatorIndex === -1) {
@@ -97,7 +97,10 @@ function parseProperty(text: string): ParsedProperty | null {
 
   return {
     key,
-    value: resolveEnvReferences(normalizeScalar(value)),
+    value:
+      options?.resolveEnv === false
+        ? normalizeScalar(value)
+        : resolveEnvReferences(normalizeScalar(value)),
   }
 }
 
@@ -318,7 +321,7 @@ export function parseOidcFromSettings(content: string): OidcSettings {
       break
     }
 
-    const property = parseProperty(trimmed)
+    const property = parseProperty(trimmed, { resolveEnv: false })
 
     if (!property) {
       throw new Error(`Invalid OIDC property on line ${index + 1}.`)
@@ -346,6 +349,12 @@ export function parseOidcFromSettings(content: string): OidcSettings {
   }
 
   if (oidc.enabled) {
+    oidc.issuer = resolveEnvReferences(oidc.issuer)
+    oidc.clientId = resolveEnvReferences(oidc.clientId)
+    oidc.clientSecret = resolveEnvReferences(oidc.clientSecret)
+    oidc.adminGroup = resolveEnvReferences(oidc.adminGroup)
+    oidc.viewerGroup = resolveEnvReferences(oidc.viewerGroup)
+
     const missing = [
       !oidc.issuer && 'issuer',
       !oidc.clientId && 'clientId',
