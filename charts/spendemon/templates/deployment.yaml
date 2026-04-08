@@ -24,6 +24,24 @@ spec:
         - name: spendemon
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.settings.oidc.enabled }}
+          env:
+            - name: OIDC_ISSUER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "settings.oidc.secretRef.name is required when OIDC is enabled" .Values.settings.oidc.secretRef.name }}
+                  key: {{ required "settings.oidc.secretRef.issuerKey is required when OIDC is enabled" .Values.settings.oidc.secretRef.issuerKey }}
+            - name: OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "settings.oidc.secretRef.name is required when OIDC is enabled" .Values.settings.oidc.secretRef.name }}
+                  key: {{ required "settings.oidc.secretRef.clientIdKey is required when OIDC is enabled" .Values.settings.oidc.secretRef.clientIdKey }}
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "settings.oidc.secretRef.name is required when OIDC is enabled" .Values.settings.oidc.secretRef.name }}
+                  key: {{ required "settings.oidc.secretRef.clientSecretKey is required when OIDC is enabled" .Values.settings.oidc.secretRef.clientSecretKey }}
+          {{- end }}
           ports:
             - containerPort: 3000
           volumeMounts:

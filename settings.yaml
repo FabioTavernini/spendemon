@@ -9,8 +9,8 @@ costs:
 
 oidc:
   enabled: false
-  issuer: ${KEYCLOAK_ISSUER}
-  clientId: ${KEYCLOAK_CLIENT_ID}
-  clientSecret: ${KEYCLOAK_CLIENT_SECRET}
+  issuer: ${OIDC_ISSUER}
+  clientId: ${OIDC_CLIENT_ID}
+  clientSecret: ${OIDC_CLIENT_SECRET}
   adminGroup: admin
   viewerGroup: viewer

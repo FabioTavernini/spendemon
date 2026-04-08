@@ -4,4 +4,4 @@ metadata:
   name: {{ include "spendemon.fullname" . }}-settings
 data:
   settings.yaml: |
-{{ .Values.settings.content | indent 4 }}
+{{ include "spendemon.settings" . | indent 4 }}

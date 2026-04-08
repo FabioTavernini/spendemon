@@ -36,17 +36,21 @@ resources: {}
 
 settings:
   mountPath: "/app/settings.yaml"
-  content: |
-    clusters:
-      - name: cluster-1
-        prometheusUrl: http://prometheus-service.prometheus.svc.cluster.local:80
-      # - name: cluster-2
-      #   prometheusUrl: http://localhost:9090
-
-    costs:
-      cpuCore: 10
-      memoryGb: 20
-      storageGb: 5
-
-
-
+  clusters:
+    - name: cluster-1
+      prometheusUrl: http://prometheus-service.prometheus.svc.cluster.local:80
+    # - name: cluster-2
+    #   prometheusUrl: http://localhost:9090
+  costs:
+    cpuCore: 10
+    memoryGb: 20
+    storageGb: 5
+  oidc:
+    enabled: false
+    adminGroup: admin
+    viewerGroup: viewer
+    secretRef:
+      name: ""
+      issuerKey: issuer
+      clientIdKey: clientId
+      clientSecretKey: clientSecret
