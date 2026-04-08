@@ -1,6 +1,4 @@
 clusters:
-#  - name: cluster-1
-#    prometheusUrl: http://prometheus-service.prometheus.svc.cluster.local:80
   - name: cluster-2
     prometheusUrl: http://localhost:9090
 
@@ -11,8 +9,8 @@ costs:
 
 oidc:
   enabled: false
-  issuer: 'http://localhost:8080/realms/spendemon'
-  clientId: 'spendemon'
-  clientSecret: ''
+  issuer: ${KEYCLOAK_ISSUER}
+  clientId: ${KEYCLOAK_CLIENT_ID}
+  clientSecret: ${KEYCLOAK_CLIENT_SECRET}
   adminGroup: admin
   viewerGroup: viewer

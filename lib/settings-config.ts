@@ -65,6 +65,18 @@ function normalizeScalar(value: string): string {
   return trimmed
 }
 
+function resolveEnvReferences(value: string): string {
+  return value.replace(/\$\{([A-Z0-9_]+)\}/gi, (_match, envKey: string) => {
+    const envValue = process.env[envKey]
+
+    if (typeof envValue !== 'string') {
+      throw new Error(`Environment variable "${envKey}" is not set.`)
+    }
+
+    return envValue
+  })
+}
+
 function getIndentation(line: string): number {
   return line.length - line.trimStart().length
 }
@@ -85,7 +97,7 @@ function parseProperty(text: string): ParsedProperty | null {
 
   return {
     key,
-    value: normalizeScalar(value),
+    value: resolveEnvReferences(normalizeScalar(value)),
   }
 }
 
