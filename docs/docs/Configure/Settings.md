@@ -1,0 +1,27 @@
+---
+sidebar_position: 1
+---
+
+## settings.yaml file
+
+```yaml
+
+clusters:
+  - name: cluster-2
+    prometheusUrl: http://localhost:9090
+
+costs:
+  cpuCore: 10
+  memoryGb: 20
+  storageGb: 5
+
+oidc:
+  enabled: false
+  issuer: ${OIDC_ISSUER}
+  clientId: ${OIDC_CLIENT_ID}
+  clientSecret: ${OIDC_CLIENT_SECRET}
+  adminGroup: admin
+  viewerGroup: viewer
+
+
+```
