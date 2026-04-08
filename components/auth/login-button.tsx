@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button'
 
 export function LoginButton() {
   return (
-    <Button onClick={() => signIn('keycloak', { callbackUrl: '/' })} type="button">
-      Sign in with Keycloak
+    <Button onClick={() => signIn('oidc', { callbackUrl: '/' })} type="button">
+      Sign in with OIDC
     </Button>
   )
 }

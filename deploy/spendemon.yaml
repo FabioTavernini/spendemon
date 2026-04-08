@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spendemon-settings
+data:
+  settings.yaml: |
+    clusters:
+      - name: "cluster-1"
+        prometheusUrl: "http://prometheus-service.prometheus.svc.cluster.local:80"
+
+    costs:
+      cpuCore: 10
+      memoryGb: 20
+      storageGb: 5
+
+    oidc:
+      enabled: false
+      issuer: ""
+      clientId: ""
+      clientSecret: ""
+      adminGroup: "admin"
+      viewerGroup: "viewer"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spendemon
+  labels:
+    app: spendemon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spendemon
+  template:
+    metadata:
+      labels:
+        app: spendemon
+    spec:
+      containers:
+        - name: spendemon
+          image: ghcr.io/fabiotavernini/spendemon:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: settings
+              mountPath: /app/settings.yaml
+              subPath: settings.yaml
+      volumes:
+        - name: settings
+          configMap:
+            name: spendemon-settings
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spendemon
+  labels:
+    app: spendemon
+spec:
+  type: ClusterIP
+  selector:
+    app: spendemon
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000

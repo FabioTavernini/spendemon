@@ -24,7 +24,7 @@ export default async function LoginPage() {
         <div className="space-y-3">
           <h1 className="text-2xl font-semibold">Sign in</h1>
           <p className="text-sm text-muted-foreground">
-            Use your Keycloak account to access Spendemon.
+            Use your OIDC account to access Spendemon.
           </p>
         </div>
 

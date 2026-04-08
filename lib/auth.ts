@@ -1,7 +1,7 @@
 import type { NextAuthOptions, Session } from 'next-auth'
 import { getServerSession } from 'next-auth'
-import KeycloakProvider from 'next-auth/providers/keycloak'
 import type { JWT } from 'next-auth/jwt'
+import type { OAuthConfig } from 'next-auth/providers/oauth'
 
 import { parseOidcFromSettings, readSettingsFileSync, type OidcSettings } from '@/lib/settings'
 
@@ -11,11 +11,12 @@ type AuthGuardResult =
   | { ok: true; session: Session }
   | { ok: false; reason: 'disabled' | 'unauthenticated' | 'unauthorized' }
 
-type KeycloakProfile = {
+type OidcProfile = {
   sub?: string
   name?: string
   email?: string
   preferred_username?: string
+  picture?: string
   groups?: unknown
   roles?: unknown
   realm_access?: {
@@ -80,7 +81,7 @@ function parseJwtPayload(token: string | undefined): JwtPayload | null {
 }
 
 function extractMembershipsFromClaims(
-  claims: Partial<KeycloakProfile> | JwtPayload | null | undefined,
+  claims: Partial<OidcProfile> | JwtPayload | null | undefined,
   clientId: string
 ): string[] {
   if (!claims) {
@@ -130,7 +131,7 @@ function userHasMembership(memberships: string[], target: string): boolean {
 
 function getMembershipsFromAuthContext(params: {
   token: JWT
-  profile?: KeycloakProfile
+  profile?: OidcProfile
   account?: { id_token?: string | null; access_token?: string | null } | null
   clientId: string
 }): string[] {
@@ -168,6 +169,29 @@ export function isOidcEnabled(): boolean {
   return getOidcSettings().enabled
 }
 
+function createOidcProvider(oidc: OidcSettings): OAuthConfig<OidcProfile> {
+  return {
+    id: 'oidc',
+    name: 'OIDC',
+    wellKnown: `${oidc.issuer}/.well-known/openid-configuration`,
+    type: 'oauth',
+    authorization: { params: { scope: 'openid email profile' } },
+    checks: ['pkce', 'state'],
+    idToken: true,
+    issuer: oidc.issuer,
+    clientId: oidc.clientId,
+    clientSecret: oidc.clientSecret,
+    profile(profile) {
+      return {
+        id: profile.sub ?? '',
+        name: profile.name ?? profile.preferred_username ?? profile.email ?? profile.sub ?? 'User',
+        email: profile.email ?? null,
+        image: profile.picture ?? null,
+      }
+    },
+  }
+}
+
 export function getNextAuthOptions(): NextAuthOptions {
   const oidc = getOidcSettings()
 
@@ -187,11 +211,7 @@ export function getNextAuthOptions(): NextAuthOptions {
   return {
     secret: getAuthSecret(),
     providers: [
-      KeycloakProvider({
-        issuer: oidc.issuer,
-        clientId: oidc.clientId,
-        clientSecret: oidc.clientSecret,
-      }),
+      createOidcProvider(oidc),
     ],
     session: {
       strategy: 'jwt',
@@ -203,7 +223,7 @@ export function getNextAuthOptions(): NextAuthOptions {
       async jwt({ token, profile, account }) {
         const memberships = getMembershipsFromAuthContext({
           token,
-          profile: profile as KeycloakProfile | undefined,
+          profile: profile as OidcProfile | undefined,
           account: account
             ? {
                 id_token: typeof account.id_token === 'string' ? account.id_token : null,
@@ -217,7 +237,7 @@ export function getNextAuthOptions(): NextAuthOptions {
         token.groups = memberships
 
         if (process.env.NODE_ENV !== 'production' && memberships.length > 0) {
-          console.log('Resolved Keycloak memberships:', memberships)
+          console.log('Resolved OIDC memberships:', memberships)
         }
 
         return token

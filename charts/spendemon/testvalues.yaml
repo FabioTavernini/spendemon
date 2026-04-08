@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/fabiotavernini/spendemon
-  tag: "0.0.2"
+  tag: "latest"
   pullPolicy: IfNotPresent
   imagePullSecret: "ghcr-login-secret"
 
@@ -46,11 +46,13 @@ settings:
     memoryGb: 20
     storageGb: 5
   oidc:
-    enabled: false
+    enabled: true
+    url: "https://spendemon.tavernini.online"
     adminGroup: admin
     viewerGroup: viewer
     secretRef:
-      name: ""
+      name: "oidc-secret"
       issuerKey: issuer
       clientIdKey: clientId
       clientSecretKey: clientSecret
+      nextAuthSecretKey: nextauthSecret

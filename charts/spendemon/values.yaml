@@ -12,20 +12,20 @@ ingress:
   enabled: false
   className: ""
   hosts:
-    - host: spendemon.local
+    - host: spendemon.domain.com
       paths:
         - path: /
           pathType: Prefix
 
 gateway:
-  enabled: true
+  enabled: false
 
   parentRefs:
-    - name: cloudflare-gw
-      namespace: cloudflare-gateway
+    - name: yourgateway
+      namespace: gateway-namespace
 
   hosts:
-    - spendemon.tavernini.online
+    - spendemon.domain.com
 
   rules:
     - matches:
@@ -47,6 +47,7 @@ settings:
     storageGb: 5
   oidc:
     enabled: false
+    url: ""
     adminGroup: admin
     viewerGroup: viewer
     secretRef:
@@ -54,5 +55,4 @@ settings:
       issuerKey: issuer
       clientIdKey: clientId
       clientSecretKey: clientSecret
-
-
+      nextAuthSecretKey: nextauthSecret

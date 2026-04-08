@@ -41,6 +41,13 @@ spec:
                 secretKeyRef:
                   name: {{ required "settings.oidc.secretRef.name is required when OIDC is enabled" .Values.settings.oidc.secretRef.name }}
                   key: {{ required "settings.oidc.secretRef.clientSecretKey is required when OIDC is enabled" .Values.settings.oidc.secretRef.clientSecretKey }}
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "settings.oidc.secretRef.name is required when OIDC is enabled" .Values.settings.oidc.secretRef.name }}
+                  key: {{ required "settings.oidc.secretRef.nextAuthSecretKey is required when OIDC is enabled" .Values.settings.oidc.secretRef.nextAuthSecretKey }}
+            - name: NEXTAUTH_URL
+              value: {{ required "settings.oidc.url is required when OIDC is enabled" .Values.settings.oidc.url | quote }}
           {{- end }}
           ports:
             - containerPort: 3000

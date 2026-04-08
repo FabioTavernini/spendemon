@@ -142,6 +142,25 @@ Want to develop the app further, just apply the manifests under `dev/manifests.y
 Then run `npm i` and then `npm run dev` to start the development server.
 If you want to simulate a failing or pending pod, just apply `dev/failing-pod.yaml` or `dev/pending-pod.yaml`
 
+## Kubernetes Install Without Helm
+
+If you prefer a plain manifest over Helm, you can apply the bundled multi-resource manifest directly:
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/fabiotavernini/spendemon/main/deploy/spendemon.yaml
+```
+
+Before exposing it publicly, update the `ConfigMap` in `deploy/spendemon.yaml` with your Prometheus endpoint(s) and pricing values.
+
+If you want OIDC, add the same secret referenced by the Helm chart and set these values in `settings.yaml`:
+
+- `oidc.enabled: true`
+- `oidc.issuer`
+- `oidc.clientId`
+- `oidc.clientSecret`
+
+The plain manifest intentionally ships with just the core `ConfigMap`, `Deployment`, and `Service` so it works in any cluster. Add your own `Ingress` or `HTTPRoute` based on the ingress controller or Gateway API setup you already use.
+
 
 ## License
 
@@ -154,3 +173,14 @@ Spendemon is distributed under a **dual-license model**:
 ### Why dual licensing?
 
 This approach allows individuals to use, modify, and enjoy the software freely, while ensuring companies pay for commercial usage. It also keeps the code source-available.
+
+
+## Notes
+
+```sh
+kubectl create secret generic oidc-secret \
+  --from-literal=issuer='http://<reachable-keycloak-host>:8080/realms/spendemon' \
+  --from-literal=clientId='your-client-id' \
+  --from-literal=clientSecret='your-client-secret' \
+  --from-literal=nextauthSecret='replace-with-a-long-random-string'
+```
