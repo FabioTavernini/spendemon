@@ -156,7 +156,7 @@ If you prefer a plain manifest over Helm, you can apply the bundled multi-resour
 kubectl apply -f https://raw.githubusercontent.com/fabiotavernini/spendemon/main/deploy/spendemon.yaml
 ```
 
-The bundled manifest now stores `settings.yaml` on a PVC mounted at `/data/settings.yaml`. On first start, an init container copies the templated starter config into the PVC if the file does not exist yet.
+The bundled manifest now stores `settings.yaml` on a PVC mounted at `/data/settings.yaml`. On each pod start, an init container copies the templated config into the PVC so Helm-managed values stay in sync with the runtime file.
 
 Before exposing it publicly, open the settings UI or edit the file on the mounted volume with your Prometheus endpoint(s), pricing values, and optional `HA.enabled` flag.
 

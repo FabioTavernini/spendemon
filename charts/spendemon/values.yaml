@@ -58,7 +58,9 @@ settings:
   oidc:
     enabled: false
     debug: false
+    extraScopes: []
     url: ""
+    nextAuthUrl: ""
     adminGroup: admin
     viewerGroup: viewer
     secretRef:

@@ -25,9 +25,7 @@ spec:
             - sh
             - -c
             - |
-              if [ ! -f {{ .Values.persistence.mountPath }}/settings.yaml ]; then
-                cp /seed/settings.yaml {{ .Values.persistence.mountPath }}/settings.yaml
-              fi
+              cp /seed/settings.yaml {{ .Values.persistence.mountPath }}/settings.yaml
           volumeMounts:
             - name: settings
               mountPath: {{ .Values.persistence.mountPath }}
@@ -69,7 +67,7 @@ spec:
                   name: {{ required "settings.oidc.secretRef.name is required when OIDC is enabled" .Values.settings.oidc.secretRef.name }}
                   key: {{ required "settings.oidc.secretRef.nextAuthSecretKey is required when OIDC is enabled" .Values.settings.oidc.secretRef.nextAuthSecretKey }}
             - name: NEXTAUTH_URL
-              value: {{ required "settings.oidc.url is required when OIDC is enabled" .Values.settings.oidc.url | quote }}
+              value: {{ required "settings.oidc.nextAuthUrl or settings.oidc.url is required when OIDC is enabled" (coalesce .Values.settings.oidc.nextAuthUrl .Values.settings.oidc.url) | quote }}
           {{- end }}
           ports:
             - containerPort: 3000

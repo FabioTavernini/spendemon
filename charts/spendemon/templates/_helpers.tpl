@@ -39,4 +39,6 @@ oidc:
 {{- end }}
   adminGroup: {{ .Values.settings.oidc.adminGroup | quote }}
   viewerGroup: {{ .Values.settings.oidc.viewerGroup | quote }}
+  debug: {{ .Values.settings.oidc.debug }}
+  extraScopes: {{ join " " .Values.settings.oidc.extraScopes | quote }}
 {{- end }}
