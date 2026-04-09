@@ -32,6 +32,10 @@ export type OidcSettings = {
   extraScopes: string[];
 };
 
+type RawOidcSettings = Omit<OidcSettings, "extraScopes"> & {
+  extraScopes: string;
+};
+
 type ParsedProperty = {
   key: string;
   value: string;
@@ -66,7 +70,7 @@ function isOidcBooleanKey(
 
 function isOidcStringKey(
   key: keyof OidcSettings,
-): key is Exclude<keyof OidcSettings, "enabled" | "debug"> {
+): key is Exclude<keyof RawOidcSettings, "enabled" | "debug"> {
   return !isOidcBooleanKey(key);
 }
 
@@ -474,7 +478,7 @@ export function parseOidcFromSettings(content: string): OidcSettings {
   }
 
   const oidcIndent = getIndentation(lines[oidcIndex]);
-  const parsedOidc: Partial<OidcSettings> = {};
+  const parsedOidc: Partial<RawOidcSettings> = {};
 
   for (let index = oidcIndex + 1; index < lines.length; index += 1) {
     const line = lines[index];
