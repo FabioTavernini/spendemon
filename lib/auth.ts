@@ -261,6 +261,81 @@ export function isOidcEnabled(): boolean {
   return getOidcSettings().enabled
 }
 
+function resolveOidcRuntimeSettings(oidc: OidcSettings): OidcSettings {
+  if (!oidc.enabled) {
+    return oidc
+  }
+
+  const resolved = {
+    ...oidc,
+    issuer: oidc.issuer ? oidc.issuer.replace(/\$\{([A-Z0-9_]+)\}/gi, (_match, envKey: string) => {
+      const envValue = process.env[envKey]
+
+      if (typeof envValue !== 'string') {
+        throw new Error(`Environment variable "${envKey}" is not set.`)
+      }
+
+      return envValue
+    }) : '',
+    clientId: oidc.clientId ? oidc.clientId.replace(/\$\{([A-Z0-9_]+)\}/gi, (_match, envKey: string) => {
+      const envValue = process.env[envKey]
+
+      if (typeof envValue !== 'string') {
+        throw new Error(`Environment variable "${envKey}" is not set.`)
+      }
+
+      return envValue
+    }) : '',
+    clientSecret: oidc.clientSecret
+      ? oidc.clientSecret.replace(/\$\{([A-Z0-9_]+)\}/gi, (_match, envKey: string) => {
+          const envValue = process.env[envKey]
+
+          if (typeof envValue !== 'string') {
+            throw new Error(`Environment variable "${envKey}" is not set.`)
+          }
+
+          return envValue
+        })
+      : '',
+    adminGroup: oidc.adminGroup
+      ? oidc.adminGroup.replace(/\$\{([A-Z0-9_]+)\}/gi, (_match, envKey: string) => {
+          const envValue = process.env[envKey]
+
+          if (typeof envValue !== 'string') {
+            throw new Error(`Environment variable "${envKey}" is not set.`)
+          }
+
+          return envValue
+        })
+      : '',
+    viewerGroup: oidc.viewerGroup
+      ? oidc.viewerGroup.replace(/\$\{([A-Z0-9_]+)\}/gi, (_match, envKey: string) => {
+          const envValue = process.env[envKey]
+
+          if (typeof envValue !== 'string') {
+            throw new Error(`Environment variable "${envKey}" is not set.`)
+          }
+
+          return envValue
+        })
+      : '',
+  }
+
+  const missing = [
+    !resolved.issuer && 'issuer',
+    !resolved.clientId && 'clientId',
+    !resolved.clientSecret && 'clientSecret',
+    !resolved.adminGroup && 'adminGroup',
+    !resolved.viewerGroup && 'viewerGroup',
+  ].filter(Boolean)
+
+  if (missing.length > 0) {
+    throw new Error(`OIDC is enabled but these settings are missing: ${missing.join(', ')}.`)
+  }
+
+  return resolved
+}
+
 function buildOidcScope(extraScopes: string[]): string {
   return Array.from(new Set(['openid', 'email', 'profile', ...extraScopes])).join(' ')
 }
@@ -297,7 +372,7 @@ function createOidcProvider(oidc: OidcSettings): OAuthConfig<OidcProfile> {
 }
 
 export function getNextAuthOptions(): NextAuthOptions {
-  const oidc = getOidcSettings()
+  const oidc = resolveOidcRuntimeSettings(getOidcSettings())
 
   if (!oidc.enabled) {
     return {
@@ -361,7 +436,7 @@ export function getNextAuthOptions(): NextAuthOptions {
       },
       async session({ session, token }) {
         const groups = normalizeMemberships(normalizeStringList(token.groups))
-        const currentOidc = getOidcSettings()
+        const currentOidc = resolveOidcRuntimeSettings(getOidcSettings())
         const roles: AppRole[] = []
 
         if (userHasMembership(groups, currentOidc.viewerGroup)) {

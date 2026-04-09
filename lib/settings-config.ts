@@ -528,12 +528,6 @@ export function parseOidcFromSettings(content: string): OidcSettings {
   };
 
   if (oidc.enabled) {
-    oidc.issuer = resolveEnvReferences(oidc.issuer);
-    oidc.clientId = resolveEnvReferences(oidc.clientId);
-    oidc.clientSecret = resolveEnvReferences(oidc.clientSecret);
-    oidc.adminGroup = resolveEnvReferences(oidc.adminGroup);
-    oidc.viewerGroup = resolveEnvReferences(oidc.viewerGroup);
-
     const missing = [
       !oidc.issuer && "issuer",
       !oidc.clientId && "clientId",
