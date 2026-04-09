@@ -11,6 +11,8 @@ spec:
     metadata:
       labels:
         app: {{ include "spendemon.name" . }}
+      annotations:
+        checksum/settings: {{ include "spendemon.settings" . | sha256sum }}
     spec:
       securityContext:
         fsGroup: 1000
