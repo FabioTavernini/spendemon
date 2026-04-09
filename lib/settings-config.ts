@@ -58,6 +58,18 @@ function isOidcKey(key: string): key is keyof OidcSettings {
   );
 }
 
+function isOidcBooleanKey(
+  key: keyof OidcSettings,
+): key is "enabled" | "debug" {
+  return key === "enabled" || key === "debug";
+}
+
+function isOidcStringKey(
+  key: keyof OidcSettings,
+): key is Exclude<keyof OidcSettings, "enabled" | "debug"> {
+  return !isOidcBooleanKey(key);
+}
+
 function parseScopeList(value: string): string[] {
   return Array.from(
     new Set(
@@ -490,17 +502,14 @@ export function parseOidcFromSettings(content: string): OidcSettings {
       );
     }
 
-    if (property.key === "enabled") {
-      parsedOidc.enabled = parseBoolean(property.value, property.key);
+    if (isOidcBooleanKey(property.key)) {
+      parsedOidc[property.key] = parseBoolean(property.value, property.key);
       continue;
     }
 
-    if (property.key === "debug") {
-      parsedOidc.debug = parseBoolean(property.value, property.key);
-      continue;
+    if (isOidcStringKey(property.key)) {
+      parsedOidc[property.key] = property.value;
     }
-
-    parsedOidc[property.key] = property.value;
   }
 
   const oidc = {
