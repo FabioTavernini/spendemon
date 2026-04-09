@@ -28,6 +28,8 @@ export type OidcSettings = {
   clientSecret: string;
   adminGroup: string;
   viewerGroup: string;
+  debug: boolean;
+  extraScopes: string[];
 };
 
 type ParsedProperty = {
@@ -50,7 +52,20 @@ function isOidcKey(key: string): key is keyof OidcSettings {
     key === "clientId" ||
     key === "clientSecret" ||
     key === "adminGroup" ||
-    key === "viewerGroup"
+    key === "viewerGroup" ||
+    key === "debug" ||
+    key === "extraScopes"
+  );
+}
+
+function parseScopeList(value: string): string[] {
+  return Array.from(
+    new Set(
+      value
+        .split(/[,\s]+/)
+        .map((entry) => entry.trim())
+        .filter(Boolean),
+    ),
   );
 }
 
@@ -441,6 +456,8 @@ export function parseOidcFromSettings(content: string): OidcSettings {
       clientSecret: "",
       adminGroup: "admin",
       viewerGroup: "viewer",
+      debug: false,
+      extraScopes: [],
     };
   }
 
@@ -478,6 +495,11 @@ export function parseOidcFromSettings(content: string): OidcSettings {
       continue;
     }
 
+    if (property.key === "debug") {
+      parsedOidc.debug = parseBoolean(property.value, property.key);
+      continue;
+    }
+
     parsedOidc[property.key] = property.value;
   }
 
@@ -488,6 +510,8 @@ export function parseOidcFromSettings(content: string): OidcSettings {
     clientSecret: parsedOidc.clientSecret ?? "",
     adminGroup: parsedOidc.adminGroup ?? "admin",
     viewerGroup: parsedOidc.viewerGroup ?? "viewer",
+    debug: parsedOidc.debug ?? false,
+    extraScopes: parseScopeList(parsedOidc.extraScopes ?? ""),
   };
 
   if (oidc.enabled) {

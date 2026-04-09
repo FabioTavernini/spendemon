@@ -27,6 +27,22 @@ type OidcProfile = {
 
 type JwtPayload = Record<string, unknown>
 
+type OidcDebugSnapshot = {
+  profileGroups: string[]
+  profileRoles: string[]
+  profileRealmRoles: string[]
+  profileResourceRoles: Record<string, string[]>
+  idTokenGroups: string[]
+  idTokenRoles: string[]
+  idTokenRealmRoles: string[]
+  idTokenResourceRoles: Record<string, string[]>
+  accessTokenGroups: string[]
+  accessTokenRoles: string[]
+  accessTokenRealmRoles: string[]
+  accessTokenResourceRoles: Record<string, string[]>
+  resolvedMemberships: string[]
+}
+
 function normalizeStringList(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return []
@@ -37,6 +53,22 @@ function normalizeStringList(value: unknown): string[] {
 
 function dedupe(values: string[]): string[] {
   return Array.from(new Set(values))
+}
+
+function normalizeRoleMap(value: unknown): Record<string, string[]> {
+  if (typeof value !== 'object' || value === null) {
+    return {}
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([key, entry]) => {
+      if (typeof entry !== 'object' || entry === null) {
+        return []
+      }
+
+      return [[key, normalizeStringList((entry as { roles?: unknown }).roles)]]
+    })
+  )
 }
 
 function stripLeadingSlash(value: string): string {
@@ -77,6 +109,35 @@ function parseJwtPayload(token: string | undefined): JwtPayload | null {
     return JSON.parse(decoded) as JwtPayload
   } catch {
     return null
+  }
+}
+
+async function loadUserInfoClaims(params: {
+  client: {
+    userinfo: (token: string) => Promise<unknown>
+  }
+  tokens: { access_token?: string | null; claims: () => JwtPayload }
+}): Promise<JwtPayload> {
+  const idTokenClaims = params.tokens.claims()
+  const accessToken = params.tokens.access_token
+
+  if (!accessToken) {
+    return idTokenClaims
+  }
+
+  try {
+    const userInfo = await params.client.userinfo(accessToken)
+
+    if (typeof userInfo !== 'object' || userInfo === null) {
+      return idTokenClaims
+    }
+
+    return {
+      ...idTokenClaims,
+      ...(userInfo as JwtPayload),
+    }
+  } catch {
+    return idTokenClaims
   }
 }
 
@@ -121,6 +182,37 @@ function extractMembershipsFromClaims(
     ...resourceRoles,
     ...clientRoles,
   ])
+}
+
+function getDebugSnapshot(params: {
+  profile?: OidcProfile
+  account?: { id_token?: string | null; access_token?: string | null } | null
+  memberships: string[]
+}): OidcDebugSnapshot {
+  const idTokenClaims = parseJwtPayload(params.account?.id_token ?? undefined)
+  const accessTokenClaims = parseJwtPayload(params.account?.access_token ?? undefined)
+
+  return {
+    profileGroups: normalizeStringList(params.profile?.groups),
+    profileRoles: normalizeStringList(params.profile?.roles),
+    profileRealmRoles: normalizeStringList(params.profile?.realm_access?.roles),
+    profileResourceRoles: normalizeRoleMap(params.profile?.resource_access),
+    idTokenGroups: normalizeStringList(idTokenClaims?.groups),
+    idTokenRoles: normalizeStringList(idTokenClaims?.roles),
+    idTokenRealmRoles:
+      typeof idTokenClaims?.realm_access === 'object' && idTokenClaims.realm_access !== null
+        ? normalizeStringList((idTokenClaims.realm_access as { roles?: unknown }).roles)
+        : [],
+    idTokenResourceRoles: normalizeRoleMap(idTokenClaims?.resource_access),
+    accessTokenGroups: normalizeStringList(accessTokenClaims?.groups),
+    accessTokenRoles: normalizeStringList(accessTokenClaims?.roles),
+    accessTokenRealmRoles:
+      typeof accessTokenClaims?.realm_access === 'object' && accessTokenClaims.realm_access !== null
+        ? normalizeStringList((accessTokenClaims.realm_access as { roles?: unknown }).roles)
+        : [],
+    accessTokenResourceRoles: normalizeRoleMap(accessTokenClaims?.resource_access),
+    resolvedMemberships: params.memberships,
+  }
 }
 
 function userHasMembership(memberships: string[], target: string): boolean {
@@ -169,18 +261,30 @@ export function isOidcEnabled(): boolean {
   return getOidcSettings().enabled
 }
 
+function buildOidcScope(extraScopes: string[]): string {
+  return Array.from(new Set(['openid', 'email', 'profile', ...extraScopes])).join(' ')
+}
+
 function createOidcProvider(oidc: OidcSettings): OAuthConfig<OidcProfile> {
   return {
     id: 'oidc',
     name: 'OIDC',
     wellKnown: `${oidc.issuer}/.well-known/openid-configuration`,
     type: 'oauth',
-    authorization: { params: { scope: 'openid email profile' } },
+    authorization: { params: { scope: buildOidcScope(oidc.extraScopes) } },
     checks: ['pkce', 'state'],
     idToken: true,
     issuer: oidc.issuer,
     clientId: oidc.clientId,
     clientSecret: oidc.clientSecret,
+    userinfo: {
+      async request({ client, tokens }) {
+        return (await loadUserInfoClaims({
+          client: client as { userinfo: (token: string) => Promise<unknown> },
+          tokens: tokens as { access_token?: string | null; claims: () => JwtPayload },
+        })) as OidcProfile
+      },
+    },
     profile(profile) {
       return {
         id: profile.sub ?? '',
@@ -236,8 +340,21 @@ export function getNextAuthOptions(): NextAuthOptions {
 
         token.groups = memberships
 
-        if (process.env.NODE_ENV !== 'production' && memberships.length > 0) {
-          console.log('Resolved OIDC memberships:', memberships)
+        if (oidc.debug) {
+          console.log(
+            'OIDC membership debug:',
+            getDebugSnapshot({
+              profile: profile as OidcProfile | undefined,
+              account: account
+                ? {
+                    id_token: typeof account.id_token === 'string' ? account.id_token : null,
+                    access_token:
+                      typeof account.access_token === 'string' ? account.access_token : null,
+                  }
+                : null,
+              memberships,
+            })
+          )
         }
 
         return token

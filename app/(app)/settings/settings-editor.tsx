@@ -256,7 +256,7 @@ export function SettingsEditor({
         </div>
 
         <textarea
-          className="min-h-[28rem] w-full resize-y rounded-md border border-border bg-background p-4 font-mono text-sm outline-none"
+          className="min-h-112 w-full resize-y rounded-md border border-border bg-background p-4 font-mono text-sm outline-none"
           spellCheck={false}
           value={content}
           onChange={(event) => {

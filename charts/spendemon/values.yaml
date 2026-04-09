@@ -57,6 +57,7 @@ settings:
     - kube-system
   oidc:
     enabled: false
+    debug: false
     url: ""
     adminGroup: admin
     viewerGroup: viewer

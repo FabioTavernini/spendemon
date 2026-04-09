@@ -31,6 +31,8 @@ oidc:
   clientSecret: ''
   adminGroup: admin
   viewerGroup: viewer
+  debug: false
+  extraScopes: ''
 `;
 
 export async function ensureSettingsFile(): Promise<void> {
