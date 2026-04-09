@@ -15,6 +15,8 @@ spec:
         checksum/settings: {{ include "spendemon.settings" . | sha256sum }}
     spec:
       securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
         fsGroup: 1000
       {{- if .Values.image.imagePullSecret }}
       imagePullSecrets:
@@ -27,7 +29,13 @@ spec:
             - sh
             - -c
             - |
-              cp /seed/settings.yaml {{ .Values.persistence.mountPath }}/settings.yaml
+              mkdir -p {{ .Values.persistence.mountPath }}
+              if [ ! -f {{ .Values.persistence.mountPath }}/settings.yaml ]; then
+                cp /seed/settings.yaml {{ .Values.persistence.mountPath }}/settings.yaml
+              fi
+              chown 1000:1000 {{ .Values.persistence.mountPath }} {{ .Values.persistence.mountPath }}/settings.yaml
+              chmod 775 {{ .Values.persistence.mountPath }}
+              chmod 664 {{ .Values.persistence.mountPath }}/settings.yaml
           volumeMounts:
             - name: settings
               mountPath: {{ .Values.persistence.mountPath }}

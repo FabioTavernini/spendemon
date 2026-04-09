@@ -55,6 +55,8 @@ spec:
         app: spendemon
     spec:
       securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
         fsGroup: 1000
       initContainers:
         - name: seed-settings
@@ -63,9 +65,13 @@ spec:
             - sh
             - -c
             - |
+              mkdir -p /data
               if [ ! -f /data/settings.yaml ]; then
                 cp /seed/settings.yaml /data/settings.yaml
               fi
+              chown 1000:1000 /data /data/settings.yaml
+              chmod 775 /data
+              chmod 664 /data/settings.yaml
           volumeMounts:
             - name: settings
               mountPath: /data
