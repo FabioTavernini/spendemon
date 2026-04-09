@@ -7,6 +7,9 @@ costs:
   memoryGb: 20
   storageGb: 5
 
+HA:
+  enabled: false
+
 oidc:
   enabled: false
   issuer: ${OIDC_ISSUER}

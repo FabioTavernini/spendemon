@@ -18,6 +18,9 @@ costs:
   memoryGb: {{ .Values.settings.costs.memoryGb }}
   storageGb: {{ .Values.settings.costs.storageGb }}
 
+HA:
+  enabled: {{ .Values.settings.ha.enabled }}
+
 sharednamespaces:
 {{- range .Values.settings.sharednamespaces }}
   - {{ . | quote }}

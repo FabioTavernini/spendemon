@@ -34,8 +34,14 @@ gateway:
 
 resources: {}
 
+persistence:
+  mountPath: /data
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  storageClassName: ""
+
 settings:
-  mountPath: "/app/settings.yaml"
   clusters:
     - name: cluster-1
       prometheusUrl: http://prometheus-service.prometheus.svc.cluster.local:80
@@ -45,6 +51,8 @@ settings:
     cpuCore: 10
     memoryGb: 20
     storageGb: 5
+  ha:
+    enabled: false
   sharednamespaces:
     - kube-system
   oidc:

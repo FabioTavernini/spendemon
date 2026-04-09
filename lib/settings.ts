@@ -6,7 +6,8 @@ import { parseSettings } from "@/lib/settings-config";
 
 export * from "@/lib/settings-config";
 
-const SETTINGS_FILE = path.join(process.cwd(), "settings.yaml");
+const SETTINGS_FILE =
+  process.env.SETTINGS_FILE_PATH || path.join(process.cwd(), "settings.yaml");
 const DEFAULT_SETTINGS = `clusters:
   - name: cluster-1
     prometheusUrl: http://localhost:9090
@@ -17,6 +18,9 @@ costs:
   cpuCore: 0
   memoryGb: 0
   storageGb: 0
+
+HA:
+  enabled: false
 
 sharednamespaces:
 

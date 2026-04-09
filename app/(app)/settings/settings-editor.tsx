@@ -5,15 +5,19 @@ import { startTransition, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   parseCostsFromSettings,
+  parseHaFromSettings,
   parseSharedNamespacesFromSettings,
   type CostSettings,
+  type HaSettings,
   upsertCostsInSettings,
+  upsertHaInSettings,
   upsertSharedNamespacesInSettings,
 } from "@/lib/settings-config";
 
 type SettingsEditorProps = {
   initialContent: string;
   initialCosts: CostSettings;
+  initialHa: HaSettings;
   initialSharedNamespaces: string[];
   initialPath: string;
 };
@@ -49,11 +53,13 @@ const COST_FIELDS: Array<{
 export function SettingsEditor({
   initialContent,
   initialCosts,
+  initialHa,
   initialSharedNamespaces,
   initialPath,
 }: SettingsEditorProps) {
   const [content, setContent] = useState(initialContent);
   const [costs, setCosts] = useState<CostSettings>(initialCosts);
+  const [ha, setHa] = useState<HaSettings>(initialHa);
   const [sharedNamespaces, setSharedNamespaces] = useState<string[]>(
     initialSharedNamespaces,
   );
@@ -64,6 +70,7 @@ export function SettingsEditor({
   useEffect(() => {
     try {
       setCosts(parseCostsFromSettings(content));
+      setHa(parseHaFromSettings(content));
       setSharedNamespaces(parseSharedNamespacesFromSettings(content));
     } catch {
       // Ignore invalid intermediate YAML while the user is typing.
@@ -100,6 +107,15 @@ export function SettingsEditor({
     setContent((currentContent) =>
       upsertSharedNamespacesInSettings(currentContent, nextSharedNamespaces),
     );
+    setStatus(null);
+    setError(null);
+  }
+
+  function updateHaEnabled(enabled: boolean) {
+    const nextHa = { enabled };
+
+    setHa(nextHa);
+    setContent((currentContent) => upsertHaInSettings(currentContent, nextHa));
     setStatus(null);
     setError(null);
   }
@@ -150,6 +166,10 @@ export function SettingsEditor({
           authorization for the app.
         </p>
         <p className="text-sm text-muted-foreground">
+          <code>HA.enabled</code> is persisted in settings and used by the
+          Kubernetes manifests in this repo to render either 1 or 2 replicas.
+        </p>
+        <p className="text-sm text-muted-foreground">
           Namespaces listed in <code>sharednamespaces:</code> have their costs
           split evenly across the remaining namespaces in the same cluster.
         </p>
@@ -185,6 +205,26 @@ export function SettingsEditor({
             </label>
           ))}
         </div>
+      </section>
+
+      <section className="rounded-xl border bg-card p-5">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold">High Availability</h2>
+          <p className="text-sm text-muted-foreground">
+            When enabled, the rendered Kubernetes deployment uses 2 replicas
+            instead of 1.
+          </p>
+        </div>
+
+        <label className="mt-4 flex items-center gap-3 text-sm font-medium">
+          <input
+            checked={ha.enabled}
+            className="h-4 w-4"
+            onChange={(event) => updateHaEnabled(event.target.checked)}
+            type="checkbox"
+          />
+          Enable HA
+        </label>
       </section>
 
       <section className="rounded-xl border bg-card p-5">

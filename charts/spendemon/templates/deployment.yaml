@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: {{ include "spendemon.fullname" . }}
 spec:
-  replicas: 1
+  replicas: {{ ternary 2 1 .Values.settings.ha.enabled }}
   selector:
     matchLabels:
       app: {{ include "spendemon.name" . }}
@@ -12,20 +12,42 @@ spec:
       labels:
         app: {{ include "spendemon.name" . }}
     spec:
+      securityContext:
+        fsGroup: 1000
       {{- if .Values.image.imagePullSecret }}
       imagePullSecrets:
       - name: {{ .Values.image.imagePullSecret }}
       {{- end }}
+      initContainers:
+        - name: seed-settings
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              if [ ! -f {{ .Values.persistence.mountPath }}/settings.yaml ]; then
+                cp /seed/settings.yaml {{ .Values.persistence.mountPath }}/settings.yaml
+              fi
+          volumeMounts:
+            - name: settings
+              mountPath: {{ .Values.persistence.mountPath }}
+            - name: settings-template
+              mountPath: /seed
       volumes:
       - name: settings
+        persistentVolumeClaim:
+          claimName: {{ include "spendemon.fullname" . }}-settings
+      - name: settings-template
         configMap:
-          name: {{ include "spendemon.fullname" . }}-settings
+          name: {{ include "spendemon.fullname" . }}-settings-template
       containers:
         - name: spendemon
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if .Values.settings.oidc.enabled }}
           env:
+            - name: SETTINGS_FILE_PATH
+              value: {{ printf "%s/settings.yaml" .Values.persistence.mountPath | quote }}
+          {{- if .Values.settings.oidc.enabled }}
             - name: OIDC_ISSUER
               valueFrom:
                 secretKeyRef:
@@ -53,5 +75,4 @@ spec:
             - containerPort: 3000
           volumeMounts:
             - name: settings
-              mountPath: {{ .Values.settings.mountPath }}
-              subPath: settings.yaml
+              mountPath: {{ .Values.persistence.mountPath }}

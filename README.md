@@ -10,7 +10,7 @@ It connects to one or more Prometheus endpoints, discovers clusters, namespaces,
 - Lets you filter data by cluster and namespace from the sidebar
 - Builds cost estimates from requested CPU, memory, and ephemeral storage
 - Breaks cost reporting down by cluster, namespace, and individual pod
-- Stores app configuration in a local `settings.yaml` file
+- Stores app configuration in a local `settings.yaml` file, or on a PVC in Kubernetes
 - Includes a settings screen for editing pricing and raw YAML in the browser
 
 ## Stack
@@ -48,6 +48,8 @@ Open `http://localhost:3000`.
 
 Spendemon reads configuration from `settings.yaml` in the project root.
 
+You can override that path with `SETTINGS_FILE_PATH`. The Kubernetes manifests in this repo use that to store settings on a persistent volume at `/data/settings.yaml`.
+
 If the file does not exist yet, the app creates it automatically with starter values the first time settings are read.
 
 Example:
@@ -63,6 +65,9 @@ costs:
   cpuCore: 12.5
   memoryGb: 1.8
   storageGb: 0.12
+
+HA:
+  enabled: false
 ```
 
 ### Settings fields
@@ -72,6 +77,7 @@ costs:
 - `costs.cpuCore`: Price applied to requested CPU cores
 - `costs.memoryGb`: Price applied to requested memory in GB
 - `costs.storageGb`: Price applied to requested ephemeral storage in GB
+- `HA.enabled`: Used by the bundled Kubernetes manifests and Helm chart to render either 1 replica (`false`) or 2 replicas (`true`)
 
 You can edit these values either:
 
@@ -150,7 +156,9 @@ If you prefer a plain manifest over Helm, you can apply the bundled multi-resour
 kubectl apply -f https://raw.githubusercontent.com/fabiotavernini/spendemon/main/deploy/spendemon.yaml
 ```
 
-Before exposing it publicly, update the `ConfigMap` in `deploy/spendemon.yaml` with your Prometheus endpoint(s) and pricing values.
+The bundled manifest now stores `settings.yaml` on a PVC mounted at `/data/settings.yaml`. On first start, an init container copies the templated starter config into the PVC if the file does not exist yet.
+
+Before exposing it publicly, open the settings UI or edit the file on the mounted volume with your Prometheus endpoint(s), pricing values, and optional `HA.enabled` flag.
 
 If you want OIDC, add the same secret referenced by the Helm chart and set these values in `settings.yaml`:
 

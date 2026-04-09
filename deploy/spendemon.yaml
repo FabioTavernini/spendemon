@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: spendemon-settings
+  name: spendemon-settings-template
 data:
   settings.yaml: |
     clusters:
@@ -13,6 +13,9 @@ data:
       memoryGb: 20
       storageGb: 5
 
+    HA:
+      enabled: false
+
     sharednamespaces:
       - "kube-system"
 
@@ -23,6 +26,17 @@ data:
       clientSecret: ""
       adminGroup: "admin"
       viewerGroup: "viewer"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: spendemon-settings
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -40,20 +54,42 @@ spec:
       labels:
         app: spendemon
     spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: seed-settings
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              if [ ! -f /data/settings.yaml ]; then
+                cp /seed/settings.yaml /data/settings.yaml
+              fi
+          volumeMounts:
+            - name: settings
+              mountPath: /data
+            - name: settings-template
+              mountPath: /seed
       containers:
         - name: spendemon
           image: ghcr.io/fabiotavernini/spendemon:latest
           imagePullPolicy: IfNotPresent
+          env:
+            - name: SETTINGS_FILE_PATH
+              value: /data/settings.yaml
           ports:
             - containerPort: 3000
           volumeMounts:
             - name: settings
-              mountPath: /app/settings.yaml
-              subPath: settings.yaml
+              mountPath: /data
       volumes:
         - name: settings
+          persistentVolumeClaim:
+            claimName: spendemon-settings
+        - name: settings-template
           configMap:
-            name: spendemon-settings
+            name: spendemon-settings-template
 ---
 apiVersion: v1
 kind: Service

@@ -1,6 +1,7 @@
 import {
   getSettingsFilePath,
   parseCostsFromSettings,
+  parseHaFromSettings,
   parseSharedNamespacesFromSettings,
   readSettingsFile,
 } from "@/lib/settings";
@@ -17,6 +18,7 @@ export default async function SettingsPage() {
   const initialContent = await readSettingsFile();
   const initialPath = getSettingsFilePath();
   const initialCosts = parseCostsFromSettings(initialContent);
+  const initialHa = parseHaFromSettings(initialContent);
   const initialSharedNamespaces =
     parseSharedNamespacesFromSettings(initialContent);
 
@@ -24,6 +26,7 @@ export default async function SettingsPage() {
     <SettingsEditor
       initialContent={initialContent}
       initialCosts={initialCosts}
+      initialHa={initialHa}
       initialSharedNamespaces={initialSharedNamespaces}
       initialPath={initialPath}
     />
