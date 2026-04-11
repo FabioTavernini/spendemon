@@ -15,6 +15,7 @@ on:
       - 'next.config.*'
       - 'tsconfig.json'
       - 'Dockerfile'
+      - 'settings-example.yaml'
       - '.dockerignore'
       - '.github/workflows/docker-publish.yml'
 
