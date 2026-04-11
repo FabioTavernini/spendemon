@@ -34,6 +34,10 @@ function getStatusColor(status: string): string {
       return 'text-green-500';
     case 'pending':
       return 'text-orange-500';
+    case 'succeeded':
+      return 'text-green-500';
+    case 'failed':
+      return 'text-red-500';
     default:
       return 'text-red-500';
   }
