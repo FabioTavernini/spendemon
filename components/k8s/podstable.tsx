@@ -1,20 +1,7 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { columns, type PodRow } from "@/components/k8s/pods-table/columns"
+import { DataTable } from "@/components/k8s/pods-table/data-table"
 import { Separator } from "../ui/separator"
 import { fetchInternalApi } from "@/lib/internal-api"
-
-type PodRow = {
-  cluster: string
-  namespace: string
-  pod: string
-  status: string
-}
 
 type ClusterPods = {
   totalPods: number
@@ -25,22 +12,6 @@ type PodsApiResponse = {
   totalPods: number
   totalClusters: number
   clusters: Record<string, ClusterPods>
-}
-
-function getStatusColor(status: string): string {
-  switch (status.toLowerCase()) {
-    case 'running':
-    case 'completed':
-      return 'text-green-500';
-    case 'pending':
-      return 'text-orange-500';
-    case 'succeeded':
-      return 'text-green-500';
-    case 'failed':
-      return 'text-red-500';
-    default:
-      return 'text-red-500';
-  }
 }
 
 export async function PodsTable({
@@ -82,32 +53,10 @@ export async function PodsTable({
     : []
 
   return (
-    <div className="max-h-96 overflow-y-auto">
+    <>
       <h2 className="my-2 text-2xl">Pods</h2>
       <Separator className="my-2" />
-      <Table className="w-full">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="px-4 py-2">Cluster</TableHead>
-            <TableHead className="px-4 py-2">Namespace</TableHead>
-            <TableHead className="px-4 py-2">Pod</TableHead>
-            <TableHead className="px-4 py-2">Status</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          {pods.map((p, i) => (
-            <TableRow key={`${p.cluster}-${p.namespace}-${p.pod}-${i}`}>
-              <TableCell className="px-4 py-2">{p.cluster}</TableCell>
-              <TableCell className="px-4 py-2">{p.namespace}</TableCell>
-              <TableCell className="px-4 py-2">{p.pod}</TableCell>
-              <TableCell className={`px-4 py-2 ${getStatusColor(p.status)}`}>
-                {p.status}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+      <DataTable columns={columns} data={pods} initialPageSize={10} />
+    </>
   )
 }
