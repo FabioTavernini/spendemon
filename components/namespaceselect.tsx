@@ -1,16 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { ChevronDown, Check, FolderKanban } from "lucide-react"
+import { ChevronDown, FolderKanban } from "lucide-react"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxTrigger,
+} from "@/components/ui/combobox"
+import { Button } from "@/components/ui/button"
 import { SidebarMenuButton } from "./ui/sidebar"
 
 type NamespaceGroup = {
@@ -28,6 +30,7 @@ export function NamespaceSelect() {
   const [namespaceGroups, setNamespaceGroups] = useState<
     Array<{ cluster: string; namespaces: string[] }>
   >([])
+  const [open, setOpen] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
@@ -81,24 +84,35 @@ export function NamespaceSelect() {
     router.push(`${pathname}?${params.toString()}`)
   }
 
-  function toggleNamespace(cluster: string, namespace: string) {
-    const value = `${cluster}:${namespace}`
-
-    if (selectedNamespaces.includes(value)) {
-      updateNamespaces(selectedNamespaces.filter((item) => item !== value))
-      return
-    }
-
-    updateNamespaces([...selectedNamespaces, value])
-  }
-
-  function isSelected(cluster: string, namespace: string) {
-    return selectedNamespaces.includes(`${cluster}:${namespace}`)
-  }
+  const namespaceItems = useMemo(
+    () =>
+      namespaceGroups.flatMap((group) =>
+        group.namespaces.map((namespace) => ({
+          cluster: group.cluster,
+          label: namespace,
+          value: `${group.cluster}:${namespace}`,
+        }))
+      ),
+    [namespaceGroups]
+  )
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Combobox
+      items={namespaceItems}
+      itemToStringValue={(item) => `${item.label} ${item.cluster}`}
+      multiple
+      open={open}
+      value={namespaceItems.filter((item) => selectedNamespaces.includes(item.value))}
+      onOpenChange={setOpen}
+      onValueChange={(value) => {
+        const nextValue = Array.isArray(value)
+          ? value.map((item) => item.value)
+          : []
+
+        updateNamespaces(nextValue)
+      }}
+    >
+      <ComboboxTrigger asChild>
         <SidebarMenuButton className="justify-between">
           <div className="flex items-center gap-2 hover:cursor-pointer">
             <FolderKanban className="h-4 w-4 shrink-0" />
@@ -108,36 +122,40 @@ export function NamespaceSelect() {
                 : `${selectedNamespaces.length} selected`}
             </span>
           </div>
-          <ChevronDown className="ml-2 h-4 w-4" />
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0" />
         </SidebarMenuButton>
-      </DropdownMenuTrigger>
+      </ComboboxTrigger>
 
-      <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => updateNamespaces([])}>
-          {selectedNamespaces.length === 0 && <Check className="mr-2 h-4 w-4" />}
-          All Namespaces
-        </DropdownMenuItem>
-
-        {namespaceGroups.length > 0 && <DropdownMenuSeparator />}
-
-        {namespaceGroups.map((group, index) => (
-          <div key={group.cluster}>
-            <DropdownMenuLabel>{group.cluster}</DropdownMenuLabel>
-            {group.namespaces.map((namespace) => (
-              <DropdownMenuItem
-                key={`${group.cluster}:${namespace}`}
-                onClick={() => toggleNamespace(group.cluster, namespace)}
-              >
-                {isSelected(group.cluster, namespace) && (
-                  <Check className="mr-2 h-4 w-4" />
-                )}
-                {namespace}
-              </DropdownMenuItem>
-            ))}
-            {index < namespaceGroups.length - 1 && <DropdownMenuSeparator />}
-          </div>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      <ComboboxContent className="p-2">
+        <div className="space-y-2">
+          <ComboboxInput autoFocus placeholder="Search namespaces..." />
+          <Button
+            className="w-full justify-start"
+            size="sm"
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              updateNamespaces([])
+              setOpen(false)
+            }}
+          >
+            All Namespaces
+          </Button>
+          <ComboboxEmpty>No namespaces found.</ComboboxEmpty>
+          <ComboboxList>
+            {(item: { cluster: string; label: string; value: string }) => (
+              <ComboboxItem key={item.value} value={item}>
+                <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                  <span className="truncate">{item.label}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {item.cluster}
+                  </span>
+                </div>
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </div>
+      </ComboboxContent>
+    </Combobox>
   )
 }
