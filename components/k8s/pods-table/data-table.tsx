@@ -35,6 +35,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   initialPageSize?: number
+  enablePagination?: boolean
 }
 
 type VisibilityState = Record<string, boolean>
@@ -43,6 +44,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   initialPageSize = 10,
+  enablePagination = true,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] =
@@ -59,7 +61,7 @@ export function DataTable<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
     getSortedRowModel: getSortedRowModel(),
     state: {
       columnVisibility,
@@ -121,6 +123,9 @@ export function DataTable<TData, TValue>({
   const pageSizes = Array.from(new Set([initialPageSize, 10, 20, 50])).sort(
     (a, b) => a - b
   )
+  const visibleRows = enablePagination
+    ? table.getRowModel().rows
+    : table.getSortedRowModel().rows
 
   return (
     <div className="overflow-hidden rounded-md border">
@@ -174,8 +179,8 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+            {visibleRows.length ? (
+              visibleRows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
@@ -197,50 +202,52 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex flex-col gap-3 border-t px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-muted-foreground">
-          Showing {table.getRowModel().rows.length} of {table.getSortedRowModel().rows.length} rows
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <label className="flex items-center gap-2 text-muted-foreground">
-            <span>Rows per page</span>
-            <select
-              className="rounded-md border bg-background px-2 py-1 text-foreground"
-              value={table.getState().pagination.pageSize}
-              onChange={(event) => table.setPageSize(Number(event.target.value))}
-            >
-              {pageSizes.map((pageSize) => (
-                <option key={pageSize} value={pageSize}>
-                  {pageSize}
-                </option>
-              ))}
-            </select>
-          </label>
+      {enablePagination ? (
+        <div className="flex flex-col gap-3 border-t px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="text-muted-foreground">
-            Page {currentPage} of {pageCount}
+            Showing {table.getRowModel().rows.length} of {table.getSortedRowModel().rows.length} rows
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <ChevronLeft />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-              <ChevronRight />
-            </Button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label className="flex items-center gap-2 text-muted-foreground">
+              <span>Rows per page</span>
+              <select
+                className="rounded-md border bg-background px-2 py-1 text-foreground"
+                value={table.getState().pagination.pageSize}
+                onChange={(event) => table.setPageSize(Number(event.target.value))}
+              >
+                {pageSizes.map((pageSize) => (
+                  <option key={pageSize} value={pageSize}>
+                    {pageSize}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="text-muted-foreground">
+              Page {currentPage} of {pageCount}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                <ChevronLeft />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                Next
+                <ChevronRight />
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </div>
   )
 }

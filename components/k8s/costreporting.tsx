@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  namespaceCostColumns,
   podCostColumns,
+  type NamespaceCostRow,
   type PodCostRow,
 } from "@/components/k8s/cost-reporting-pods-table-columns";
 import { DataTable } from "@/components/k8s/pods-table/data-table";
@@ -165,7 +167,7 @@ function ClusterSummaryTable({ report }: { report: CostReport }) {
 }
 
 function NamespaceSummaryTable({ report }: { report: CostReport }) {
-  const rows = Object.entries(report.clusters).flatMap(
+  const rows: NamespaceCostRow[] = Object.entries(report.clusters).flatMap(
     ([clusterName, cluster]) =>
       Object.entries(cluster.namespaces).map(([namespaceName, namespace]) => ({
         clusterName,
@@ -178,40 +180,7 @@ function NamespaceSummaryTable({ report }: { report: CostReport }) {
     <div className="rounded-xl border bg-card p-4">
       <h2 className="text-xl font-semibold">Namespace Costs</h2>
       <Separator className="my-3" />
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Cluster</TableHead>
-            <TableHead>Namespace</TableHead>
-            <TableHead className="text-right">Pods</TableHead>
-            <TableHead className="text-right">CPU</TableHead>
-            <TableHead className="text-right">RAM GB</TableHead>
-            <TableHead className="text-right">Storage GB</TableHead>
-            <TableHead className="text-right">Cost</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={`${row.clusterName}:${row.namespaceName}`}>
-              <TableCell>{row.clusterName}</TableCell>
-              <TableCell className="font-medium">{row.namespaceName}</TableCell>
-              <TableCell className="text-right">{row.totalPods}</TableCell>
-              <TableCell className="text-right">
-                {formatNumber(row.totalCpuCores)}
-              </TableCell>
-              <TableCell className="text-right">
-                {formatNumber(row.totalMemoryGb)}
-              </TableCell>
-              <TableCell className="text-right">
-                {formatNumber(row.totalStorageGb)}
-              </TableCell>
-              <TableCell className="text-right">
-                {formatCost(row.totalCost)}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable columns={namespaceCostColumns} data={rows} initialPageSize={10} />
     </div>
   );
 }
@@ -233,7 +202,7 @@ function PodCostTable({ report }: { report: CostReport }) {
       <h2 className="text-xl font-semibold">Pod Costs</h2>
       <Separator className="my-3" />
       <div className="max-h-[36rem] overflow-auto">
-        <DataTable columns={podCostColumns} data={rows} />
+        <DataTable columns={podCostColumns} data={rows} initialPageSize={10} />
       </div>
     </div>
   );

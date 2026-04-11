@@ -33,6 +33,16 @@ export type PodCostRow = {
   totalCost: number
 }
 
+export type NamespaceCostRow = {
+  clusterName: string
+  namespaceName: string
+  totalPods: number
+  totalCpuCores: number
+  totalMemoryGb: number
+  totalStorageGb: number
+  totalCost: number
+}
+
 function SortableHeader({
   column,
   label,
@@ -120,6 +130,55 @@ export const podCostColumns: ColumnDef<PodCostRow>[] = [
     header: () => <div className="text-right">Storage Cost</div>,
     cell: ({ row }) => (
       <div className="text-right">{formatCost(row.original.storageCost)}</div>
+    ),
+  },
+  {
+    accessorKey: "totalCost",
+    header: ({ column }) => <SortableHeader column={column} label="Cost" />,
+    cell: ({ row }) => (
+      <div className="text-right">{formatCost(row.original.totalCost)}</div>
+    ),
+  },
+]
+
+export const namespaceCostColumns: ColumnDef<NamespaceCostRow>[] = [
+  {
+    accessorKey: "clusterName",
+    header: "Cluster",
+  },
+  {
+    accessorKey: "namespaceName",
+    header: "Namespace",
+    cell: ({ row }) => (
+      <span className="font-medium">{row.original.namespaceName}</span>
+    ),
+  },
+  {
+    accessorKey: "totalPods",
+    header: () => <div className="text-right">Pods</div>,
+    cell: ({ row }) => (
+      <div className="text-right">{formatNumber(row.original.totalPods)}</div>
+    ),
+  },
+  {
+    accessorKey: "totalCpuCores",
+    header: ({ column }) => <SortableHeader column={column} label="CPU" />,
+    cell: ({ row }) => (
+      <div className="text-right">{formatNumber(row.original.totalCpuCores)}</div>
+    ),
+  },
+  {
+    accessorKey: "totalMemoryGb",
+    header: ({ column }) => <SortableHeader column={column} label="RAM GB" />,
+    cell: ({ row }) => (
+      <div className="text-right">{formatNumber(row.original.totalMemoryGb)}</div>
+    ),
+  },
+  {
+    accessorKey: "totalStorageGb",
+    header: ({ column }) => <SortableHeader column={column} label="Storage GB" />,
+    cell: ({ row }) => (
+      <div className="text-right">{formatNumber(row.original.totalStorageGb)}</div>
     ),
   },
   {
