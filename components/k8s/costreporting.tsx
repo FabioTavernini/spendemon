@@ -244,7 +244,8 @@ export async function CostReporting({
         <h1 className="text-2xl font-semibold">Cost Reporting</h1>
         <p className="text-sm text-muted-foreground">
           Snapshot estimate based on configured pricing and current Prometheus
-          resource requests.
+          resource requests, with pod CPU and memory usage used as a fallback
+          when requests are missing.
         </p>
         <p className="text-xs text-muted-foreground">
           Rates: CPU {formatCost(report.rates.cpuCore)} / core, RAM{" "}
@@ -271,7 +272,7 @@ export async function CostReporting({
           value={String(report.totalPods)}
         />
         <SummaryCard
-          description="Requested CPU and RAM"
+          description="Requested CPU and RAM, with usage fallback"
           title={`${formatNumber(report.totalCpuCores)} cores / ${formatNumber(report.totalMemoryGb)} GB`}
           value={String(report.totalClusters)}
         />

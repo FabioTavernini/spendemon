@@ -157,24 +157,30 @@ function upsertPodState(
   return next;
 }
 
-async function queryStorageMetrics(
+async function queryFirstAvailableMetric(
   prometheusUrl: string,
+  queries: string[],
+  transformer?: (value: number) => number,
 ): Promise<MetricValue[]> {
-  const storageQueries = [
-    'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="ephemeral_storage",unit="byte"})',
-    'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="ephemeral-storage",unit="byte"})',
-    "sum by (namespace, pod) (kube_pod_ephemeral_storage_request_bytes)",
-  ];
-
-  for (const query of storageQueries) {
+  for (const query of queries) {
     const results = await queryPrometheusVector(prometheusUrl, query);
 
     if (results.length > 0) {
-      return parseMetricValues(results, (value) => value / BYTES_PER_GB);
+      return parseMetricValues(results, transformer);
     }
   }
 
   return [];
+}
+
+async function queryStorageMetrics(
+  prometheusUrl: string,
+): Promise<MetricValue[]> {
+  return queryFirstAvailableMetric(prometheusUrl, [
+    'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="ephemeral_storage",unit="byte"})',
+    'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="ephemeral-storage",unit="byte"})',
+    "sum by (namespace, pod) (kube_pod_ephemeral_storage_request_bytes)",
+  ], (value) => value / BYTES_PER_GB);
 }
 
 async function buildClusterPodStates(cluster: {
@@ -186,12 +192,41 @@ async function buildClusterPodStates(cluster: {
     'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="cpu",unit="core"})';
   const memoryQuery =
     'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="memory",unit="byte"})';
+  const cpuUsageQueries = [
+    'sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{container!="",container!="POD"}[5m]))',
+    'sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{image!="",pod!=""}[5m]))',
+    'sum by (namespace, pod) (label_replace(rate(container_cpu_usage_seconds_total{container_name!="",container_name!="POD",pod_name!=""}[5m]), "pod", "$1", "pod_name", "(.*)"))',
+  ];
+  const memoryUsageQueries = [
+    'sum by (namespace, pod) (container_memory_working_set_bytes{container!="",container!="POD"})',
+    'sum by (namespace, pod) (container_memory_working_set_bytes{image!="",pod!=""})',
+    'sum by (namespace, pod) (label_replace(container_memory_working_set_bytes{container_name!="",container_name!="POD",pod_name!=""}, "pod", "$1", "pod_name", "(.*)"))',
+    'sum by (namespace, pod) (container_memory_usage_bytes{container!="",container!="POD"})',
+    'sum by (namespace, pod) (container_memory_usage_bytes{image!="",pod!=""})',
+    'sum by (namespace, pod) (label_replace(container_memory_usage_bytes{container_name!="",container_name!="POD",pod_name!=""}, "pod", "$1", "pod_name", "(.*)"))',
+    'sum by (namespace, pod) (container_memory_rss{container!="",container!="POD"})',
+    'sum by (namespace, pod) (container_memory_rss{image!="",pod!=""})',
+    'sum by (namespace, pod) (label_replace(container_memory_rss{container_name!="",container_name!="POD",pod_name!=""}, "pod", "$1", "pod_name", "(.*)"))',
+  ];
 
-  const [statusResults, cpuResults, memoryResults, storageResults] =
+  const [
+    statusResults,
+    cpuResults,
+    memoryResults,
+    cpuUsageResults,
+    memoryUsageResults,
+    storageResults,
+  ] =
     await Promise.all([
       queryPrometheusVector(cluster.prometheusUrl, podStatusQuery),
       queryPrometheusVector(cluster.prometheusUrl, cpuQuery),
       queryPrometheusVector(cluster.prometheusUrl, memoryQuery),
+      queryFirstAvailableMetric(cluster.prometheusUrl, cpuUsageQueries),
+      queryFirstAvailableMetric(
+        cluster.prometheusUrl,
+        memoryUsageQueries,
+        (value) => value / BYTES_PER_GB,
+      ),
       queryStorageMetrics(cluster.prometheusUrl),
     ]);
 
@@ -230,6 +265,32 @@ async function buildClusterPodStates(cluster: {
       item.pod,
     );
     podState.memoryGb = item.value;
+  }
+
+  for (const item of cpuUsageResults) {
+    const podState = upsertPodState(
+      podMap,
+      cluster.name,
+      item.namespace,
+      item.pod,
+    );
+
+    if (podState.cpuCores <= 0) {
+      podState.cpuCores = item.value;
+    }
+  }
+
+  for (const item of memoryUsageResults) {
+    const podState = upsertPodState(
+      podMap,
+      cluster.name,
+      item.namespace,
+      item.pod,
+    );
+
+    if (podState.memoryGb <= 0) {
+      podState.memoryGb = item.value;
+    }
   }
 
   for (const item of storageResults) {
