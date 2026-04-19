@@ -35,6 +35,13 @@ import {
 } from "@/lib/settings";
 
 function formatNumber(value: number) {
+  if (value !== 0 && Math.abs(value) < 0.01) {
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    });
+  }
+
   return value.toLocaleString(undefined, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
@@ -42,6 +49,13 @@ function formatNumber(value: number) {
 }
 
 function formatCost(value: number) {
+  if (value !== 0 && Math.abs(value) < 0.01) {
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    });
+  }
+
   return value.toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -157,6 +171,12 @@ function ClusterSummaryTable({ report }: { report: CostReport }) {
               </TableCell>
               <TableCell className="text-right">
                 {formatCost(cluster.totalCost)}
+                {cluster.estimatedPodCount > 0 ? (
+                  <div className="text-xs text-amber-700 dark:text-amber-400">
+                    Includes {cluster.estimatedPodCount} estimate
+                    {cluster.estimatedPodCount === 1 ? "" : "s"}
+                  </div>
+                ) : null}
               </TableCell>
             </TableRow>
           ))}
@@ -241,11 +261,23 @@ export async function CostReporting({
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <h1 className="text-2xl font-semibold">Cost Reporting</h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-semibold">Cost Reporting</h1>
+          {report.estimatedPodCount > 0 ? (
+            <Badge
+              className="border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+              variant="outline"
+            >
+              {report.estimatedPodCount} estimated pod
+              {report.estimatedPodCount === 1 ? "" : "s"}
+            </Badge>
+          ) : null}
+        </div>
         <p className="text-sm text-muted-foreground">
           Snapshot estimate based on configured pricing and current Prometheus
-          resource requests, with pod CPU and memory usage used as a fallback
-          when requests are missing.
+          resource requests. When kube-state-metrics reports missing or zero CPU
+          or memory requests, cAdvisor usage is used as a fallback and those pod
+          costs are flagged as estimates.
         </p>
         <p className="text-xs text-muted-foreground">
           Rates: CPU {formatCost(report.rates.cpuCore)} / core, RAM{" "}
@@ -263,7 +295,11 @@ export async function CostReporting({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
           description="Estimated total cost"
-          title="Aggregated across the selected clusters"
+          title={
+            report.estimatedPodCount > 0
+              ? `Aggregated across the selected clusters, including ${report.estimatedPodCount} estimated pod${report.estimatedPodCount === 1 ? "" : "s"}`
+              : "Aggregated across the selected clusters"
+          }
           value={formatCost(report.totalCost)}
         />
         <SummaryCard
@@ -272,7 +308,7 @@ export async function CostReporting({
           value={String(report.totalPods)}
         />
         <SummaryCard
-          description="Requested CPU and RAM, with usage fallback"
+          description="Requested CPU and RAM, with cAdvisor usage fallback"
           title={`${formatNumber(report.totalCpuCores)} cores / ${formatNumber(report.totalMemoryGb)} GB`}
           value={String(report.totalClusters)}
         />

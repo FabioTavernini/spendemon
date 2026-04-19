@@ -36,10 +36,13 @@ export type PodCost = {
   memoryCost: number;
   storageCost: number;
   totalCost: number;
+  isEstimated: boolean;
+  estimatedResources: string[];
 };
 
 export type NamespaceCostSummary = {
   totalPods: number;
+  estimatedPodCount: number;
   totalCpuCores: number;
   totalMemoryGb: number;
   totalStorageGb: number;
@@ -50,6 +53,7 @@ export type NamespaceCostSummary = {
 export type ClusterCostSummary = {
   totalPods: number;
   totalNamespaces: number;
+  estimatedPodCount: number;
   totalCpuCores: number;
   totalMemoryGb: number;
   totalStorageGb: number;
@@ -63,6 +67,7 @@ export type CostReport = {
   totalClusters: number;
   totalNamespaces: number;
   totalPods: number;
+  estimatedPodCount: number;
   totalCpuCores: number;
   totalMemoryGb: number;
   totalStorageGb: number;
@@ -81,6 +86,7 @@ type ClusterPodState = {
   cpuCores: number;
   memoryGb: number;
   storageGb: number;
+  estimatedResources: Set<string>;
 };
 
 type MetricValue = {
@@ -183,6 +189,7 @@ function upsertPodState(
     cpuCores: 0,
     memoryGb: 0,
     storageGb: 0,
+    estimatedResources: new Set<string>(),
   };
 
   podMap.set(key, next);
@@ -227,18 +234,30 @@ async function buildClusterPodStates(cluster: {
   const cpuUsageQueries = [
     'sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{container!="",container!="POD"}[5m]))',
     'sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{image!="",pod!=""}[5m]))',
+    'sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{pod!="",namespace!="",cpu="total"}[5m]))',
+    'sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{id=~".*pod.*",pod!="",namespace!="",cpu="total"}[5m]))',
     'sum by (namespace, pod) (label_replace(rate(container_cpu_usage_seconds_total{container_name!="",container_name!="POD",pod_name!=""}[5m]), "pod", "$1", "pod_name", "(.*)"))',
+    'sum by (namespace, pod) (label_replace(rate(container_cpu_usage_seconds_total{cpu="total",pod_name!=""}[5m]), "pod", "$1", "pod_name", "(.*)"))',
   ];
   const memoryUsageQueries = [
     'sum by (namespace, pod) (container_memory_working_set_bytes{container!="",container!="POD"})',
     'sum by (namespace, pod) (container_memory_working_set_bytes{image!="",pod!=""})',
+    'sum by (namespace, pod) (container_memory_working_set_bytes{pod!="",namespace!=""})',
+    'sum by (namespace, pod) (container_memory_working_set_bytes{id=~".*pod.*",pod!="",namespace!=""})',
     'sum by (namespace, pod) (label_replace(container_memory_working_set_bytes{container_name!="",container_name!="POD",pod_name!=""}, "pod", "$1", "pod_name", "(.*)"))',
+    'sum by (namespace, pod) (label_replace(container_memory_working_set_bytes{pod_name!=""}, "pod", "$1", "pod_name", "(.*)"))',
     'sum by (namespace, pod) (container_memory_usage_bytes{container!="",container!="POD"})',
     'sum by (namespace, pod) (container_memory_usage_bytes{image!="",pod!=""})',
+    'sum by (namespace, pod) (container_memory_usage_bytes{pod!="",namespace!=""})',
+    'sum by (namespace, pod) (container_memory_usage_bytes{id=~".*pod.*",pod!="",namespace!=""})',
     'sum by (namespace, pod) (label_replace(container_memory_usage_bytes{container_name!="",container_name!="POD",pod_name!=""}, "pod", "$1", "pod_name", "(.*)"))',
+    'sum by (namespace, pod) (label_replace(container_memory_usage_bytes{pod_name!=""}, "pod", "$1", "pod_name", "(.*)"))',
     'sum by (namespace, pod) (container_memory_rss{container!="",container!="POD"})',
     'sum by (namespace, pod) (container_memory_rss{image!="",pod!=""})',
+    'sum by (namespace, pod) (container_memory_rss{pod!="",namespace!=""})',
+    'sum by (namespace, pod) (container_memory_rss{id=~".*pod.*",pod!="",namespace!=""})',
     'sum by (namespace, pod) (label_replace(container_memory_rss{container_name!="",container_name!="POD",pod_name!=""}, "pod", "$1", "pod_name", "(.*)"))',
+    'sum by (namespace, pod) (label_replace(container_memory_rss{pod_name!=""}, "pod", "$1", "pod_name", "(.*)"))',
   ];
 
   const [
@@ -309,6 +328,9 @@ async function buildClusterPodStates(cluster: {
 
     if (podState.cpuCores <= 0) {
       podState.cpuCores = item.value;
+      if (item.value > 0) {
+        podState.estimatedResources.add("cpu");
+      }
     }
   }
 
@@ -322,6 +344,9 @@ async function buildClusterPodStates(cluster: {
 
     if (podState.memoryGb <= 0) {
       podState.memoryGb = item.value;
+      if (item.value > 0) {
+        podState.estimatedResources.add("memory");
+      }
     }
   }
 
@@ -351,6 +376,7 @@ function cloneNamespaceCostSummary(
 ): MutableNamespaceCostSummary {
   return {
     totalPods: summary.totalPods,
+    estimatedPodCount: summary.estimatedPodCount,
     totalCpuCores: summary.totalCpuCores,
     totalMemoryGb: summary.totalMemoryGb,
     totalStorageGb: summary.totalStorageGb,
@@ -505,11 +531,14 @@ export async function getCostReport(
         memoryCost: round(memoryCost),
         storageCost: round(storageCost),
         totalCost: round(totalCost),
+        isEstimated: podState.estimatedResources.size > 0,
+        estimatedResources: Array.from(podState.estimatedResources).sort(),
       };
 
       if (!namespaces[podState.namespace]) {
         namespaces[podState.namespace] = {
           totalPods: 0,
+          estimatedPodCount: 0,
           totalCpuCores: 0,
           totalMemoryGb: 0,
           totalStorageGb: 0,
@@ -520,6 +549,7 @@ export async function getCostReport(
 
       const namespaceSummary = namespaces[podState.namespace];
       namespaceSummary.totalPods += 1;
+      namespaceSummary.estimatedPodCount += podCost.isEstimated ? 1 : 0;
       namespaceSummary.totalCpuCores += podCost.cpuCores;
       namespaceSummary.totalMemoryGb += podCost.memoryGb;
       namespaceSummary.totalStorageGb += podCost.storageGb;
@@ -535,6 +565,7 @@ export async function getCostReport(
     const clusterSummary: ClusterCostSummary = {
       totalPods: 0,
       totalNamespaces: Object.keys(namespacesWithSharing).length,
+      estimatedPodCount: 0,
       totalCpuCores: 0,
       totalMemoryGb: 0,
       totalStorageGb: 0,
@@ -545,6 +576,7 @@ export async function getCostReport(
     for (const [namespace, summary] of Object.entries(namespacesWithSharing)) {
       const normalizedSummary: NamespaceCostSummary = {
         totalPods: summary.totalPods,
+        estimatedPodCount: summary.estimatedPodCount,
         totalCpuCores: round(summary.totalCpuCores),
         totalMemoryGb: round(summary.totalMemoryGb),
         totalStorageGb: round(summary.totalStorageGb),
@@ -562,6 +594,7 @@ export async function getCostReport(
       };
 
       clusterSummary.totalPods += normalizedSummary.totalPods;
+      clusterSummary.estimatedPodCount += normalizedSummary.estimatedPodCount;
       clusterSummary.totalCpuCores += normalizedSummary.totalCpuCores;
       clusterSummary.totalMemoryGb += normalizedSummary.totalMemoryGb;
       clusterSummary.totalStorageGb += normalizedSummary.totalStorageGb;
@@ -583,6 +616,7 @@ export async function getCostReport(
       accumulator.totalClusters += 1;
       accumulator.totalNamespaces += cluster.totalNamespaces;
       accumulator.totalPods += cluster.totalPods;
+      accumulator.estimatedPodCount += cluster.estimatedPodCount;
       accumulator.totalCpuCores += cluster.totalCpuCores;
       accumulator.totalMemoryGb += cluster.totalMemoryGb;
       accumulator.totalStorageGb += cluster.totalStorageGb;
@@ -593,6 +627,7 @@ export async function getCostReport(
       totalClusters: 0,
       totalNamespaces: 0,
       totalPods: 0,
+      estimatedPodCount: 0,
       totalCpuCores: 0,
       totalMemoryGb: 0,
       totalStorageGb: 0,
@@ -606,6 +641,7 @@ export async function getCostReport(
     totalClusters: report.totalClusters,
     totalNamespaces: report.totalNamespaces,
     totalPods: report.totalPods,
+    estimatedPodCount: report.estimatedPodCount,
     totalCpuCores: round(report.totalCpuCores),
     totalMemoryGb: round(report.totalMemoryGb),
     totalStorageGb: round(report.totalStorageGb),
