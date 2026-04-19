@@ -22,10 +22,68 @@ data:
     global:
       scrape_interval: 15s
       evaluation_interval: 15s
+
     scrape_configs:
     - job_name: 'kube-state-metrics'
       static_configs:
         - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
+
+    - job_name: 'metrics-server'
+      metrics_path: /metrics
+      scheme: https
+      tls_config:
+        insecure_skip_verify: true
+      static_configs:
+        - targets: ['metrics-server.kube-system.svc.cluster.local:443']
+
+
+    - job_name: 'kubelet-cadvisor'
+      scheme: https
+      tls_config:
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      kubernetes_sd_configs:
+        - role: node
+      relabel_configs:
+        - target_label: __address__
+          replacement: kubernetes.default.svc:443
+        - source_labels: [__meta_kubernetes_node_name]
+          target_label: __metrics_path__
+          replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus-server
+  namespace: prometheus
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus-kubelet
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/proxy", "nodes/metrics"]
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics", "/metrics/cadvisor"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-kubelet
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-kubelet
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-server
+    namespace: prometheus
+
 
 ---
 # -------------------
@@ -46,6 +104,7 @@ spec:
       labels:
         app: prometheus-server
     spec:
+      serviceAccountName: prometheus-server
       containers:
         - name: prometheus
           image: prom/prometheus:latest
