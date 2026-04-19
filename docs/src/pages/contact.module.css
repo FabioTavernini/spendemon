@@ -1,0 +1,108 @@
+.page {
+  padding-bottom: 4rem;
+}
+
+.hero {
+  padding: 4rem 0 2rem;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  color: var(--ifm-color-primary-dark);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  max-width: 15ch;
+  margin-bottom: 1rem;
+}
+
+.lead {
+  max-width: 46rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 1.05rem;
+}
+
+.section {
+  padding: 1.5rem 0;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.formCard,
+.infoCard {
+  padding: 1.75rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 16px;
+  background: var(--ifm-background-surface-color);
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.hiddenField {
+  display: none;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 500;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 10px;
+  background: var(--ifm-background-color);
+  color: inherit;
+  font: inherit;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.infoPanel h2 {
+  margin-bottom: 1rem;
+}
+
+.infoList {
+  display: grid;
+  gap: 1rem;
+}
+
+.infoTitle {
+  margin-bottom: 0.5rem;
+}
+
+.infoText {
+  color: var(--ifm-color-emphasis-700);
+  margin-bottom: 1rem;
+}
+
+@media screen and (max-width: 996px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .formCard,
+  .infoCard {
+    padding: 1.5rem;
+  }
+}

@@ -90,9 +90,14 @@ const config: Config = {
           label: 'Pricing',
           position: 'left',
         },
+        {
+          to: '/contact',
+          label: 'Contact',
+          position: 'left',
+        },
         // {to: '/blog', label: 'Blog', position: 'left'},
         {
-          href: 'https://github.com/facebook/docusaurus',
+          href: 'https://github.com/FabioTavernini/spendemon',
           label: 'GitHub',
           position: 'right',
         },
@@ -130,6 +135,10 @@ const config: Config = {
         {
           title: 'More',
           items: [
+            {
+              label: 'Contact',
+              to: '/contact',
+            },
             // {
             //   label: 'Blog',
             //   to: '/blog',
