@@ -45,9 +45,9 @@ Example:
 ```yaml
 clusters:
   - name: production
-    prometheusUrl: https://prometheus-prod.example.com
+    prometheusUrl: https://prometheus-prod.example.com:9090
   - name: staging
-    prometheusUrl: https://prometheus-staging.example.com
+    prometheusUrl: https://prometheus-staging.example.com:9090
 ```
 
 ## Cost configuration
