@@ -21,7 +21,7 @@ function HomepageHeader() {
           <Link
             className="button button--secondary button--lg"
             to="/docs/intro">
-            Quickstart - 5min ⏱️
+            Get started
           </Link>
         </div>
       </div>
@@ -33,10 +33,25 @@ export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />">
+      title="Spendemon — Kubernetes cost reporting"
+      description="Spendemon documentation for Kubernetes cost monitoring, namespace chargeback, and pod-level cost reporting.">
       <HomepageHeader />
       <main>
+        <section className={styles.screenshotSection}>
+          <div className="container">
+            <Heading as="h2">Spendemon in action</Heading>
+            <p className={styles.screenshotText}>
+              Track cluster spend, compare namespaces, and drill into pod-level costs with the Spendemon cost reporting UI.
+            </p>
+            <div className={styles.screenshotWrapper}>
+              <img
+                src="/img/CostReportingSC.png"
+                alt="Spendemon cost reporting UI screenshot"
+                className={styles.screenshot}
+              />
+            </div>
+          </div>
+        </section>
         <HomepageFeatures />
       </main>
     </Layout>
