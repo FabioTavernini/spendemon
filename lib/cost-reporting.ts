@@ -93,12 +93,44 @@ async function queryPrometheusVector(
   prometheusUrl: string,
   query: string,
 ): Promise<QueryResult[]> {
-  const response = await fetch(
-    `${prometheusUrl}/api/v1/query?query=${encodeURIComponent(query)}`,
-    { cache: "no-store" },
-  );
+  let requestUrl: string;
 
-  const payload = (await response.json()) as PrometheusResponse;
+  try {
+    requestUrl = new URL(
+      `/api/v1/query?query=${encodeURIComponent(query)}`,
+      prometheusUrl,
+    ).toString();
+  } catch (error) {
+    console.warn(
+      `[cost-reporting] Invalid Prometheus URL "${prometheusUrl}":`,
+      error,
+    );
+    return [];
+  }
+
+  let response: Response;
+
+  try {
+    response = await fetch(requestUrl, { cache: "no-store" });
+  } catch (error) {
+    console.warn(
+      `[cost-reporting] Failed to query Prometheus at "${prometheusUrl}":`,
+      error,
+    );
+    return [];
+  }
+
+  let payload: PrometheusResponse;
+
+  try {
+    payload = (await response.json()) as PrometheusResponse;
+  } catch (error) {
+    console.warn(
+      `[cost-reporting] Invalid Prometheus response from "${prometheusUrl}":`,
+      error,
+    );
+    return [];
+  }
 
   if (!response.ok || payload.status !== "success") {
     return [];
