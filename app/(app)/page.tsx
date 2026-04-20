@@ -1,5 +1,6 @@
 import { SectionCards } from '@/components/cards'
 import { NamespacesTable } from '@/components/k8s/namespacestable'
+import { NodesTable } from '@/components/k8s/nodestable'
 import { PodsTable } from '@/components/k8s/podstable'
 import { SiteHeader } from '@/components/site-header'
 import { Separator } from '@/components/ui/separator'
@@ -22,6 +23,9 @@ export default async function Page({
 
         <Separator className="my-4" />
 
+        <div className="min-w-0 rounded-lg border bg-card p-3 sm:p-4">
+          <NodesTable clusters={params.clusters} />
+        </div>
         <div className="min-w-0 rounded-lg border bg-card p-3 sm:p-4">
           <NamespacesTable
             clusters={params.clusters}
