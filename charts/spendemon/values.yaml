@@ -9,6 +9,16 @@ image:
   # Optional image pull secret name for private registries. Leave empty for public images.
   imagePullSecret: ""
 
+# Init container used to seed the rendered settings.yaml into the persistent volume.
+seedSettings:
+  image:
+    # OCI image repository for the seed-settings init container.
+    repository: busybox
+    # Image tag for the init container.
+    tag: "1.36"
+    # Kubernetes image pull policy for the init container.
+    pullPolicy: IfNotPresent
+
 # Service exposed inside the cluster and used by Ingress / Gateway backends.
 service:
   # Kubernetes Service type.
