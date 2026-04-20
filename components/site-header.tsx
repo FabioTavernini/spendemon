@@ -4,6 +4,8 @@ import { LogoutButton } from '@/components/auth/logout-button'
 import { Button } from '@/components/ui/button'
 import { auth, isOidcEnabled } from '@/lib/auth'
 
+import { ArrowUpRight } from 'lucide-react'
+
 export async function SiteHeader({ title = 'Overview' }: { title?: string }) {
   const session = await auth()
 
@@ -12,11 +14,18 @@ export async function SiteHeader({ title = 'Overview' }: { title?: string }) {
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6 mb-2">
         <h1 className="text-base font-medium">{title}</h1>
         <div className="ml-auto flex items-center gap-2">
-          <Link href={'https://spendemon.netlify.app'} target="_blank">
-            <Button variant="outline" size="sm" className="hover:cursor-pointer">
+
+          <Button asChild className="shadow-sm text-black dark:text-white" size="sm" variant="outline">
+            <Link
+              href="https://spendemon.com/docs/intro"
+              rel="noreferrer"
+              target="_blank"
+            >
               Docs
-            </Button>
-          </Link>
+              <ArrowUpRight className="size-3.5" />
+            </Link>
+          </Button>
+
           {isOidcEnabled() && session ? <LogoutButton /> : null}
         </div>
       </div>
