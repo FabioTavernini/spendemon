@@ -1,22 +1,22 @@
-import { AppSidebar } from '@/components/layout/sidebar/sidebar'
-import Footer from '@/components/layout/footer/footer'
-import { SidebarProvider } from '@/components/ui/sidebar'
-import { requirePageRole } from '@/lib/authorization'
+import { AppSidebar } from "@/components/layout/sidebar/sidebar";
+import Footer from "@/components/layout/footer/footer";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { requirePageRole } from "@/lib/authorization";
 
 export default async function AppLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
-  await requirePageRole('viewer')
+  await requirePageRole("viewer");
 
   return (
-    <>
-      <SidebarProvider>
-        <AppSidebar />
-        <main className="min-w-0 flex-1">{children}</main>
-      </SidebarProvider>
-      <Footer />
-    </>
-  )
+    <SidebarProvider>
+      <AppSidebar />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</main>
+        <Footer />
+      </div>
+    </SidebarProvider>
+  );
 }

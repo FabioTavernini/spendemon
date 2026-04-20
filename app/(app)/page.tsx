@@ -1,25 +1,28 @@
-import { SectionCards } from '@/components/cards'
-import { NamespacesTable } from '@/components/k8s/namespacestable'
-import { NodesTable } from '@/components/k8s/nodestable'
-import { PodsTable } from '@/components/k8s/podstable'
-import { SiteHeader } from '@/components/site-header'
-import { Separator } from '@/components/ui/separator'
+import { SectionCards } from "@/components/cards";
+import { NamespacesTable } from "@/components/k8s/namespacestable";
+import { NodesTable } from "@/components/k8s/nodestable";
+import { PodsTable } from "@/components/k8s/podstable";
+import { SiteHeader } from "@/components/site-header";
+import { Separator } from "@/components/ui/separator";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ clusters?: string; namespaces?: string }>
+  searchParams: Promise<{ clusters?: string; namespaces?: string }>;
 }) {
-  const params = await searchParams
+  const params = await searchParams;
 
   return (
-    <div className="flex min-h-screen w-full min-w-0 flex-col bg-background px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5">
+    <div className="flex h-full w-full min-w-0 flex-1 flex-col bg-background px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5">
       <SiteHeader />
 
       <div className="flex min-w-0 flex-1 flex-col space-y-6 py-4 sm:py-6">
-        <SectionCards clusters={params.clusters} namespaces={params.namespaces} />
+        <SectionCards
+          clusters={params.clusters}
+          namespaces={params.namespaces}
+        />
 
         <Separator className="my-4" />
 
@@ -33,9 +36,12 @@ export default async function Page({
           />
         </div>
         <div className="min-w-0 rounded-lg border bg-card p-3 sm:p-4">
-          <PodsTable clusters={params.clusters} namespaces={params.namespaces} />
+          <PodsTable
+            clusters={params.clusters}
+            namespaces={params.namespaces}
+          />
         </div>
       </div>
     </div>
-  )
+  );
 }

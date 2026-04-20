@@ -1,11 +1,27 @@
+import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
+
 export default function Footer() {
+  return (
+    <footer className="border-t bg-transparent px-4 py-3 text-sm">
+      <div className="flex w-full flex-wrap items-center justify-center gap-3 text-center">
+        <p className="text-muted-foreground">
+          &copy; {new Date().getFullYear()} Spendemon. All rights reserved.
+        </p>
 
-    return (
-        <footer className="w-full border-t bg-transparent text-center text-sm p-4">
-            <p className="text-gray-500">
-                &copy; {new Date().getFullYear()} Spendemon. All rights reserved.
-            </p>
-        </footer>
-    )
-
+        <Button asChild className="shadow-sm" size="sm" variant="outline">
+          <Link
+            href="https://spendemon.com/docs/intro"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Docs
+            <ArrowUpRight className="size-3.5" />
+          </Link>
+        </Button>
+      </div>
+    </footer>
+  );
 }
