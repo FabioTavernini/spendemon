@@ -11,29 +11,33 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Cluster cost visibility',
+    title: 'Multi-cluster inventory',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Monitor total Kubernetes spend across clusters and understand cost drivers in a centralized dashboard.
+        Connect multiple Prometheus endpoints and browse clusters, namespaces,
+        and pods from one focused dashboard.
       </>
     ),
   },
   {
-    title: 'Namespace & pod chargeback',
+    title: 'Request-based cost estimates',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Allocate costs to namespaces and pods so teams can identify unexpected spending and optimize resource usage.
+        Turn CPU, memory, and ephemeral storage requests into namespace and
+        pod-level cost rollups, with fallback estimates when requests are
+        missing.
       </>
     ),
   },
   {
-    title: 'Actionable reporting',
+    title: 'Config, auth, and chargeback controls',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        View cost rollups, compare usage over time, and export reports for Kubernetes budget planning.
+        Manage pricing, shared namespaces, HA, and optional OIDC access control
+        from the same deployment.
       </>
     ),
   },

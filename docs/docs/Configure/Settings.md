@@ -4,19 +4,34 @@ sidebar_position: 1
 
 # settings.yaml
 
-Spendemon reads its runtime configuration from a `settings.yaml` file. This file tells the app which clusters to display, where to find Prometheus for each cluster, and which pricing assumptions to use when estimating cost.
+Spendemon reads its runtime configuration from a `settings.yaml` file.
+
+This file controls:
+
+- which clusters are queried
+- the cost rates used for estimates
+- whether HA should be enabled in the bundled Kubernetes deployment patterns
+- which namespaces should be treated as shared overhead
+- whether OIDC authentication and authorization is enabled
+
+By default the app reads `settings.yaml` from the project root. You can override the path with `SETTINGS_FILE_PATH`.
 
 ## Example
 
 ```yaml
 clusters:
-  - name: cluster-2
-    prometheusUrl: http://localhost:9090
+  - name: prod-eu
+    prometheusUrl: http://prometheus-prod-eu:9090
+  - name: staging-us
+    prometheusUrl: http://prometheus-staging-us:9090
 
 costs:
-  cpuCore: 10
-  memoryGb: 20
-  storageGb: 5
+  cpuCore: 12.5
+  memoryGb: 1.8
+  storageGb: 0.12
+
+HA:
+  enabled: false
 
 sharednamespaces:
   - kube-system
@@ -24,21 +39,42 @@ sharednamespaces:
 
 oidc:
   enabled: false
+  debug: false
   issuer: ${OIDC_ISSUER}
   clientId: ${OIDC_CLIENT_ID}
   clientSecret: ${OIDC_CLIENT_SECRET}
-  adminGroup: admin
-  viewerGroup: viewer
+  adminGroup: platform-admins
+  viewerGroup: engineering
+  extraScopes: groups
 ```
 
-## Cluster configuration
+## Top-level keys
 
-Use `clusters` to define the environments Spendemon should connect to.
+The runtime parser understands these top-level sections:
 
-- `name`: the display name shown in the UI
-- `prometheusUrl`: the base URL of the Prometheus instance for that cluster
+- `clusters`
+- `costs`
+- `HA`
+- `sharednamespaces`
+- `oidc`
 
-You can add multiple entries when you want to compare several clusters in one dashboard.
+Two details are easy to miss:
+
+- `HA` is uppercase in runtime `settings.yaml`
+- `sharednamespaces` is all lowercase and written as one word
+
+## clusters
+
+Use `clusters` to define the Prometheus-backed environments Spendemon should query.
+
+- `name`: cluster label shown throughout the UI
+- `prometheusUrl`: base URL for that cluster's Prometheus server
+
+Rules and notes:
+
+- at least one cluster is required
+- every cluster must include both `name` and `prometheusUrl`
+- the URL must be reachable from where Spendemon is running
 
 Example:
 
@@ -50,48 +86,166 @@ clusters:
     prometheusUrl: https://prometheus-staging.example.com:9090
 ```
 
-## Cost configuration
+## costs
 
-The `costs` block defines the pricing inputs used to turn infrastructure usage into estimated cost.
+The `costs` block defines the pricing inputs used to turn resource data into estimated cost.
 
-- `cpuCore`: cost assigned to one CPU core
-- `memoryGb`: cost assigned to one gigabyte of memory
-- `storageGb`: cost assigned to one gigabyte of storage
+- `cpuCore`: cost applied to CPU cores
+- `memoryGb`: cost applied to memory in GB
+- `storageGb`: cost applied to ephemeral storage in GB
 
-These numbers should reflect your own internal assumptions or cloud cost model. Spendemon uses them as estimation inputs, so they do not need to exactly mirror your billing export to still be useful.
+All three values must be non-negative numbers.
 
-## OIDC configuration
+Spendemon prefers Kubernetes resource requests when calculating pod cost:
 
-If you want authentication, enable the `oidc` block.
+- CPU from `kube_pod_container_resource_requests{resource="cpu",unit="core"}`
+- memory from `kube_pod_container_resource_requests{resource="memory",unit="byte"}`
+- ephemeral storage from available storage request metrics
 
-- `enabled`: turns OIDC integration on or off
-- `issuer`: the issuer URL of your identity provider
-- `clientId`: the OIDC client ID
-- `clientSecret`: the OIDC client secret
-- `adminGroup`: group name that should receive admin access
-- `viewerGroup`: group name that should receive read-only access
+If CPU or memory requests are missing, Spendemon falls back to observed usage for estimation and marks those pods as estimated in the report.
 
-The example uses environment variable placeholders for sensitive values. That is the recommended approach so secrets are not committed into source control.
+## HA
 
-## Shared namespace configuration
+The `HA` block currently contains one key:
 
-Use `sharednamespaces` when some namespaces represent platform or shared overhead that should be spread across the rest of the namespaces.
+- `enabled`: when `true`, the bundled Helm chart and related deployment patterns use 2 replicas instead of 1
 
-- each entry is a namespace name such as `kube-system` or `monitoring`
-- matching namespaces are applied per cluster
-- their cost is redistributed evenly across the remaining namespaces in that cluster
+Example:
+
+```yaml
+HA:
+  enabled: true
+```
+
+## sharednamespaces
+
+Use `sharednamespaces` for platform namespaces whose cost should be redistributed across the other namespaces in the same cluster.
+
+Typical examples:
+
+- `kube-system`
+- `monitoring`
+- `ingress-nginx`
+
+Behavior:
+
+- matching namespaces are excluded as standalone chargeback targets
+- their totals are split evenly across the remaining namespaces in that cluster
+- the redistributed values are also spread across the pods inside each recipient namespace
 
 Example:
 
 ```yaml
 sharednamespaces:
   - kube-system
-  - istio-system
   - monitoring
+  - ingress-nginx
 ```
 
-## Practical tips
+## oidc
 
-- Start with one cluster and simple cost values, then expand once the basic flow works.
-- Make sure the Prometheus URL is reachable from wherever Spendemon is running.
-- Keep secrets such as OIDC client credentials outside the repository when possible.
+The `oidc` block enables authentication and role-based authorization through NextAuth and an OpenID Connect provider.
+
+Supported keys:
+
+- `enabled`: turns OIDC on or off
+- `debug`: logs resolved memberships to the server logs during sign-in
+- `issuer`: OIDC issuer URL
+- `clientId`: client ID
+- `clientSecret`: client secret
+- `adminGroup`: membership that grants admin access
+- `viewerGroup`: membership that grants viewer access
+- `extraScopes`: extra scopes appended to the default `openid email profile`
+
+`extraScopes` is stored in runtime YAML as a single string and can be space-separated or comma-separated:
+
+```yaml
+oidc:
+  extraScopes: groups offline_access
+```
+
+or:
+
+```yaml
+oidc:
+  extraScopes: groups,offline_access
+```
+
+The parser will normalize both forms into a deduplicated list.
+
+### Environment placeholders
+
+Runtime OIDC string fields can reference environment variables with `${...}` placeholders.
+
+Example:
+
+```yaml
+oidc:
+  enabled: true
+  issuer: ${OIDC_ISSUER}
+  clientId: ${OIDC_CLIENT_ID}
+  clientSecret: ${OIDC_CLIENT_SECRET}
+  adminGroup: ${OIDC_ADMIN_GROUP}
+  viewerGroup: ${OIDC_VIEWER_GROUP}
+```
+
+When OIDC is enabled, these values must resolve successfully at runtime.
+
+### Authorization model
+
+Spendemon currently uses two roles:
+
+- `viewer`: can access the main app and read-only API endpoints
+- `admin`: can also access `/settings` and update configuration through `/api/settings`
+
+Admins also inherit viewer access.
+
+## Defaults and validation
+
+If some sections are omitted, Spendemon falls back to these defaults:
+
+- `costs`: all zeros
+- `HA.enabled`: `false`
+- `sharednamespaces`: empty list
+- `oidc.enabled`: `false`
+- `oidc.debug`: `false`
+- `oidc.adminGroup`: `admin`
+- `oidc.viewerGroup`: `viewer`
+- `oidc.extraScopes`: empty list
+
+Validation rules to keep in mind:
+
+- `clusters` must exist and contain at least one entry
+- `costs` must be non-negative numbers
+- `HA.enabled` and `oidc.enabled` / `oidc.debug` must be `true` or `false`
+- unknown keys inside supported sections are rejected
+
+## Example with everything enabled
+
+```yaml
+clusters:
+  - name: production
+    prometheusUrl: https://prometheus-prod.example.com:9090
+
+costs:
+  cpuCore: 12.5
+  memoryGb: 1.8
+  storageGb: 0.12
+
+HA:
+  enabled: true
+
+sharednamespaces:
+  - kube-system
+  - monitoring
+
+oidc:
+  enabled: true
+  debug: false
+  issuer: ${OIDC_ISSUER}
+  clientId: ${OIDC_CLIENT_ID}
+  clientSecret: ${OIDC_CLIENT_SECRET}
+  adminGroup: platform-admins
+  viewerGroup: engineering
+  extraScopes: groups
+```

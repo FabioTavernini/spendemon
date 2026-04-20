@@ -4,7 +4,9 @@ sidebar_position: 3
 
 # Docker
 
-Running Spendemon with Docker is the quickest way to try it locally. This is a good option when you want to validate the UI, test a configuration, or connect to an existing Prometheus instance without setting up a full development environment.
+Running Spendemon with Docker is the quickest way to try the app locally.
+
+It is a good fit when you want to validate the UI, connect to an existing Prometheus endpoint, or test a `settings.yaml` file without setting up the full development environment.
 
 ## Run it directly
 
@@ -14,9 +16,11 @@ docker run -p 3000:3000 ghcr.io/fabiotavernini/spendemon:latest
 
 Then open `http://localhost:3000`.
 
-## Provide configuration
+The image already contains a starter `settings.yaml`, so the container will boot immediately. In practice, you will usually want to provide your own config.
 
-Spendemon needs a `settings.yaml` file to know which clusters to show and which cost assumptions to use. In practice, you will usually mount that file into the container.
+## Mount your own settings.yaml
+
+Spendemon reads runtime configuration from `settings.yaml` in the container working directory unless `SETTINGS_FILE_PATH` is overridden.
 
 Example:
 
@@ -27,19 +31,40 @@ docker run \
   ghcr.io/fabiotavernini/spendemon:latest
 ```
 
-Adjust the container path if your image expects the config in a different location.
+If you prefer another mount path, also set `SETTINGS_FILE_PATH`:
+
+```sh
+docker run \
+  -p 3000:3000 \
+  -e SETTINGS_FILE_PATH=/data/settings.yaml \
+  -v $(pwd)/settings.yaml:/data/settings.yaml \
+  ghcr.io/fabiotavernini/spendemon:latest
+```
 
 ## Typical local workflow
 
-The most common way to evaluate Spendemon with Docker is:
+1. Copy the example config and edit it for your environment.
 
-1. Create a `settings.yaml` file with at least one cluster and some baseline pricing values.
-2. Start the container and mount the configuration file.
-3. Open the app in your browser.
-4. Confirm the Prometheus endpoint is reachable from the environment where the container runs.
+```sh
+cp settings-example.yaml settings.yaml
+```
+
+2. Point `clusters[].prometheusUrl` at a Prometheus instance reachable from the container.
+3. Start the container and mount `settings.yaml`.
+4. Open `http://localhost:3000`.
+5. Use `/settings` if you want to adjust pricing or inspect the raw YAML in the UI.
+
+## OIDC note
+
+OIDC works in Docker too, but you need both:
+
+- an `oidc:` block in `settings.yaml`
+- the environment variables referenced by that block, plus `NEXTAUTH_SECRET` and `NEXTAUTH_URL`
+
+For production-style OIDC setups, the [Helm install](./Kubernetes/Helm) path is usually simpler because the chart already supports secret-based wiring.
 
 ## Notes
 
 - If your Prometheus instance is only reachable from inside your cluster or VPN, make sure the Docker container has network access to it.
-- If you update `settings.yaml`, you may need to restart the container depending on how the application loads configuration.
-- For the available configuration keys, see [Settings](../Configure/Settings).
+- If you replace the mounted file contents, refresh the app after saving.
+- For the full runtime configuration format, see [Settings](../Configure/Settings).

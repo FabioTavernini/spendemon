@@ -21,7 +21,7 @@ function HomepageHeader() {
           <Link
             className="button button--secondary button--lg"
             to="/docs/intro">
-            Get started
+            Read the docs
           </Link>
         </div>
       </div>
@@ -41,7 +41,8 @@ export default function Home(): ReactNode {
           <div className="container">
             <Heading as="h2">Spendemon in action</Heading>
             <p className={styles.screenshotText}>
-              Track cluster spend, compare namespaces, and drill into pod-level costs with the Spendemon cost reporting UI.
+              Compare clusters, inspect namespace chargeback, and drill into
+              pod-level cost estimates from the cost reporting view.
             </p>
             <div className={styles.screenshotWrapper}>
               <img

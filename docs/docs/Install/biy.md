@@ -4,14 +4,12 @@ sidebar_position: 4
 
 # Build it yourself
 
-Use this path if you want to develop locally, inspect the code, or contribute changes. It gives you the most control and is the best setup for iterating on the app itself.
+Use this path if you want to develop locally, inspect the code, or run a custom build.
 
 ## Prerequisites
 
-Before you begin, make sure you have:
-
 - Node.js 20 or newer
-- a package manager such as `npm`
+- npm
 - access to a Prometheus endpoint you can point Spendemon at
 
 ## Clone and install
@@ -22,14 +20,36 @@ cd spendemon
 npm install
 ```
 
-## Start the app
+## Create your config
 
-Once dependencies are installed, start the local development server for the Spendemon app using the scripts provided by the main project:
+```sh
+cp settings-example.yaml settings.yaml
+```
+
+Then edit `settings.yaml` with:
+
+- one or more cluster names
+- a reachable `prometheusUrl` for each cluster
+- pricing values under `costs`
+- optional `sharednamespaces`, `HA`, and `oidc` settings
+
+See [Settings](../Configure/Settings) for the full format.
+
+## Start Spendemon
+
 ```sh
 npm run dev
 ```
 
-If you are only working on these docs, the docs site itself can be started from this directory with:
+Then open `http://localhost:3000`.
+
+## OIDC note
+
+If your `settings.yaml` uses placeholders such as `${OIDC_ISSUER}`, export those environment variables before starting the app. In production, you should also set `NEXTAUTH_SECRET` and `NEXTAUTH_URL`.
+
+## Docs-only workflow
+
+If you are only working on the Docusaurus site under `docs/`, start it separately:
 
 ```sh
 cd docs
@@ -37,21 +57,4 @@ npm install
 npm run start
 ```
 
-## Configure Spendemon
-
-Edit the `settings.yaml` file and define:
-
-- one or more clusters
-- the Prometheus URL for each cluster
-- cost values for CPU, memory, and storage
-- optional OIDC settings if you want authentication enabled
-
-See [Settings](../Configure/Settings) for the configuration format.
-
-## When to choose this option
-
-Building from source is the right choice when you want to:
-
-- contribute code or docs
-- test changes before opening a pull request
-- run a custom version instead of the published container image
+This launches the docs site with live reload from the `docs/` folder.

@@ -6,7 +6,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Spendemon',
-  tagline: 'Kubernetes cost monitoring',
+  tagline: 'Prometheus-powered Kubernetes cost reporting',
   favicon: 'img/spendemon.svg',
 
   onBrokenLinks: 'ignore', // or 'warn' to just warn
