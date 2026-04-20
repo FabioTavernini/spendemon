@@ -54,6 +54,7 @@ spec:
       labels:
         app: spendemon
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
@@ -79,13 +80,22 @@ spec:
               mountPath: /seed
       containers:
         - name: spendemon
-          image: ghcr.io/fabiotavernini/spendemon:latest
+          image: ghcr.io/fabiotavernini/spendemon:0.0.5
           imagePullPolicy: IfNotPresent
           env:
             - name: SETTINGS_FILE_PATH
               value: /data/settings.yaml
           ports:
             - containerPort: 3000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+              ephemeral-storage: 512Mi
           volumeMounts:
             - name: settings
               mountPath: /data

@@ -40,3 +40,5 @@ settings.yaml
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.codex/
