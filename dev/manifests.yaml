@@ -112,6 +112,9 @@ spec:
             - "--config.file=/etc/prometheus/prometheus.yml"
           ports:
             - containerPort: 9090
+          resources:
+            limits:
+              memory: 512Mi
           volumeMounts:
             - name: config-volume
               mountPath: /etc/prometheus
@@ -160,6 +163,7 @@ spec:
       labels:
         app: kube-state-metrics
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: kube-state-metrics
           image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.18.0

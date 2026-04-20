@@ -3,10 +3,14 @@ kind: Pod
 metadata:
   name: pending-pod
 spec:
+  automountServiceAccountToken: false
   containers:
   - name: pending-pod
     image: ubuntu:24.04
     command: ["sleep", "infinity"]
+    resources:
+      limits:
+        memory: 128Mi
   restartPolicy: Never
   nodeSelector:
     kubernetes.io/hostname: this-node-does-not-exist

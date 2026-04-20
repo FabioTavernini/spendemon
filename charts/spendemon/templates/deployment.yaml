@@ -57,7 +57,14 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
-{{- toYaml .Values.resources | nindent 12 }}
+            requests:
+              cpu: {{ dig "requests" "cpu" "100m" .Values.resources }}
+              memory: {{ dig "requests" "memory" "256Mi" .Values.resources }}
+              ephemeral-storage: {{ dig "requests" "ephemeral-storage" "256Mi" .Values.resources }}
+            limits:
+              cpu: {{ dig "limits" "cpu" "500m" .Values.resources }}
+              memory: {{ dig "limits" "memory" "512Mi" .Values.resources }}
+              ephemeral-storage: {{ dig "limits" "ephemeral-storage" "512Mi" .Values.resources }}
           env:
             - name: SETTINGS_FILE_PATH
               value: {{ printf "%s/settings.yaml" .Values.persistence.mountPath | quote }}
