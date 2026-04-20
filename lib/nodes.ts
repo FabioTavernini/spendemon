@@ -391,7 +391,9 @@ async function listClusterNodes(cluster: Cluster): Promise<NodeItem[]> {
         : readyOutcome.success
           ? 'NotReady'
           : 'Unknown',
-      roles: Array.from(rolesByNode.get(nodeName) ?? []).sort(),
+      roles: Array.from(rolesByNode.get(nodeName) ?? []).sort((left, right) =>
+        left.localeCompare(right)
+      ),
       internalIp: toNullableValue(item.metric.internal_ip),
       osImage: toNullableValue(item.metric.os_image),
       kernelVersion: toNullableValue(item.metric.kernel_version),

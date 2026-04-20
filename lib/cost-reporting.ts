@@ -532,7 +532,9 @@ export async function getCostReport(
         storageCost: round(storageCost),
         totalCost: round(totalCost),
         isEstimated: podState.estimatedResources.size > 0,
-        estimatedResources: Array.from(podState.estimatedResources).sort(),
+        estimatedResources: Array.from(podState.estimatedResources).sort(
+          (left, right) => left.localeCompare(right)
+        ),
       };
 
       if (!namespaces[podState.namespace]) {
