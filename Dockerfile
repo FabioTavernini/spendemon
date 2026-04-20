@@ -86,17 +86,17 @@ ENV HOSTNAME="0.0.0.0"
 # Uncomment the following line in case you want to disable telemetry during the run time.
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy production assets with read-only permissions
-COPY --from=builder --chown=node:node --chmod=0555 /app/public ./public
+# Copy production assets as immutable runtime files
+COPY --from=builder --chown=root:root --chmod=0555 /app/public ./public
 
 # Set the correct permissions for the prerender cache directory
 RUN mkdir -p .next && chown node:node .next && chmod 0755 .next
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=node:node --chmod=0555 /app/.next/standalone ./
-COPY --from=builder --chown=node:node --chmod=0555 /app/.next/static ./.next/static
-COPY --from=builder --chown=node:node --chmod=0444 /app/settings-example.yaml ./settings.yaml
+COPY --from=builder --chown=root:root --chmod=0555 /app/.next/standalone ./
+COPY --from=builder --chown=root:root --chmod=0555 /app/.next/static ./.next/static
+COPY --from=builder --chown=root:root --chmod=0444 /app/settings-example.yaml ./settings.yaml
 
 # If you want to persist the fetch cache generated during the build so that
 # cached responses are available immediately on startup, uncomment this line:
