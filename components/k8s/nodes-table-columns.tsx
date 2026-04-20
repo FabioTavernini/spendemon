@@ -12,6 +12,14 @@ export type NodeRow = {
   node: string
   status: "Ready" | "NotReady" | "Unknown"
   roles: string[]
+  cpuCapacityCores: number | null
+  cpuAllocatableCores: number | null
+  memoryCapacityGb: number | null
+  memoryAllocatableGb: number | null
+  storageCapacityGb: number | null
+  storageAllocatableGb: number | null
+  podCapacity: number | null
+  podAllocatable: number | null
   internalIp: string | null
   kubeletVersion: string | null
   containerRuntimeVersion: string | null
@@ -56,6 +64,48 @@ function getStatusClasses(status: NodeRow["status"]) {
   }
 }
 
+function formatNumber(value: number) {
+  if (value !== 0 && Math.abs(value) < 0.01) {
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    })
+  }
+
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })
+}
+
+function formatResourceValue(value: number | null) {
+  return value === null ? "N/A" : formatNumber(value)
+}
+
+function formatResourcePair(allocatable: number | null, capacity: number | null) {
+  if (allocatable === null && capacity === null) {
+    return "N/A"
+  }
+
+  return `${formatResourceValue(allocatable)} / ${formatResourceValue(capacity)}`
+}
+
+function compareNullableNumbers(left: number | null, right: number | null) {
+  if (left === null && right === null) {
+    return 0
+  }
+
+  if (left === null) {
+    return 1
+  }
+
+  if (right === null) {
+    return -1
+  }
+
+  return left - right
+}
+
 function renderNullableValue(value: string | null, className?: string) {
   if (!value) {
     return <span className="text-muted-foreground">N/A</span>
@@ -65,6 +115,23 @@ function renderNullableValue(value: string | null, className?: string) {
     <span className={className} title={value}>
       {value}
     </span>
+  )
+}
+
+function renderResourceCell(allocatable: number | null, capacity: number | null) {
+  if (allocatable === null && capacity === null) {
+    return <span className="text-muted-foreground">N/A</span>
+  }
+
+  return (
+    <div className="text-right">
+      <div className="font-medium tabular-nums">
+        {formatResourceValue(allocatable)}
+      </div>
+      <div className="text-xs text-muted-foreground tabular-nums">
+        cap {formatResourceValue(capacity)}
+      </div>
+    </div>
   )
 }
 
@@ -110,6 +177,68 @@ export const columns: ColumnDef<NodeRow>[] = [
       ) : (
         <span className="text-muted-foreground">Unassigned</span>
       ),
+  },
+  {
+    id: "cpu",
+    accessorFn: (row) =>
+      formatResourcePair(row.cpuAllocatableCores, row.cpuCapacityCores),
+    sortingFn: (rowA, rowB) =>
+      compareNullableNumbers(
+        rowA.original.cpuAllocatableCores ?? rowA.original.cpuCapacityCores,
+        rowB.original.cpuAllocatableCores ?? rowB.original.cpuCapacityCores
+      ),
+    header: ({ column }) => <SortableHeader column={column} label="CPU" />,
+    cell: ({ row }) =>
+      renderResourceCell(
+        row.original.cpuAllocatableCores,
+        row.original.cpuCapacityCores
+      ),
+  },
+  {
+    id: "memory",
+    accessorFn: (row) =>
+      formatResourcePair(row.memoryAllocatableGb, row.memoryCapacityGb),
+    sortingFn: (rowA, rowB) =>
+      compareNullableNumbers(
+        rowA.original.memoryAllocatableGb ?? rowA.original.memoryCapacityGb,
+        rowB.original.memoryAllocatableGb ?? rowB.original.memoryCapacityGb
+      ),
+    header: ({ column }) => <SortableHeader column={column} label="RAM GB" />,
+    cell: ({ row }) =>
+      renderResourceCell(
+        row.original.memoryAllocatableGb,
+        row.original.memoryCapacityGb
+      ),
+  },
+  {
+    id: "storage",
+    accessorFn: (row) =>
+      formatResourcePair(row.storageAllocatableGb, row.storageCapacityGb),
+    sortingFn: (rowA, rowB) =>
+      compareNullableNumbers(
+        rowA.original.storageAllocatableGb ?? rowA.original.storageCapacityGb,
+        rowB.original.storageAllocatableGb ?? rowB.original.storageCapacityGb
+      ),
+    header: ({ column }) => (
+      <SortableHeader column={column} label="Storage GB" />
+    ),
+    cell: ({ row }) =>
+      renderResourceCell(
+        row.original.storageAllocatableGb,
+        row.original.storageCapacityGb
+      ),
+  },
+  {
+    id: "pods",
+    accessorFn: (row) => formatResourcePair(row.podAllocatable, row.podCapacity),
+    sortingFn: (rowA, rowB) =>
+      compareNullableNumbers(
+        rowA.original.podAllocatable ?? rowA.original.podCapacity,
+        rowB.original.podAllocatable ?? rowB.original.podCapacity
+      ),
+    header: ({ column }) => <SortableHeader column={column} label="Pods" />,
+    cell: ({ row }) =>
+      renderResourceCell(row.original.podAllocatable, row.original.podCapacity),
   },
   {
     accessorKey: "internalIp",

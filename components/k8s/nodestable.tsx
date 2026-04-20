@@ -32,6 +32,14 @@ export async function NodesTable({
     node: node.node,
     status: node.status,
     roles: node.roles,
+    cpuCapacityCores: node.cpuCapacityCores,
+    cpuAllocatableCores: node.cpuAllocatableCores,
+    memoryCapacityGb: node.memoryCapacityGb,
+    memoryAllocatableGb: node.memoryAllocatableGb,
+    storageCapacityGb: node.storageCapacityGb,
+    storageAllocatableGb: node.storageAllocatableGb,
+    podCapacity: node.podCapacity,
+    podAllocatable: node.podAllocatable,
     internalIp: node.internalIp,
     kubeletVersion: node.kubeletVersion,
     containerRuntimeVersion: node.containerRuntimeVersion,
@@ -42,6 +50,10 @@ export async function NodesTable({
     <>
       <h2 className="my-2 text-2xl">Nodes</h2>
       <Separator className="my-2" />
+      <p className="mb-3 text-sm text-muted-foreground">
+        Resource columns show allocatable first, with total node capacity
+        underneath.
+      </p>
       <DataTable columns={columns} data={rows} initialPageSize={10} />
     </>
   )
