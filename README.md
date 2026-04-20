@@ -172,16 +172,11 @@ The plain manifest intentionally ships with just the core `ConfigMap`, `Deployme
 
 ## License
 
-Spendemon is distributed under a **dual-license model**:
+Free for personal, educational, homelab, and non-commercial use.
 
-1. **Personal Use**: Free for individuals for non-commercial purposes under the **Personal-Use Free License (PUFL 1.0)**. See [LICENSE](./LICENSE).
+Commercial use requires a paid license.
 
-2. **Commercial Use**: Corporations, organizations, or any commercial usage require a **Commercial License**. See [COMMERCIAL_LICENSE.md](./COMMERCIAL_LICENSE.md).
-
-### Why dual licensing?
-
-This approach allows individuals to use, modify, and enjoy the software freely, while ensuring companies pay for commercial usage. It also keeps the code source-available.
-
+See LICENSE.md and COMMERCIAL.md
 
 ## Notes
 
