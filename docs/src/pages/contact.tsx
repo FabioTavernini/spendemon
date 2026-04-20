@@ -110,7 +110,7 @@ export default function Contact(): ReactNode {
               </div>
 
               <aside className={styles.infoPanel}>
-                <Heading as="h2">Other ways to reach the right place</Heading>
+                {/* <Heading as="h2">Other ways to reach the right place</Heading> */}
                 <div className={styles.infoList}>
                   {infoItems.map((item) => (
                     <article key={item.title} className={styles.infoCard}>
