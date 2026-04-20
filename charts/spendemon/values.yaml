@@ -18,6 +18,14 @@ seedSettings:
     tag: "1.36"
     # Kubernetes image pull policy for the init container.
     pullPolicy: IfNotPresent
+  # Pod resource requests / limits for the init container.
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 50m
+      memory: 64Mi
 
 # Service exposed inside the cluster and used by Ingress / Gateway backends.
 service:
@@ -25,6 +33,10 @@ service:
   type: ClusterIP
   # Service port exposed by the chart. The container itself listens on port 3000.
   port: 3000
+
+# Spendemon does not need access to the Kubernetes API by default, so do not
+# mount the service account token unless you explicitly opt in.
+automountServiceAccountToken: false
 
 # Optional Kubernetes Ingress resource.
 ingress:
@@ -72,15 +84,13 @@ gateway:
           pathType: PathPrefix
 
 # Pod resource requests / limits for the main container.
-# Example:
-# resources:
-#   requests:
-#     cpu: 100m
-#     memory: 256Mi
-#   limits:
-#     cpu: 500m
-#     memory: 512Mi
-resources: {}
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
 
 # Persistent storage used for the generated settings file.
 # Important: an init container copies the rendered settings into this volume on every pod start,

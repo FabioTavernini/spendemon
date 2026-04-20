@@ -14,6 +14,7 @@ spec:
       annotations:
         checksum/settings: {{ include "spendemon.settings" . | sha256sum }}
     spec:
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
@@ -26,6 +27,8 @@ spec:
         - name: seed-settings
           image: "{{ .Values.seedSettings.image.repository }}:{{ .Values.seedSettings.image.tag }}"
           imagePullPolicy: {{ .Values.seedSettings.image.pullPolicy }}
+          resources:
+{{- toYaml .Values.seedSettings.resources | nindent 12 }}
           command:
             - sh
             - -c
@@ -53,6 +56,8 @@ spec:
         - name: spendemon
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+{{- toYaml .Values.resources | nindent 12 }}
           env:
             - name: SETTINGS_FILE_PATH
               value: {{ printf "%s/settings.yaml" .Values.persistence.mountPath | quote }}
