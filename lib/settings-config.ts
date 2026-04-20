@@ -41,6 +41,11 @@ type ParsedProperty = {
   value: string;
 };
 
+type ParsedListItem = {
+  indentation: number;
+  value: string;
+};
+
 function isClusterKey(key: string): key is keyof ClusterSettings {
   return key === "name" || key === "prometheusUrl";
 }
@@ -111,7 +116,7 @@ function resolveEnvReferences(value: string): string {
     const envValue = process.env[envKey];
 
     if (typeof envValue !== "string") {
-      throw new Error(`Environment variable "${envKey}" is not set.`);
+      throw new TypeError(`Environment variable "${envKey}" is not set.`);
     }
 
     return envValue;
@@ -120,6 +125,25 @@ function resolveEnvReferences(value: string): string {
 
 function getIndentation(line: string): number {
   return line.length - line.trimStart().length;
+}
+
+function parseListItem(line: string): ParsedListItem | null {
+  const indentation = getIndentation(line);
+
+  if (indentation >= line.length || line[indentation] !== "-") {
+    return null;
+  }
+
+  let valueStart = indentation + 1;
+
+  while (valueStart < line.length && line[valueStart] === " ") {
+    valueStart += 1;
+  }
+
+  return {
+    indentation,
+    value: line.slice(valueStart),
+  };
 }
 
 function parseProperty(
@@ -183,21 +207,21 @@ function collectTopLevelListSection(
       break;
     }
 
-    const itemMatch = line.match(/^(\s*)-\s*(.*)$/);
+    const item = parseListItem(line);
 
-    if (!itemMatch) {
+    if (!item) {
       throw new Error(
         `Invalid list entry in "${sectionName}" on line ${index + 1}.`,
       );
     }
 
-    if (itemMatch[1].length <= sectionIndent) {
+    if (item.indentation <= sectionIndent) {
       throw new Error(
         `List items in "${sectionName}" must be indented under the section.`,
       );
     }
 
-    const value = normalizeScalar(itemMatch[2]);
+    const value = normalizeScalar(item.value);
 
     if (!value) {
       throw new Error(`List items in "${sectionName}" cannot be empty.`);
@@ -255,14 +279,13 @@ export function parseClustersFromSettings(content: string): ClusterSettings[] {
     }
 
     const indentation = getIndentation(line);
+    const item = parseListItem(line);
 
-    if (indentation <= clustersIndent && !trimmed.startsWith("- ")) {
+    if (indentation <= clustersIndent && !item) {
       break;
     }
 
-    const itemMatch = line.match(/^(\s*)-\s*(.*)$/);
-
-    if (itemMatch) {
+    if (item) {
       if (currentCluster) {
         if (!currentCluster.name || !currentCluster.prometheusUrl) {
           throw new Error(
@@ -273,7 +296,7 @@ export function parseClustersFromSettings(content: string): ClusterSettings[] {
         clusters.push(currentCluster as ClusterSettings);
       }
 
-      currentItemIndent = itemMatch[1].length;
+      currentItemIndent = item.indentation;
       currentCluster = {};
 
       if (currentItemIndent <= clustersIndent) {
@@ -282,8 +305,8 @@ export function parseClustersFromSettings(content: string): ClusterSettings[] {
         );
       }
 
-      if (itemMatch[2].trim()) {
-        const property = parseProperty(itemMatch[2].trim());
+      if (item.value.trim()) {
+        const property = parseProperty(item.value.trim());
 
         if (!property) {
           throw new Error(`Invalid cluster property on line ${index + 1}.`);
