@@ -6,7 +6,7 @@ import { auth, isOidcEnabled } from '@/lib/auth'
 
 import { ArrowUpRight } from 'lucide-react'
 
-export async function SiteHeader({ title = 'Overview' }: { title?: string }) {
+export async function SiteHeader({ title = 'Overview' }: Readonly<{ title?: string }>) {
   const session = await auth()
 
   return (
