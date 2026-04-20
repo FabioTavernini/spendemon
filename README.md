@@ -1,4 +1,14 @@
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=FabioTavernini_spendemon)
+
 [![Netlify Status](https://api.netlify.com/api/v1/badges/c717f0fe-3d28-49c9-aeca-bbfaa3aaee15/deploy-status)](https://app.netlify.com/projects/spendemon/deploys)
+
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=FabioTavernini_spendemon&metric=alert_status&token=3c79d836826de6f39f0a1d39cf02550fe96414f4)](https://sonarcloud.io/summary/new_code?id=FabioTavernini_spendemon)
+
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=FabioTavernini_spendemon&metric=security_rating&token=3c79d836826de6f39f0a1d39cf02550fe96414f4)](https://sonarcloud.io/summary/new_code?id=FabioTavernini_spendemon)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=FabioTavernini_spendemon&metric=vulnerabilities&token=3c79d836826de6f39f0a1d39cf02550fe96414f4)](https://sonarcloud.io/summary/new_code?id=FabioTavernini_spendemon)
+
+
 
 # Spendemon
 
