@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/c717f0fe-3d28-49c9-aeca-bbfaa3aaee15/deploy-status)](https://app.netlify.com/projects/spendemon/deploys)
+
 # Spendemon
 
 Spendemon is a small Next.js dashboard for exploring Kubernetes footprint and estimating workload cost from Prometheus metrics.
