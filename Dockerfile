@@ -39,7 +39,16 @@ COPY hooks ./hooks
 COPY lib ./lib
 COPY public ./public
 COPY types ./types
-COPY next-env.d.ts next.config.mjs postcss.config.mjs settings-example.yaml tsconfig.json ./
+COPY next.config.mjs postcss.config.mjs settings-example.yaml tsconfig.json ./
+
+RUN printf '%s\n' \
+  '/// <reference types="next" />' \
+  '/// <reference types="next/image-types/global" />' \
+  'import "./.next/types/routes.d.ts";' \
+  '' \
+  '// NOTE: This file should not be edited' \
+  '// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.' \
+  > next-env.d.ts
 
 ENV NODE_ENV=production
 
