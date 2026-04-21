@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -54,21 +54,12 @@ export function SettingsEditor({
 }: Readonly<SettingsEditorProps>) {
   const [content, setContent] = useState(initialContent);
   const [costs, setCosts] = useState<CostSettings>(initialCosts);
-  const [sharedNamespaces, setSharedNamespaces] = useState<string[]>(
-    initialSharedNamespaces,
+  const [sharedNamespacesInput, setSharedNamespacesInput] = useState(
+    initialSharedNamespaces.join("\n"),
   );
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    try {
-      setCosts(parseCostsFromSettings(content));
-      setSharedNamespaces(parseSharedNamespacesFromSettings(content));
-    } catch {
-      // Ignore invalid intermediate YAML while the user is typing.
-    }
-  }, [content]);
 
   function updateCostField(field: CostField, value: string) {
     const nextValue = value === "" ? 0 : Number(value);
@@ -91,12 +82,13 @@ export function SettingsEditor({
   }
 
   function updateSharedNamespaces(value: string) {
+    setSharedNamespacesInput(value);
+
     const nextSharedNamespaces = value
       .split("\n")
       .map((item) => item.trim())
       .filter(Boolean);
 
-    setSharedNamespaces(nextSharedNamespaces);
     setContent((currentContent) =>
       upsertSharedNamespacesInSettings(currentContent, nextSharedNamespaces),
     );
@@ -146,13 +138,12 @@ export function SettingsEditor({
           Configure pricing inputs and edit the raw YAML used by the app.
         </p>
         <p className="text-sm text-muted-foreground">
-          The optional <code>oidc:</code>{" "}block lets you enable or disable
-          OIDC authorization for the app.
+          The optional <code>oidc:</code> block lets you enable or disable OIDC
+          authorization for the app.
         </p>
         <p className="text-sm text-muted-foreground">
-          Namespaces listed in <code>sharednamespaces:</code>{" "}have their
-          costs split evenly across the remaining namespaces in the same
-          cluster.
+          Namespaces listed in <code>sharednamespaces:</code> have their costs
+          split evenly across the remaining namespaces in the same cluster.
         </p>
         <p className="font-mono text-xs text-muted-foreground">{initialPath}</p>
       </div>
@@ -162,8 +153,7 @@ export function SettingsEditor({
           <h2 className="text-lg font-semibold">Cost Inputs</h2>
           <p className="text-sm text-muted-foreground">
             These values are written into the top-level <code>costs:</code>{" "}
-            block in{" "}
-            <code>settings.yaml</code>.
+            block in <code>settings.yaml</code>.
           </p>
         </div>
 
@@ -189,20 +179,34 @@ export function SettingsEditor({
       </section>
 
       <section className="rounded-xl border bg-card p-5">
-        <div className="space-y-1">
+        <div className="space-y-3">
           <h2 className="text-lg font-semibold">Shared Namespaces</h2>
           <p className="text-sm text-muted-foreground">
             Enter one namespace name per line. Matching namespaces are treated
             as shared overhead and redistributed evenly to the other namespaces
             in the same cluster.
           </p>
+          <div className="rounded-lg border bg-muted/40 p-3">
+            <p className="text-xs font-medium text-foreground">
+              Syntax reference
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Type plain namespace names here, one per line.
+            </p>
+            <pre className="mt-2 overflow-x-auto rounded-md bg-background p-3 font-mono text-xs text-foreground">
+              {`kube-system
+prometheus
+kube-public
+`}
+            </pre>
+          </div>
         </div>
 
         <textarea
           className="mt-4 min-h-40 w-full resize-y rounded-md border border-border bg-background p-4 font-mono text-sm outline-none"
-          placeholder={`kube-system\nmonitoring\ningress-nginx`}
+          placeholder={`kube-system\ntest`}
           spellCheck={false}
-          value={sharedNamespaces.join("\n")}
+          value={sharedNamespacesInput}
           onChange={(event) => updateSharedNamespaces(event.target.value)}
         />
       </section>
@@ -221,9 +225,22 @@ export function SettingsEditor({
           spellCheck={false}
           value={content}
           onChange={(event) => {
-            setContent(event.target.value);
+            const nextContent = event.target.value;
+
+            setContent(nextContent);
             setStatus(null);
             setError(null);
+
+            try {
+              setCosts(parseCostsFromSettings(nextContent));
+
+              const nextSharedNamespaces =
+                parseSharedNamespacesFromSettings(nextContent);
+
+              setSharedNamespacesInput(nextSharedNamespaces.join("\n"));
+            } catch {
+              // Ignore invalid intermediate YAML while the user is typing.
+            }
           }}
         />
       </section>
