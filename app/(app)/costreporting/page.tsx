@@ -5,9 +5,9 @@ export const dynamic = "force-dynamic";
 
 export default async function CostReportingPage({
   searchParams,
-}: {
+}: Readonly<{
   searchParams: Promise<{ clusters?: string; namespaces?: string }>;
-}) {
+}>) {
   const params = await searchParams;
 
   return (

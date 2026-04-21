@@ -18,8 +18,8 @@ export default async function UnauthorizedPage() {
           </p>
           {isOidcEnabled() ? (
             <p className="text-sm text-muted-foreground">
-              Viewers can access the app, and admins can also manage
-              <code> /settings</code>.
+              Viewers can access the app, and admins can also manage{' '}
+              <code>/settings</code>.
             </p>
           ) : (
             <p className="text-sm text-muted-foreground">

@@ -30,25 +30,25 @@ const COST_FIELDS: Array<{
   description: string;
   step: string;
 }> = [
-  {
-    key: "cpuCore",
-    label: "Cost per CPU core",
-    description: "Used against requested CPU cores per pod.",
-    step: "0.01",
-  },
-  {
-    key: "memoryGb",
-    label: "Cost per GB RAM",
-    description: "Used against requested memory converted to GB.",
-    step: "0.01",
-  },
-  {
-    key: "storageGb",
-    label: "Cost per GB storage",
-    description: "Used against requested ephemeral storage converted to GB.",
-    step: "0.01",
-  },
-];
+    {
+      key: "cpuCore",
+      label: "Cost per CPU core",
+      description: "Used against requested CPU cores per pod.",
+      step: "0.01",
+    },
+    {
+      key: "memoryGb",
+      label: "Cost per GB RAM",
+      description: "Used against requested memory converted to GB.",
+      step: "0.01",
+    },
+    {
+      key: "storageGb",
+      label: "Cost per GB storage",
+      description: "Used against requested ephemeral storage converted to GB.",
+      step: "0.01",
+    },
+  ];
 
 export function SettingsEditor({
   initialContent,
@@ -56,7 +56,7 @@ export function SettingsEditor({
   initialHa,
   initialSharedNamespaces,
   initialPath,
-}: SettingsEditorProps) {
+}: Readonly<SettingsEditorProps>) {
   const [content, setContent] = useState(initialContent);
   const [costs, setCosts] = useState<CostSettings>(initialCosts);
   const [ha, setHa] = useState<HaSettings>(initialHa);
@@ -162,16 +162,17 @@ export function SettingsEditor({
           Configure pricing inputs and edit the raw YAML used by the app.
         </p>
         <p className="text-sm text-muted-foreground">
-          The optional <code>oidc:</code> block lets you enable or disable OIDC
-          authorization for the app.
+          The optional <code>oidc:</code>{" "}block lets you enable or disable
+          OIDC authorization for the app.
         </p>
         <p className="text-sm text-muted-foreground">
-          <code>HA.enabled</code> is persisted in settings and used by the
+          <code>HA.enabled</code>{" "}is persisted in settings and used by the
           Kubernetes manifests in this repo to render either 1 or 2 replicas.
         </p>
         <p className="text-sm text-muted-foreground">
-          Namespaces listed in <code>sharednamespaces:</code> have their costs
-          split evenly across the remaining namespaces in the same cluster.
+          Namespaces listed in <code>sharednamespaces:</code>{" "}have their
+          costs split evenly across the remaining namespaces in the same
+          cluster.
         </p>
         <p className="font-mono text-xs text-muted-foreground">{initialPath}</p>
       </div>
@@ -181,8 +182,8 @@ export function SettingsEditor({
           <h2 className="text-lg font-semibold">Cost Inputs</h2>
           <p className="text-sm text-muted-foreground">
             These values are written into the top-level <code>costs:</code>{" "}
-            block in
-            <code> settings.yaml</code>.
+            block in{" "}
+            <code>settings.yaml</code>.
           </p>
         </div>
 
