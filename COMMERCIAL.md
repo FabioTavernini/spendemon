@@ -1,41 +1,47 @@
 # Commercial Licensing
 
-Spendemon is source-available under the `PolyForm Noncommercial 1.0.0` license in [LICENSE](./LICENSE).
+Spendemon is free to use for:
 
-That public license is meant for noncommercial use. If you want to use Spendemon commercially, please contact Fabio Tavernini for a separate commercial license.
+- individuals using it personally
+- non-commercial use
+- evaluation for up to 30 consecutive days
 
-## When To Reach Out
+Any use by or on behalf of a for-profit company beyond that evaluation period
+requires a separate commercial license.
 
-Please get in touch before using Spendemon in situations like these:
+## Free Use Examples
 
-- internal use at a for-profit company
-- consulting or client delivery work
-- a paid product or service
-- managed hosting or SaaS
-- resale, bundling, or white-label distribution
-- any environment tied to revenue or commercial operations
-
-## Likely Covered By The Public License
-
-These examples are generally aligned with the public noncommercial license:
+These are generally covered by the public license:
 
 - personal and homelab use
 - hobby projects
 - individual learning and experimentation
 - classroom or educational use
-- public-interest research
-- charitable or other noncommercial organizational use allowed by the license
+- nonprofit or other genuinely non-commercial use
+- a company testing Spendemon internally for up to 30 consecutive days
+
+## Paid Use Examples
+
+These generally require a commercial license:
+
+- a company using Spendemon in production
+- internal business use beyond the evaluation period
+- consulting, contracting, or client delivery work
+- managed hosting or SaaS
+- bundling or resale as part of a commercial offering
 
 ## If You Are Unsure
 
-If your use case sits somewhere between these examples, treat it as commercial and reach out before using Spendemon in production.
+If your use case involves a business, client work, revenue, or ongoing company
+operations, treat it as commercial and get in touch before using Spendemon.
 
-This file is a plain-English summary for convenience. The license text in [LICENSE](./LICENSE) controls.
+This file is only a plain-English summary. The license text in
+[LICENSE](./LICENSE) controls.
 
 ## Contact
 
-To discuss commercial licensing, contact Fabio Tavernini via GitHub:
+To discuss commercial licensing, contact via GitHub:
+[github.com/FabioTavernini](https://github.com/FabioTavernini)
 
-- [github.com/FabioTavernini](https://github.com/FabioTavernini)
-
-Commercial terms are provided separately and are not included in this repository.
+Or via the spendemon.com contact form:
+https://spendemon.com/contact/

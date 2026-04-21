@@ -1,75 +1,107 @@
-PolyForm Noncommercial License 1.0.0
+Spendemon Personal, Non-Commercial, and Evaluation License 1.0
 
-https://polyformproject.org/licenses/noncommercial/1.0.0
+Copyright (c) 2026 Fabio Tavernini
 
-Required Notice: Copyright 2026 Fabio Tavernini
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to use,
+copy, run, and modify the Software, subject to the terms below.
 
-Acceptance
+1. Free Use
 
-In order to get any license under these terms, you must agree to them as both strict obligations and conditions to all your licenses.
+You may use the Software without a separate commercial license only for:
 
-Copyright License
+a. Personal Use
+Use by an individual for personal, hobby, homelab, learning, or other private
+non-business purposes.
 
-The licensor grants you a copyright license for the software to do everything you might do with the software that would otherwise infringe the licensor's copyright in it for any permitted purpose. However, you may only distribute the software according to Distribution License and make changes or new works based on the software according to Changes and New Works License.
+b. Non-Commercial Use
+Use that is not primarily intended for or directed toward commercial advantage
+or monetary compensation.
 
-Distribution License
+c. Evaluation Use
+Use for up to 30 consecutive calendar days to evaluate whether the Software is
+suitable for your needs. Evaluation Use may be carried out by or on behalf of a
+for-profit entity only for internal testing, review, or trial purposes, and not
+for production use or for providing services to third parties.
 
-The licensor grants you an additional copyright license to distribute copies of the software. Your license to distribute covers distributing the software with changes and new works permitted by Changes and New Works License.
+2. Commercial Use
 
-Notices
+Any use of the Software by or on behalf of a for-profit entity, other than
+permitted Evaluation Use under Section 1(c), requires a separate commercial
+license from the copyright holder.
 
-You must ensure that anyone who gets a copy of any part of the software from you also gets a copy of these terms or the URL for them above, as well as copies of any plain-text lines beginning with `Required Notice:` that the licensor provided with the software. For example:
+Commercial Use includes, without limitation:
 
-Required Notice: Copyright Yoyodyne, Inc. (http://example.com)
+- internal business operations
+- production deployments
+- consulting, contracting, or client delivery work
+- offering the Software, or its functionality, as a hosted or managed service
+- bundling, resale, sublicensing, or distribution as part of a paid product or
+  service
 
-Changes and New Works License
+3. Redistribution
 
-The licensor grants you an additional copyright license to make changes and new works based on the software for any permitted purpose.
+You may redistribute the Software in source form, with or without
+modifications, only for Personal Use or Non-Commercial Use, provided that:
 
-Patent License
+- this license and all copyright notices are included
+- you clearly identify any modifications you made
+- you do not charge a fee for the Software itself
+- you do not grant others any right to use the Software for Commercial Use
+  without a separate commercial license
 
-The licensor grants you a patent license for the software that covers patent claims the licensor can license, or becomes able to license, that you would infringe by using the software.
+4. Restrictions
 
-Noncommercial Purposes
+You may not:
 
-Any noncommercial purpose is a permitted purpose.
+- use the Software for Commercial Use without a separate commercial license
+- remove or alter any copyright, license, or attribution notices
+- misrepresent the origin of the Software
+- use the name "Spendemon" or the author's names, logos, or trademarks to imply
+  endorsement without prior written permission
 
-Personal Uses
+5. Ownership
 
-Personal use for research, experiment, and testing for the benefit of public knowledge, personal study, private entertainment, hobby projects, amateur pursuits, or religious observance, without any anticipated commercial application, is use for a permitted purpose.
+The Software is licensed, not sold. Except for the limited rights expressly
+granted by this license, all rights are reserved by the copyright holder.
 
-Noncommercial Organizations
+6. No Warranty
 
-Use by any charitable organization, educational institution, public research organization, public safety or health organization, environmental protection organization, or government institution is use for a permitted purpose regardless of the source of funding or obligations resulting from the funding.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
 
-Fair Use
+7. Limitation of Liability
 
-You may have "fair use" rights for the software under the law. These terms do not limit them.
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE
+COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-No Other Rights
+8. Termination
 
-These terms do not allow you to sublicense or transfer any of your licenses to anyone else, or prevent the licensor from granting licenses to anyone else. These terms do not imply any other licenses.
+Any use of the Software outside the scope of this license automatically
+terminates your rights under it.
 
-Patent Defense
+If the violation is curable and you cure it within 14 days after receiving
+written notice from the copyright holder, your rights under this license are
+reinstated unless and until a later violation occurs.
 
-If you make any written claim that the software infringes or contributes to infringement of any patent, your patent license for the software granted under these terms ends immediately. If your company makes such a claim, your patent license ends immediately for work on behalf of your company.
+9. Definitions
 
-Violations
+"For-profit entity" means any corporation, company, partnership, sole
+proprietorship, consultancy, agency, contractor, or other organization or
+person acting for commercial gain, business operations, client work, or revenue
+generating activity.
 
-The first time you are notified in writing that you have violated any of these terms, or done anything with the software not covered by your licenses, your licenses can nonetheless continue if you come into full compliance with these terms, and take practical steps to correct past violations, within 32 days of receiving notice. Otherwise, all your licenses end immediately.
+"Production use" means use of the Software in a live or operational business
+environment other than solely for internal evaluation.
 
-No Liability
+10. Commercial Licensing
 
-As far as the law allows, the software comes as is, without any warranty or condition, and the licensor will not be liable to you for any damages arising out of these terms or the use or nature of the software, under any kind of legal claim.
+For commercial licensing, contact Fabio Tavernini via GitHub:
+https://github.com/FabioTavernini
 
-Definitions
-
-The licensor is the individual or entity offering these terms, and the software is the software the licensor makes available under these terms.
-
-You refers to the individual or entity agreeing to these terms.
-
-Your company is any legal entity, sole proprietorship, or other kind of organization that you work for, plus all organizations that have control over, are under the control of, or are under common control with that organization. Control means ownership of substantially all the assets of an entity, or the power to direct its management and policies by vote, contract, or otherwise. Control can be direct or indirect.
-
-Your licenses are all the licenses granted to you for the software under these terms.
-
-Use means anything you do with the software requiring one of your licenses.
+Or via the spendemon.com contact form:
+https://spendemon.com/contact/
