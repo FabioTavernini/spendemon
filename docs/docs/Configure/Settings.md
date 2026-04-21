@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+import RepoFileCodeBlock from '@site/src/components/RepoFileCodeBlock';
+
 # settings.yaml
 
 Spendemon reads its runtime configuration from a `settings.yaml` file.
@@ -17,32 +19,11 @@ By default the app reads `settings.yaml` from the project root. You can override
 
 ## Example
 
-```yaml
-clusters:
-  - name: prod-eu
-    prometheusUrl: http://prometheus-prod-eu:9090
-  - name: staging-us
-    prometheusUrl: http://prometheus-staging-us:9090
-
-costs:
-  cpuCore: 12.5
-  memoryGb: 1.8
-  storageGb: 0.12
-
-sharednamespaces:
-  - kube-system
-  - monitoring
-
-oidc:
-  enabled: false
-  debug: false
-  issuer: ${OIDC_ISSUER}
-  clientId: ${OIDC_CLIENT_ID}
-  clientSecret: ${OIDC_CLIENT_SECRET}
-  adminGroup: platform-admins
-  viewerGroup: engineering
-  extraScopes: groups
-```
+<RepoFileCodeBlock
+  file="settingsExample"
+  title="Starter settings-example.yaml"
+  description="This starter file is rendered from the repository root so the docs stay aligned with the shipped example config."
+/>
 
 ## Top-level keys
 

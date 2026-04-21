@@ -1,8 +1,24 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+
+const repoRoot = path.resolve(__dirname, '..');
+const githubBlobBase =
+  'https://github.com/FabioTavernini/spendemon/blob/main';
+
+function readRepoFile(relativePath: string) {
+  return {
+    path: relativePath,
+    sourceUrl: `${githubBlobBase}/${relativePath}`,
+    content: fs
+      .readFileSync(path.join(repoRoot, relativePath), 'utf8')
+      .replace(/\r\n/g, '\n'),
+  };
+}
 
 const config: Config = {
   title: 'Spendemon',
@@ -31,6 +47,25 @@ const config: Config = {
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
+  },
+
+  customFields: {
+    repoFiles: {
+      helmValues: {
+        ...readRepoFile('charts/spendemon/values.yaml'),
+        language: 'yaml',
+        title: 'Current chart values.yaml',
+        description:
+          'Rendered from the Helm chart in this repository at docs build time.',
+      },
+      settingsExample: {
+        ...readRepoFile('settings-example.yaml'),
+        language: 'yaml',
+        title: 'Starter settings-example.yaml',
+        description:
+          'Rendered from the root starter config in this repository at docs build time.',
+      },
+    },
   },
 
   presets: [

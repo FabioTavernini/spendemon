@@ -1,13 +1,45 @@
 ---
 sidebar_position: 1
+description: Install Spendemon on Kubernetes with the official Helm chart and live chart defaults.
 ---
+
+import RepoFileCodeBlock from '@site/src/components/RepoFileCodeBlock';
 
 # Helm
 
-Helm is the recommended way to run Spendemon on Kubernetes.
+Helm is the recommended way to run Spendemon on Kubernetes. It keeps routing,
+persistence, and runtime settings in one release, which makes upgrades and
+environment-specific overrides much easier to manage.
 
 The chart lives in:
 [https://github.com/FabioTavernini/spendemon/tree/main/charts/spendemon](https://github.com/FabioTavernini/spendemon/tree/main/charts/spendemon)
+
+<div className="doc-card-grid">
+  <div className="doc-card">
+    <p className="doc-card__eyebrow">Recommended path</p>
+    <h3>Deploy with one chart</h3>
+    <p>
+      Use Helm when you want repeatable releases, per-environment values files,
+      and cleaner upgrade workflows.
+    </p>
+  </div>
+  <div className="doc-card">
+    <p className="doc-card__eyebrow">Built-in persistence</p>
+    <h3>Keep `settings.yaml` on a PVC</h3>
+    <p>
+      The chart mounts a persistent volume and seeds the initial runtime config
+      without forcing you to rebuild the container image.
+    </p>
+  </div>
+  <div className="doc-card">
+    <p className="doc-card__eyebrow">Auth-ready</p>
+    <h3>Wire OIDC through values</h3>
+    <p>
+      Ingress, Gateway API, and OIDC secret references can all be managed from
+      the same release values.
+    </p>
+  </div>
+</div>
 
 ## Install
 
@@ -17,50 +49,12 @@ helm upgrade --install spendemon \
   --values ./values.yaml
 ```
 
-## Example values.yaml
+## Current chart values
 
-```yaml
-image:
-  tag: latest
+The block below is rendered from the chart in this repository during the docs
+build, so it stays aligned with the current `charts/spendemon/values.yaml`.
 
-ingress:
-  enabled: true
-  className: nginx
-  hosts:
-    - host: spendemon.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-
-ha:
-  enabled: true
-
-settings:
-  clusters:
-    - name: prod-eu
-      prometheusUrl: http://prometheus-operated.monitoring.svc:9090
-    - name: staging-us
-      prometheusUrl: http://prometheus-operated.monitoring.svc:9090
-
-  costs:
-    cpuCore: 12.5
-    memoryGb: 1.8
-    storageGb: 0.12
-
-  sharednamespaces:
-    - kube-system
-    - monitoring
-
-  oidc:
-    enabled: true
-    nextAuthUrl: https://spendemon.example.com
-    adminGroup: platform-admins
-    viewerGroup: engineering
-    extraScopes:
-      - groups
-    secretRef:
-      name: oidc-secret
-```
+<RepoFileCodeBlock file="helmValues" />
 
 ## What the chart configures
 
@@ -77,6 +71,17 @@ The chart exposes these major value groups:
 
 The default values file is here:
 [https://github.com/FabioTavernini/spendemon/blob/main/charts/spendemon/values.yaml](https://github.com/FabioTavernini/spendemon/blob/main/charts/spendemon/values.yaml)
+
+## What to customize first
+
+Most teams only need to touch a few areas for the first working deployment:
+
+- `settings.clusters`: point Spendemon at one or more Prometheus endpoints
+- `settings.costs`: set your CPU, memory, and storage rates
+- `ingress` or `gateway`: expose the UI inside your environment
+- `ha.enabled`: run two replicas instead of one when you want chart-managed HA
+- `settings.oidc.*`: enable login and group-based authorization
+- `persistence.*`: align the PVC with your cluster storage defaults
 
 ## Runtime settings vs Helm values
 
@@ -113,7 +118,8 @@ kubectl create secret generic oidc-secret \
 
 ## Important persistence behavior
 
-The chart stores `settings.yaml` on a PVC and seeds it from the rendered template only when the file does not already exist.
+The chart stores `settings.yaml` on a PVC and seeds it from the rendered
+template only when the file does not already exist.
 
 That means:
 
