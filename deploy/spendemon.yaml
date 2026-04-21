@@ -82,6 +82,10 @@ spec:
           env:
             - name: SETTINGS_FILE_PATH
               value: /data/settings.yaml
+          envFrom:
+            - secretRef:
+                name: spendemon-auth
+                optional: true
           ports:
             - containerPort: 3000
           resources:

@@ -43,6 +43,20 @@ npm run dev
 
 Then open `http://localhost:3000`.
 
+## Credentials note
+
+If you want local username/password auth, start Spendemon with env vars such as:
+
+```sh
+AUTH_MODE=credentials \
+NEXTAUTH_SECRET=replace-with-a-long-random-string \
+LOCAL_ADMIN_USERNAME=admin \
+LOCAL_ADMIN_PASSWORD=change-me \
+npm run dev
+```
+
+For production-style setups, prefer `LOCAL_ADMIN_PASSWORD_HASH` and `LOCAL_VIEWER_PASSWORD_HASH` over plaintext passwords.
+
 ## OIDC note
 
 If your `settings.yaml` uses placeholders such as `${OIDC_ISSUER}`, export those environment variables before starting the app. In production, you should also set `NEXTAUTH_SECRET` and `NEXTAUTH_URL`.

@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/components/auth-provider'
 import { ThemeProvider } from '@/components/theme-provider'
-import { isOidcEnabled } from '@/lib/auth'
+import { isAuthEnabled } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' })
@@ -18,7 +18,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const authEnabled = isOidcEnabled()
+  const authEnabled = isAuthEnabled()
 
   return (
     <html

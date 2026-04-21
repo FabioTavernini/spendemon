@@ -54,6 +54,25 @@ cp settings-example.yaml settings.yaml
 4. Open `http://localhost:3000`.
 5. Use `/settings` if you want to adjust pricing or inspect the raw YAML in the UI.
 
+## Credentials note
+
+Local username/password auth works in Docker too.
+
+Example:
+
+```sh
+docker run \
+  -p 3000:3000 \
+  -e AUTH_MODE=credentials \
+  -e NEXTAUTH_SECRET=replace-with-a-long-random-string \
+  -e LOCAL_ADMIN_USERNAME=admin \
+  -e LOCAL_ADMIN_PASSWORD=change-me \
+  -v $(pwd)/settings.yaml:/app/settings.yaml \
+  ghcr.io/fabiotavernini/spendemon:latest
+```
+
+For production-style setups, prefer `LOCAL_ADMIN_PASSWORD_HASH` and `LOCAL_VIEWER_PASSWORD_HASH` over plaintext passwords.
+
 ## OIDC note
 
 OIDC works in Docker too, but you need both:

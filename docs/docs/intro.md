@@ -19,7 +19,7 @@ Spendemon currently lets you:
 - fall back to observed CPU and memory usage when requests are missing, and mark those pods as estimated
 - redistribute costs from shared namespaces such as `kube-system` across the remaining namespaces in the same cluster
 - edit pricing, shared namespace settings, and raw YAML from the in-app settings screen
-- optionally enable OIDC authentication with `viewer` and `admin` group-based authorization
+- optionally enable local username/password auth or OIDC with `viewer` and `admin` role-based authorization
 
 ## Main routes
 
@@ -28,7 +28,7 @@ Once the app is running, these are the main surfaces:
 - `/` for overview cards, namespace inventory, and pod inventory
 - `/costreporting` for cost rollups and pod-level cost detail
 - `/settings` for admins to edit pricing and raw configuration
-- `/login` and `/unauthorized` when OIDC is enabled
+- `/login` and `/unauthorized` when authentication is enabled
 
 ## What you need
 
@@ -36,7 +36,7 @@ Before you start, make sure you have:
 
 - at least one reachable Prometheus endpoint exposing Kubernetes metrics
 - a `settings.yaml` file with cluster names, Prometheus URLs, and pricing inputs
-- optional OIDC provider details if you want authentication enabled
+- optional auth env vars for local credentials or OIDC if you want authentication enabled
 
 Spendemon can compare multiple clusters from one UI as long as each cluster has a `name` and `prometheusUrl` entry in the same config file.
 
@@ -52,4 +52,4 @@ If you are just getting started, this is the shortest path through the docs:
 
 1. Pick an install path: [Docker](./Install/Docker), [Helm](./Install/Kubernetes/Helm), or [Manifest](./Install/Kubernetes/Manifest).
 2. Configure [`settings.yaml`](./Configure/Settings).
-3. If needed, enable OIDC and map your viewer/admin groups in the same settings file.
+3. If needed, choose either local credentials or OIDC for authentication.

@@ -1,10 +1,9 @@
 import Link from 'next/link'
+import { ArrowUpRight } from 'lucide-react'
 
 import { LogoutButton } from '@/components/auth/logout-button'
 import { Button } from '@/components/ui/button'
-import { auth, isOidcEnabled } from '@/lib/auth'
-
-import { ArrowUpRight } from 'lucide-react'
+import { auth } from '@/lib/auth'
 
 export async function SiteHeader({ title = 'Overview' }: Readonly<{ title?: string }>) {
   const session = await auth()
@@ -26,7 +25,7 @@ export async function SiteHeader({ title = 'Overview' }: Readonly<{ title?: stri
             </Link>
           </Button>
 
-          {isOidcEnabled() && session ? <LogoutButton /> : null}
+          {session ? <LogoutButton /> : null}
         </div>
       </div>
     </header>

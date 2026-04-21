@@ -94,6 +94,15 @@ You can edit these values either:
 
 Replica count is deployment-level config. When you install with Helm, use `ha.enabled` in chart values instead of `settings.yaml`.
 
+### Authentication
+
+Spendemon supports two optional auth modes:
+
+- Local credentials through env vars such as `AUTH_MODE=credentials`, `NEXTAUTH_SECRET`, and `LOCAL_*`
+- OIDC through the `oidc:` block in `settings.yaml` plus the referenced `OIDC_*` and `NEXTAUTH_*` env vars
+
+Local credentials are env-only and are not stored in `settings.yaml`.
+
 ## Prometheus Metrics Used
 
 Spendemon currently builds its views from standard Kubernetes metrics exposed to Prometheus, including:
@@ -170,7 +179,19 @@ The bundled manifest now stores `settings.yaml` on a PVC mounted at `/data/setti
 
 Before exposing it publicly, open the settings UI or edit the file on the mounted volume with your Prometheus endpoint(s) and pricing values. If you are using Helm, keep replica changes in `ha.enabled`.
 
-If you want OIDC, add the same secret referenced by the Helm chart and set these values in `settings.yaml`:
+The manifest includes an optional `envFrom.secretRef` for a secret named `spendemon-auth`.
+
+For local credentials, create that secret with:
+
+```sh
+kubectl create secret generic spendemon-auth \
+  --from-literal=AUTH_MODE='credentials' \
+  --from-literal=NEXTAUTH_SECRET='replace-with-a-long-random-string' \
+  --from-literal=LOCAL_ADMIN_USERNAME='admin' \
+  --from-literal=LOCAL_ADMIN_PASSWORD='change-me'
+```
+
+For OIDC, create the same secret with the env vars you reference in `settings.yaml`, and set these values in `settings.yaml`:
 
 - `oidc.enabled: true`
 - `oidc.issuer`
@@ -192,9 +213,10 @@ See [LICENSE](./LICENSE) and [COMMERCIAL.md](./COMMERCIAL.md).
 ## Notes
 
 ```sh
-kubectl create secret generic oidc-secret \
-  --from-literal=issuer='http://<reachable-keycloak-host>:8080/realms/spendemon' \
-  --from-literal=clientId='your-client-id' \
-  --from-literal=clientSecret='your-client-secret' \
-  --from-literal=nextauthSecret='replace-with-a-long-random-string'
+kubectl create secret generic spendemon-auth \
+  --from-literal=NEXTAUTH_SECRET='replace-with-a-long-random-string' \
+  --from-literal=NEXTAUTH_URL='https://spendemon.example.com' \
+  --from-literal=OIDC_ISSUER='http://<reachable-keycloak-host>:8080/realms/spendemon' \
+  --from-literal=OIDC_CLIENT_ID='your-client-id' \
+  --from-literal=OIDC_CLIENT_SECRET='your-client-secret'
 ```

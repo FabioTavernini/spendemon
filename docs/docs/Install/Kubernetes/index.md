@@ -15,11 +15,11 @@ Choose Helm when you want:
 
 - built-in persistence for `settings.yaml`
 - configurable Ingress or Gateway API routing
-- OIDC secret wiring through chart values
+- credentials or OIDC secret wiring through chart values
 - easier upgrades and environment-specific values files
 
 Choose the plain manifest when you want:
 
 - a minimal deployment you can read quickly
-- to manage ingress and auth wiring yourself
+- to manage ingress yourself but still have an optional auth secret hook
 - a simple starting point for a custom manifest set

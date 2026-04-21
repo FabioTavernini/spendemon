@@ -33,10 +33,10 @@ The chart lives in:
   </div>
   <div className="doc-card">
     <p className="doc-card__eyebrow">Auth-ready</p>
-    <h3>Wire OIDC through values</h3>
+    <h3>Wire credentials or OIDC through values</h3>
     <p>
-      Ingress, Gateway API, and OIDC secret references can all be managed from
-      the same release values.
+      Ingress, Gateway API, local credentials, and OIDC secret references can
+      all be managed from the same release values.
     </p>
   </div>
 </div>
@@ -67,6 +67,7 @@ The chart exposes these major value groups:
 - `ha`: deployment replica behavior managed by the chart
 - `resources`: pod requests and limits
 - `persistence`: PVC size, storage class, and mount path for `settings.yaml`
+- `auth.credentials`: optional local username/password auth secret wiring
 - `settings`: the runtime config rendered into `settings.yaml`
 
 The default values file is here:
@@ -80,7 +81,7 @@ Most teams only need to touch a few areas for the first working deployment:
 - `settings.costs`: set your CPU, memory, and storage rates
 - `ingress` or `gateway`: expose the UI inside your environment
 - `ha.enabled`: run two replicas instead of one when you want chart-managed HA
-- `settings.oidc.*`: enable login and group-based authorization
+- `auth.credentials.*` or `settings.oidc.*`: choose one auth mode if you want login
 - `persistence.*`: align the PVC with your cluster storage defaults
 
 ## Runtime settings vs Helm values
@@ -95,9 +96,50 @@ The same applies to OIDC helpers:
 - Helm values include `settings.oidc.nextAuthUrl` and `settings.oidc.secretRef`
 - the runtime `settings.yaml` only stores the app-facing OIDC fields such as `issuer`, `clientId`, `clientSecret`, `adminGroup`, `viewerGroup`, `debug`, and `extraScopes`
 
+Local credentials are Helm-only:
+
+- `auth.credentials.*` injects `AUTH_MODE=credentials`, `NEXTAUTH_SECRET`, and optional `LOCAL_*` account env vars
+- no local credential data is written into the runtime `settings.yaml`
+
 See [Settings](../../Configure/Settings) for the runtime file format.
 
-## OIDC secret wiring
+## Auth secret wiring
+
+Only enable one auth mode at a time:
+
+- `auth.credentials.enabled: true` for local username/password sign-in
+- `settings.oidc.enabled: true` for OIDC
+
+### Local credentials
+
+When `auth.credentials.enabled` is `true`, the chart expects a Kubernetes secret with:
+
+- `nextauthSecret`
+- `localAdminUsername` with either `localAdminPassword` or `localAdminPasswordHash`
+- `localViewerUsername` with either `localViewerPassword` or `localViewerPasswordHash`
+
+You only need one of the local account entries to enable credentials mode.
+
+Example:
+
+```sh
+kubectl create secret generic spendemon-credentials \
+  --from-literal=nextauthSecret='replace-with-a-long-random-string' \
+  --from-literal=localAdminUsername='admin' \
+  --from-literal=localAdminPasswordHash='scrypt:7b91d3c5f6f6c8e0a6f2e1b4c5d6e7f8:6b1a5f8f0a7c4b6e6b667f6c2852e7416bfe2f521f3473df84c62fb4ef13a4dd9f32831f4a1dd4ec9e4b1f69aa389a6d2f31f2f5fd70888e387de0d7e47355d6'
+```
+
+Then point the chart at that secret:
+
+```yaml
+auth:
+  credentials:
+    enabled: true
+    secretRef:
+      name: spendemon-credentials
+```
+
+### OIDC
 
 When `settings.oidc.enabled` is `true`, the chart expects a Kubernetes secret with:
 

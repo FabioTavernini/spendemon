@@ -113,6 +113,31 @@ persistence:
   # StorageClass for the PVC. Leave empty to use the cluster default.
   storageClassName: ""
 
+# Optional local username/password authentication for internal deployments.
+# Leave disabled when you want no auth or when you use OIDC via settings.oidc below.
+auth:
+  credentials:
+    # Set to true to enable local username/password sign-in.
+    enabled: false
+    # Existing Secret that contains NEXTAUTH_SECRET and LOCAL_* credentials env values.
+    secretRef:
+      # Secret name. Required when credentials auth is enabled.
+      name: ""
+      # Secret key containing NEXTAUTH_SECRET.
+      nextAuthSecretKey: nextauthSecret
+      # Optional secret key containing LOCAL_ADMIN_USERNAME.
+      adminUsernameKey: localAdminUsername
+      # Optional secret key containing LOCAL_ADMIN_PASSWORD.
+      adminPasswordKey: localAdminPassword
+      # Optional secret key containing LOCAL_ADMIN_PASSWORD_HASH.
+      adminPasswordHashKey: localAdminPasswordHash
+      # Optional secret key containing LOCAL_VIEWER_USERNAME.
+      viewerUsernameKey: localViewerUsername
+      # Optional secret key containing LOCAL_VIEWER_PASSWORD.
+      viewerPasswordKey: localViewerPassword
+      # Optional secret key containing LOCAL_VIEWER_PASSWORD_HASH.
+      viewerPasswordHashKey: localViewerPasswordHash
+
 # Application settings rendered into settings.yaml and mounted into the container.
 settings:
   # Prometheus endpoints to query. One entry per monitored cluster.

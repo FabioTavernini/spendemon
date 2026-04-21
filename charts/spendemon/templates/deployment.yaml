@@ -1,3 +1,6 @@
+{{- if and .Values.auth.credentials.enabled .Values.settings.oidc.enabled }}
+{{- fail "auth.credentials.enabled and settings.oidc.enabled cannot both be true" }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -68,7 +71,51 @@ spec:
           env:
             - name: SETTINGS_FILE_PATH
               value: {{ printf "%s/settings.yaml" .Values.persistence.mountPath | quote }}
-          {{- if .Values.settings.oidc.enabled }}
+          {{- if .Values.auth.credentials.enabled }}
+            - name: AUTH_MODE
+              value: credentials
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ required "auth.credentials.secretRef.nextAuthSecretKey is required when credentials auth is enabled" .Values.auth.credentials.secretRef.nextAuthSecretKey }}
+            - name: LOCAL_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ .Values.auth.credentials.secretRef.adminUsernameKey }}
+                  optional: true
+            - name: LOCAL_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ .Values.auth.credentials.secretRef.adminPasswordKey }}
+                  optional: true
+            - name: LOCAL_ADMIN_PASSWORD_HASH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ .Values.auth.credentials.secretRef.adminPasswordHashKey }}
+                  optional: true
+            - name: LOCAL_VIEWER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ .Values.auth.credentials.secretRef.viewerUsernameKey }}
+                  optional: true
+            - name: LOCAL_VIEWER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ .Values.auth.credentials.secretRef.viewerPasswordKey }}
+                  optional: true
+            - name: LOCAL_VIEWER_PASSWORD_HASH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ .Values.auth.credentials.secretRef.viewerPasswordHashKey }}
+                  optional: true
+          {{- else if .Values.settings.oidc.enabled }}
             - name: OIDC_ISSUER
               valueFrom:
                 secretKeyRef:

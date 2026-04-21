@@ -15,6 +15,8 @@ This file controls:
 - which namespaces should be treated as shared overhead
 - whether OIDC authentication and authorization is enabled
 
+Local username/password auth is configured entirely through environment variables, not `settings.yaml`.
+
 By default the app reads `settings.yaml` from the project root. You can override the path with `SETTINGS_FILE_PATH`.
 
 ## Example
@@ -163,6 +165,40 @@ Spendemon currently uses two roles:
 - `admin`: can also access `/settings` and update configuration through `/api/settings`
 
 Admins also inherit viewer access.
+
+## credentials auth
+
+Spendemon also supports local username/password sign-in, but that mode lives outside `settings.yaml`.
+
+Use these environment variables instead:
+
+- `AUTH_MODE=credentials`
+- `NEXTAUTH_SECRET`
+- one or more local accounts:
+- `LOCAL_ADMIN_USERNAME` with either `LOCAL_ADMIN_PASSWORD` or `LOCAL_ADMIN_PASSWORD_HASH`
+- `LOCAL_VIEWER_USERNAME` with either `LOCAL_VIEWER_PASSWORD` or `LOCAL_VIEWER_PASSWORD_HASH`
+
+Rules and notes:
+
+- at least one local account is required in credentials mode
+- admins automatically inherit viewer access
+- if both `*_PASSWORD` and `*_PASSWORD_HASH` are set for the same account, Spendemon fails fast on startup
+- password hashes must use the format `scrypt:<saltHex>:<hashHex>`
+
+Example:
+
+```sh
+AUTH_MODE=credentials
+NEXTAUTH_SECRET=replace-with-a-long-random-string
+LOCAL_ADMIN_USERNAME=admin
+LOCAL_ADMIN_PASSWORD_HASH=scrypt:7b91d3c5f6f6c8e0a6f2e1b4c5d6e7f8:6b1a5f8f0a7c4b6e6b667f6c2852e7416bfe2f521f3473df84c62fb4ef13a4dd9f32831f4a1dd4ec9e4b1f69aa389a6d2f31f2f5fd70888e387de0d7e47355d6
+```
+
+Generate a hash with Node.js:
+
+```sh
+node -e "const { randomBytes, scryptSync } = require('crypto'); const salt = randomBytes(16); const hash = scryptSync(process.argv[1], salt, 64); console.log(`scrypt:${salt.toString('hex')}:${hash.toString('hex')}`)" 'change-me'
+```
 
 ## Defaults and validation
 

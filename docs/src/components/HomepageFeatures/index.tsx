@@ -39,8 +39,8 @@ const FeatureList: FeatureItem[] = [
     Svg: ReactSvg,
     description: (
       <>
-        Manage pricing, shared namespaces, and optional OIDC access control
-        from the same deployment.
+        Manage pricing, shared namespaces, and optional local credentials or
+        OIDC access control from the same deployment.
       </>
     ),
   },

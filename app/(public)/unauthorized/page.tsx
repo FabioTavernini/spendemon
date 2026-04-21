@@ -1,11 +1,12 @@
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
-import { auth, isOidcEnabled } from '@/lib/auth'
+import { auth, getAuthMode } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export default async function UnauthorizedPage() {
+  const authMode = getAuthMode()
   const session = await auth()
 
   return (
@@ -14,16 +15,20 @@ export default async function UnauthorizedPage() {
         <div className="space-y-3">
           <h1 className="text-2xl font-semibold">Unauthorized</h1>
           <p className="text-sm text-muted-foreground">
-            You do not have the required group membership to access this page.
+            You do not have the required access to use this page.
           </p>
-          {isOidcEnabled() ? (
+          {authMode === 'oidc' ? (
             <p className="text-sm text-muted-foreground">
               Viewers can access the app, and admins can also manage{' '}
               <code>/settings</code>.
             </p>
+          ) : authMode === 'credentials' ? (
+            <p className="text-sm text-muted-foreground">
+              Use a locally configured viewer or admin account to sign in.
+            </p>
           ) : (
             <p className="text-sm text-muted-foreground">
-              OIDC is currently disabled in <code>settings.yaml</code>.
+              Authentication is currently disabled for this deployment.
             </p>
           )}
         </div>
