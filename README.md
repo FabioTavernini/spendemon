@@ -182,11 +182,13 @@ The plain manifest intentionally ships with just the core `ConfigMap`, `Deployme
 
 ## License
 
-Free for personal, educational, homelab, and non-commercial use.
+Spendemon is source-available, not OSI-approved open source.
 
-Commercial use requires a paid license.
+The repository is licensed under `PolyForm Noncommercial 1.0.0` for noncommercial use, including personal, educational, homelab, hobby, and other qualifying noncommercial use allowed by the license.
 
-See LICENSE.md and COMMERCIAL.md
+If you want to use Spendemon commercially, please contact Fabio Tavernini for a separate commercial license.
+
+See [LICENSE](./LICENSE) and [COMMERCIAL.md](./COMMERCIAL.md).
 
 ## Notes
 
