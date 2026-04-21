@@ -121,7 +121,7 @@ settings:
     - name: cluster-1
       # Base URL of the Prometheus instance for this cluster. Prefer HTTPS endpoints.
       prometheusUrl: https://prometheus.example.com
-  # Hourly cost rates used for spend calculations.
+  # Cost rates used for spend calculations. - use any period, but keep it consistent across CPU/RAM/storage
   costs:
     # Cost per CPU core.
     cpuCore: 10
