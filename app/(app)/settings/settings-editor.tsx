@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -26,25 +26,25 @@ const COST_FIELDS: Array<{
   description: string;
   step: string;
 }> = [
-    {
-      key: "cpuCore",
-      label: "Cost per CPU core",
-      description: "Used against requested CPU cores per pod.",
-      step: "0.01",
-    },
-    {
-      key: "memoryGb",
-      label: "Cost per GB RAM",
-      description: "Used against requested memory converted to GB.",
-      step: "0.01",
-    },
-    {
-      key: "storageGb",
-      label: "Cost per GB storage",
-      description: "Used against requested ephemeral storage converted to GB.",
-      step: "0.01",
-    },
-  ];
+  {
+    key: "cpuCore",
+    label: "Cost per CPU core",
+    description: "Used against requested CPU cores per pod.",
+    step: "0.01",
+  },
+  {
+    key: "memoryGb",
+    label: "Cost per GB RAM",
+    description: "Used against requested memory converted to GB.",
+    step: "0.01",
+  },
+  {
+    key: "storageGb",
+    label: "Cost per GB storage",
+    description: "Used against requested ephemeral storage converted to GB.",
+    step: "0.01",
+  },
+];
 
 export function SettingsEditor({
   initialContent,
@@ -96,7 +96,11 @@ export function SettingsEditor({
     setError(null);
   }
 
-  async function saveSettings() {
+  const saveSettings = useCallback(async () => {
+    if (isSaving) {
+      return;
+    }
+
     setIsSaving(true);
     setStatus(null);
     setError(null);
@@ -128,7 +132,23 @@ export function SettingsEditor({
     } finally {
       setIsSaving(false);
     }
-  }
+  }, [content, isSaving]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key.toLowerCase() === "s" &&
+        (event.metaKey || event.ctrlKey) &&
+        !event.altKey
+      ) {
+        event.preventDefault();
+        void saveSettings();
+      }
+    };
+
+    globalThis.addEventListener("keydown", handleKeyDown);
+    return () => globalThis.removeEventListener("keydown", handleKeyDown);
+  }, [saveSettings]);
 
   return (
     <div className="mx-auto flex h-full w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-8">
@@ -250,6 +270,7 @@ kube-public
           className="rounded-md bg-foreground px-4 py-2 text-sm text-background disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isSaving}
           onClick={saveSettings}
+          title="Save settings (Ctrl+S / Cmd+S)"
           type="button"
         >
           {isSaving ? "Saving..." : "Save Settings"}
