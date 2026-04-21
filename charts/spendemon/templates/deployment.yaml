@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: {{ include "spendemon.fullname" . }}
 spec:
-  replicas: {{ ternary 2 1 .Values.settings.ha.enabled }}
+  replicas: {{ ternary 2 1 .Values.ha.enabled }}
   selector:
     matchLabels:
       app: {{ include "spendemon.name" . }}

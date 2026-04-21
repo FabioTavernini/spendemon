@@ -13,9 +13,6 @@ data:
       memoryGb: 20
       storageGb: 5
 
-    HA:
-      enabled: false
-
     sharednamespaces:
       - "kube-system"
 

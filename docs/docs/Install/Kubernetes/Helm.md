@@ -32,6 +32,9 @@ ingress:
         - path: /
           pathType: Prefix
 
+ha:
+  enabled: true
+
 settings:
   clusters:
     - name: prod-eu
@@ -43,9 +46,6 @@ settings:
     cpuCore: 12.5
     memoryGb: 1.8
     storageGb: 0.12
-
-  ha:
-    enabled: true
 
   sharednamespaces:
     - kube-system
@@ -70,6 +70,7 @@ The chart exposes these major value groups:
 - `service`: service type and port
 - `ingress`: optional Kubernetes `Ingress`
 - `gateway`: optional Gateway API `HTTPRoute`
+- `ha`: deployment replica behavior managed by the chart
 - `resources`: pod requests and limits
 - `persistence`: PVC size, storage class, and mount path for `settings.yaml`
 - `settings`: the runtime config rendered into `settings.yaml`
@@ -81,8 +82,8 @@ The default values file is here:
 
 There are two slightly different configuration layers:
 
-- Helm values use `settings.ha.enabled`
-- the generated runtime file uses `HA.enabled`
+- deployment-only values such as `ha.enabled` stay in Helm and do not appear in the runtime `settings.yaml`
+- application values under `settings.*` are rendered into the runtime `settings.yaml`
 
 The same applies to OIDC helpers:
 

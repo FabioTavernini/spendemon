@@ -11,6 +11,7 @@ const SETTINGS_FILE =
 const SETTINGS_EXAMPLE_FILE =
   process.env.SETTINGS_EXAMPLE_FILE_PATH ||
   path.join(process.cwd(), "settings-example.yaml");
+const DEPRECATED_TOP_LEVEL_SECTIONS = ["HA"];
 const FALLBACK_DEFAULT_SETTINGS = `clusters:
   - name: cluster-1
     prometheusUrl: http://localhost:9090
@@ -22,11 +23,6 @@ costs:
   memoryGb: 0
   storageGb: 0
 
-HA:
-  enabled: false
-
-sharednamespaces:
-
 oidc:
   enabled: false
   issuer: ''
@@ -36,11 +32,75 @@ oidc:
   viewerGroup: viewer
   debug: false
   extraScopes: ''
+
+sharednamespaces:
 `;
+
+function getIndentation(line: string): number {
+  return line.length - line.trimStart().length;
+}
+
+function findTopLevelSectionIndex(
+  lines: string[],
+  sectionName: string,
+): number {
+  return lines.findIndex((line) => line.trim() === `${sectionName}:`);
+}
+
+function findTopLevelSectionEndIndex(
+  lines: string[],
+  sectionIndex: number,
+): number {
+  let sectionEnd = lines.length;
+
+  for (let index = sectionIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index];
+    const trimmed = line.trim();
+
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
+
+    if (getIndentation(line) === 0) {
+      sectionEnd = index;
+      break;
+    }
+  }
+
+  return sectionEnd;
+}
+
+function removeTopLevelSection(content: string, sectionName: string): string {
+  const normalizedContent = content.replace(/\r\n/g, "\n");
+  const lines = normalizedContent.split("\n");
+  const sectionIndex = findTopLevelSectionIndex(lines, sectionName);
+
+  if (sectionIndex === -1) {
+    return normalizedContent;
+  }
+
+  const updatedLines = [
+    ...lines.slice(0, sectionIndex),
+    ...lines.slice(findTopLevelSectionEndIndex(lines, sectionIndex)),
+  ];
+  const updatedContent = updatedLines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+
+  return updatedContent ? `${updatedContent}\n` : "";
+}
+
+function normalizeSettingsContent(content: string): string {
+  return DEPRECATED_TOP_LEVEL_SECTIONS.reduce(
+    (currentContent, sectionName) =>
+      removeTopLevelSection(currentContent, sectionName),
+    content,
+  );
+}
 
 async function readDefaultSettings(): Promise<string> {
   try {
-    return await readFile(SETTINGS_EXAMPLE_FILE, "utf8");
+    return normalizeSettingsContent(
+      await readFile(SETTINGS_EXAMPLE_FILE, "utf8"),
+    );
   } catch {
     return FALLBACK_DEFAULT_SETTINGS;
   }
@@ -48,7 +108,7 @@ async function readDefaultSettings(): Promise<string> {
 
 function readDefaultSettingsSync(): string {
   if (existsSync(SETTINGS_EXAMPLE_FILE)) {
-    return readFileSync(SETTINGS_EXAMPLE_FILE, "utf8");
+    return normalizeSettingsContent(readFileSync(SETTINGS_EXAMPLE_FILE, "utf8"));
   }
 
   return FALLBACK_DEFAULT_SETTINGS;
@@ -64,7 +124,14 @@ export async function ensureSettingsFile(): Promise<void> {
 
 export async function readSettingsFile(): Promise<string> {
   await ensureSettingsFile();
-  return readFile(SETTINGS_FILE, "utf8");
+  const content = await readFile(SETTINGS_FILE, "utf8");
+  const normalizedContent = normalizeSettingsContent(content);
+
+  if (normalizedContent !== content) {
+    await writeFile(SETTINGS_FILE, normalizedContent, "utf8");
+  }
+
+  return normalizedContent;
 }
 
 export function ensureSettingsFileSync(): void {
@@ -75,12 +142,21 @@ export function ensureSettingsFileSync(): void {
 
 export function readSettingsFileSync(): string {
   ensureSettingsFileSync();
-  return readFileSync(SETTINGS_FILE, "utf8");
+  const content = readFileSync(SETTINGS_FILE, "utf8");
+  const normalizedContent = normalizeSettingsContent(content);
+
+  if (normalizedContent !== content) {
+    writeFileSync(SETTINGS_FILE, normalizedContent, "utf8");
+  }
+
+  return normalizedContent;
 }
 
 export async function writeSettingsFile(content: string): Promise<void> {
-  parseSettings(content);
-  await writeFile(SETTINGS_FILE, content, "utf8");
+  const normalizedContent = normalizeSettingsContent(content);
+
+  parseSettings(normalizedContent);
+  await writeFile(SETTINGS_FILE, normalizedContent, "utf8");
 }
 
 export function getSettingsFilePath(): string {

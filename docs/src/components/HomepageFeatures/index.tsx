@@ -1,6 +1,9 @@
 import type {ReactNode} from 'react';
 import clsx from 'clsx';
 import Heading from '@theme/Heading';
+import MountainSvg from '@site/static/img/undraw_docusaurus_mountain.svg';
+import TreeSvg from '@site/static/img/undraw_docusaurus_tree.svg';
+import ReactSvg from '@site/static/img/undraw_docusaurus_react.svg';
 import styles from './styles.module.css';
 
 type FeatureItem = {
@@ -12,7 +15,7 @@ type FeatureItem = {
 const FeatureList: FeatureItem[] = [
   {
     title: 'Multi-cluster inventory',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    Svg: MountainSvg,
     description: (
       <>
         Connect multiple Prometheus endpoints and browse clusters, namespaces,
@@ -22,7 +25,7 @@ const FeatureList: FeatureItem[] = [
   },
   {
     title: 'Request-based cost estimates',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    Svg: TreeSvg,
     description: (
       <>
         Turn CPU, memory, and ephemeral storage requests into namespace and
@@ -33,10 +36,10 @@ const FeatureList: FeatureItem[] = [
   },
   {
     title: 'Config, auth, and chargeback controls',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    Svg: ReactSvg,
     description: (
       <>
-        Manage pricing, shared namespaces, HA, and optional OIDC access control
+        Manage pricing, shared namespaces, and optional OIDC access control
         from the same deployment.
       </>
     ),

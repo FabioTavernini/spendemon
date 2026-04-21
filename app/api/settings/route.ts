@@ -28,7 +28,6 @@ export async function GET() {
         content,
         clusters: settings.clusters,
         costs: settings.costs,
-        ha: settings.ha,
         sharedNamespaces: settings.sharedNamespaces,
         oidc: settings.oidc,
       },
@@ -63,8 +62,10 @@ export async function PUT(req: Request) {
       );
     }
 
-    await writeSettingsFile(body.content);
-    const settings = parseSettings(body.content);
+    const content = body.content;
+
+    await writeSettingsFile(content);
+    const settings = parseSettings(content);
 
     return NextResponse.json(
       {
@@ -72,7 +73,6 @@ export async function PUT(req: Request) {
         path: getSettingsFilePath(),
         clusters: settings.clusters,
         costs: settings.costs,
-        ha: settings.ha,
         sharedNamespaces: settings.sharedNamespaces,
         oidc: settings.oidc,
       },

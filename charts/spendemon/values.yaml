@@ -83,6 +83,11 @@ gateway:
           # Gateway API path type. Defaults to PathPrefix in the template.
           pathType: PathPrefix
 
+# Deployment-level high availability managed by the Helm chart.
+ha:
+  # Set to true to run 2 replicas instead of 1.
+  enabled: false
+
 # Pod resource requests / limits for the main container.
 resources:
   requests:
@@ -124,10 +129,6 @@ settings:
     memoryGb: 20
     # Cost per GB of storage.
     storageGb: 5
-  # Application-level high availability flag written into settings.yaml.
-  # The chart also uses this flag to scale the Deployment to 2 replicas when enabled.
-  ha:
-    enabled: false
   # Namespaces that should be treated as shared / platform namespaces in reports.
   sharednamespaces:
     - kube-system

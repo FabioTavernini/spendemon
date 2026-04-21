@@ -31,7 +31,7 @@ Then edit `settings.yaml` with:
 - one or more cluster names
 - a reachable `prometheusUrl` for each cluster
 - pricing values under `costs`
-- optional `sharednamespaces`, `HA`, and `oidc` settings
+- optional `sharednamespaces` and `oidc` settings
 
 See [Settings](../Configure/Settings) for the full format.
 

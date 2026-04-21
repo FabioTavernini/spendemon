@@ -10,7 +10,6 @@ This file controls:
 
 - which clusters are queried
 - the cost rates used for estimates
-- whether HA should be enabled in the bundled Kubernetes deployment patterns
 - which namespaces should be treated as shared overhead
 - whether OIDC authentication and authorization is enabled
 
@@ -29,9 +28,6 @@ costs:
   cpuCore: 12.5
   memoryGb: 1.8
   storageGb: 0.12
-
-HA:
-  enabled: false
 
 sharednamespaces:
   - kube-system
@@ -54,14 +50,14 @@ The runtime parser understands these top-level sections:
 
 - `clusters`
 - `costs`
-- `HA`
 - `sharednamespaces`
 - `oidc`
 
-Two details are easy to miss:
+One detail is easy to miss:
 
-- `HA` is uppercase in runtime `settings.yaml`
 - `sharednamespaces` is all lowercase and written as one word
+
+Deployment replica behavior is not part of the runtime file. If you use Helm, keep that in chart values under `ha.enabled`.
 
 ## clusters
 
@@ -103,19 +99,6 @@ Spendemon prefers Kubernetes resource requests when calculating pod cost:
 - ephemeral storage from available storage request metrics
 
 If CPU or memory requests are missing, Spendemon falls back to observed usage for estimation and marks those pods as estimated in the report.
-
-## HA
-
-The `HA` block currently contains one key:
-
-- `enabled`: when `true`, the bundled Helm chart and related deployment patterns use 2 replicas instead of 1
-
-Example:
-
-```yaml
-HA:
-  enabled: true
-```
 
 ## sharednamespaces
 
@@ -205,7 +188,6 @@ Admins also inherit viewer access.
 If some sections are omitted, Spendemon falls back to these defaults:
 
 - `costs`: all zeros
-- `HA.enabled`: `false`
 - `sharednamespaces`: empty list
 - `oidc.enabled`: `false`
 - `oidc.debug`: `false`
@@ -217,7 +199,7 @@ Validation rules to keep in mind:
 
 - `clusters` must exist and contain at least one entry
 - `costs` must be non-negative numbers
-- `HA.enabled` and `oidc.enabled` / `oidc.debug` must be `true` or `false`
+- `oidc.enabled` and `oidc.debug` must be `true` or `false`
 - unknown keys inside supported sections are rejected
 
 ## Example with everything enabled
@@ -231,9 +213,6 @@ costs:
   cpuCore: 12.5
   memoryGb: 1.8
   storageGb: 0.12
-
-HA:
-  enabled: true
 
 sharednamespaces:
   - kube-system

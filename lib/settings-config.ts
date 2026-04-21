@@ -12,13 +12,8 @@ export type CostSettings = {
 export type ParsedSettings = {
   clusters: ClusterSettings[];
   costs: CostSettings;
-  ha: HaSettings;
   sharedNamespaces: string[];
   oidc: OidcSettings;
-};
-
-export type HaSettings = {
-  enabled: boolean;
 };
 
 export type OidcSettings = {
@@ -88,10 +83,6 @@ function parseScopeList(value: string): string[] {
         .filter(Boolean),
     ),
   );
-}
-
-function isHaKey(key: string): key is keyof HaSettings {
-  return key === "enabled";
 }
 
 function normalizeScalar(value: string): string {
@@ -177,6 +168,29 @@ function findTopLevelSectionIndex(
   sectionName: string,
 ): number {
   return lines.findIndex((line) => line.trim() === `${sectionName}:`);
+}
+
+function findTopLevelSectionEndIndex(
+  lines: string[],
+  sectionIndex: number,
+): number {
+  let sectionEnd = lines.length;
+
+  for (let index = sectionIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index];
+    const trimmed = line.trim();
+
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
+
+    if (getIndentation(line) === 0) {
+      sectionEnd = index;
+      break;
+    }
+  }
+
+  return sectionEnd;
 }
 
 function collectTopLevelListSection(
@@ -426,56 +440,8 @@ export function parseSettings(content: string): ParsedSettings {
   return {
     clusters: parseClustersFromSettings(content),
     costs: parseCostsFromSettings(content),
-    ha: parseHaFromSettings(content),
     sharedNamespaces: parseSharedNamespacesFromSettings(content),
     oidc: parseOidcFromSettings(content),
-  };
-}
-
-export function parseHaFromSettings(content: string): HaSettings {
-  const lines = content.replace(/\r\n/g, "\n").split("\n");
-  const haIndex = findTopLevelSectionIndex(lines, "HA");
-
-  if (haIndex === -1) {
-    return {
-      enabled: false,
-    };
-  }
-
-  const haIndent = getIndentation(lines[haIndex]);
-  const parsedHa: Partial<HaSettings> = {};
-
-  for (let index = haIndex + 1; index < lines.length; index += 1) {
-    const line = lines[index];
-    const trimmed = line.trim();
-
-    if (!trimmed || trimmed.startsWith("#")) {
-      continue;
-    }
-
-    const indentation = getIndentation(line);
-
-    if (indentation <= haIndent) {
-      break;
-    }
-
-    const property = parseProperty(trimmed);
-
-    if (!property) {
-      throw new Error(`Invalid HA property on line ${index + 1}.`);
-    }
-
-    if (!isHaKey(property.key)) {
-      throw new Error(
-        `Unknown HA property "${property.key}" on line ${index + 1}.`,
-      );
-    }
-
-    parsedHa.enabled = parseBoolean(property.value, property.key);
-  }
-
-  return {
-    enabled: parsedHa.enabled ?? false,
   };
 }
 
@@ -589,12 +555,6 @@ ${sharedNamespaces.map((namespace) => `  - ${namespace}`).join("\n")}
 `;
 }
 
-export function stringifyHaSection(ha: HaSettings): string {
-  return `HA:
-  enabled: ${ha.enabled}
-`;
-}
-
 export function upsertCostsInSettings(
   content: string,
   costs: CostSettings,
@@ -613,26 +573,10 @@ export function upsertCostsInSettings(
       : stringifyCostsSection(costs);
   }
 
-  let sectionEnd = lines.length;
-
-  for (let index = costsIndex + 1; index < lines.length; index += 1) {
-    const line = lines[index];
-    const trimmed = line.trim();
-
-    if (!trimmed || trimmed.startsWith("#")) {
-      continue;
-    }
-
-    if (getIndentation(line) === 0) {
-      sectionEnd = index;
-      break;
-    }
-  }
-
   const updatedLines = [
     ...lines.slice(0, costsIndex),
     ...costLines,
-    ...lines.slice(sectionEnd),
+    ...lines.slice(findTopLevelSectionEndIndex(lines, costsIndex)),
   ];
 
   return `${updatedLines
@@ -661,69 +605,10 @@ export function upsertSharedNamespacesInSettings(
       : stringifySharedNamespacesSection(sharedNamespaces);
   }
 
-  let sectionEnd = lines.length;
-
-  for (let index = sectionIndex + 1; index < lines.length; index += 1) {
-    const line = lines[index];
-    const trimmed = line.trim();
-
-    if (!trimmed || trimmed.startsWith("#")) {
-      continue;
-    }
-
-    if (getIndentation(line) === 0) {
-      sectionEnd = index;
-      break;
-    }
-  }
-
   const updatedLines = [
     ...lines.slice(0, sectionIndex),
     ...sectionLines,
-    ...lines.slice(sectionEnd),
-  ];
-
-  return `${updatedLines
-    .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trimEnd()}\n`;
-}
-
-export function upsertHaInSettings(content: string, ha: HaSettings): string {
-  parseClustersFromSettings(content);
-
-  const normalizedContent = content.replace(/\r\n/g, "\n");
-  const lines = normalizedContent.split("\n");
-  const sectionIndex = findTopLevelSectionIndex(lines, "HA");
-  const sectionLines = stringifyHaSection(ha).trimEnd().split("\n");
-
-  if (sectionIndex === -1) {
-    const trimmed = normalizedContent.trimEnd();
-    return trimmed
-      ? `${trimmed}\n\n${stringifyHaSection(ha)}`
-      : stringifyHaSection(ha);
-  }
-
-  let sectionEnd = lines.length;
-
-  for (let index = sectionIndex + 1; index < lines.length; index += 1) {
-    const line = lines[index];
-    const trimmed = line.trim();
-
-    if (!trimmed || trimmed.startsWith("#")) {
-      continue;
-    }
-
-    if (getIndentation(line) === 0) {
-      sectionEnd = index;
-      break;
-    }
-  }
-
-  const updatedLines = [
-    ...lines.slice(0, sectionIndex),
-    ...sectionLines,
-    ...lines.slice(sectionEnd),
+    ...lines.slice(findTopLevelSectionEndIndex(lines, sectionIndex)),
   ];
 
   return `${updatedLines

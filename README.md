@@ -77,9 +77,6 @@ costs:
   cpuCore: 12.5
   memoryGb: 1.8
   storageGb: 0.12
-
-HA:
-  enabled: false
 ```
 
 ### Settings fields
@@ -89,12 +86,13 @@ HA:
 - `costs.cpuCore`: Price applied to requested CPU cores
 - `costs.memoryGb`: Price applied to requested memory in GB
 - `costs.storageGb`: Price applied to requested ephemeral storage in GB
-- `HA.enabled`: Used by the bundled Kubernetes manifests and Helm chart to render either 1 replica (`false`) or 2 replicas (`true`)
 
 You can edit these values either:
 
 - In the UI at `/settings`
 - Directly in `settings.yaml`
+
+Replica count is deployment-level config. When you install with Helm, use `ha.enabled` in chart values instead of `settings.yaml`.
 
 ## Prometheus Metrics Used
 
@@ -170,7 +168,7 @@ kubectl apply -f https://raw.githubusercontent.com/fabiotavernini/spendemon/main
 
 The bundled manifest now stores `settings.yaml` on a PVC mounted at `/data/settings.yaml`. On each pod start, an init container copies the templated config into the PVC so Helm-managed values stay in sync with the runtime file.
 
-Before exposing it publicly, open the settings UI or edit the file on the mounted volume with your Prometheus endpoint(s), pricing values, and optional `HA.enabled` flag.
+Before exposing it publicly, open the settings UI or edit the file on the mounted volume with your Prometheus endpoint(s) and pricing values. If you are using Helm, keep replica changes in `ha.enabled`.
 
 If you want OIDC, add the same secret referenced by the Helm chart and set these values in `settings.yaml`:
 
