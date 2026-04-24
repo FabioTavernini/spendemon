@@ -279,6 +279,18 @@ kube-public
         {status ? <p className="text-sm text-emerald-600">{status}</p> : null}
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
       </div>
+
+      <p className="text-xs text-muted-foreground">
+        Spendemon is free for personal and non-commercial use.{" "}
+        <a
+          className="underline underline-offset-2"
+          href="https://spendemon.com/contact"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Commercial use requires a license.
+        </a>
+      </p>
     </div>
   );
 }
