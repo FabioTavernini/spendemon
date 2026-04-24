@@ -40,7 +40,7 @@
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.25rem;
 }
 
@@ -69,6 +69,12 @@
   font-weight: 700;
 }
 
+.pricePer {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--ifm-color-emphasis-600);
+}
+
 .featureList {
   margin: 0 0 1.5rem;
   padding-left: 1.2rem;
@@ -86,7 +92,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 1rem;
   padding: 1rem 1.25rem;
   background: var(--ifm-background-surface-color);
@@ -101,9 +107,12 @@
 }
 
 @media screen and (max-width: 996px) {
-  .cardGrid,
-  .row {
+  .cardGrid {
     grid-template-columns: 1fr;
+  }
+
+  .row {
+    grid-template-columns: minmax(100px, 0.7fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .card {

@@ -5,7 +5,16 @@ import Heading from '@theme/Heading';
 
 import styles from './contact.module.css';
 
+const STRIPE_PRO = 'https://buy.stripe.com/test_4gM7sMcR5bvCdjUaC85Rm06';
+
 const infoItems = [
+  // {
+  //   title: 'Ready to subscribe?',
+  //   description:
+  //     'Subscribe directly — $29/mo for up to 5 clusters, $59/mo for unlimited. No sales call needed.',
+  //   actionLabel: 'Subscribe now',
+  //   actionHref: STRIPE_TEAMS,
+  // },
   {
     title: 'Commercial inquiries',
     description:

@@ -5,23 +5,34 @@ import Heading from '@theme/Heading';
 
 import styles from './pricing.module.css';
 
+const STRIPE_PRO = 'https://buy.stripe.com/test_4gM7sMcR5bvCdjUaC85Rm06';
+const STRIPE_UNLIMITED = 'https://buy.stripe.com/test_3cIbJ2g3h57e4No25C5Rm07';
+
 const freeFeatures = [
   'Cluster cost visibility',
   'Namespace and pod-level breakdowns',
   'Personal, learning, and evaluation use',
+  '1 cluster',
 ];
 
-const commercialFeatures = [
-  'Commercial licensing for teams and production usage',
-  'Help with rollout, setup, and support expectations',
-  'Flexible pricing based on your usage and needs',
+const proFeatures = [
+  'Commercial production use',
+  'Up to 5 Prometheus endpoints',
+  'Namespace and pod-level breakdowns',
+  'Email support',
+];
+
+const unlimitedFeatures = [
+  'Everything in Pro',
+  'Unlimited Prometheus endpoints',
+  'Priority support',
 ];
 
 const comparisonRows = [
-  ['Usage', 'Personal and evaluation', 'Commercial and production'],
-  ['Scale', 'Smaller setups and pilots', 'Teams and multi-cluster usage'],
-  ['Support', 'Self-serve', 'Direct contact and guidance'],
-  ['Pricing', 'Free', 'Custom quote'],
+  ['Usage', 'Personal and evaluation', 'Commercial and production', 'Commercial and production'],
+  ['Clusters', '1', 'Up to 5', 'Unlimited'],
+  ['Support', 'Self-serve', 'Email', 'Priority'],
+  ['Pricing', 'Free', '$29/mo', '$59/mo'],
 ];
 
 export default function Pricing(): ReactNode {
@@ -37,18 +48,18 @@ export default function Pricing(): ReactNode {
               Simple pricing for getting started and growing into production use.
             </Heading>
             <p className={styles.lead}>
-              Spendemon is free for personal use and evaluation. If you want to
-              use it commercially, get in touch and we can work out the right
-              setup and pricing for your team.
+              Spendemon is free for personal use and evaluation. Commercial use
+              with multiple clusters starts at $29/mo — subscribe instantly, no
+              sales call needed.
             </p>
-            <div className={styles.actions}>
-              <Link className="button button--primary" to="/contact">
-                Contact us
+            {/* <div className={styles.actions}>
+              <Link className="button button--primary" href={STRIPE_PRO} target="_blank" rel="noreferrer">
+                Subscribe now
               </Link>
               <Link className="button button--secondary" to="/docs/intro">
                 Read the docs
               </Link>
-            </div>
+            </div> */}
           </div>
         </section>
 
@@ -75,19 +86,41 @@ export default function Pricing(): ReactNode {
 
               <article className={styles.card}>
                 <span className={styles.planLabel}>Commercial</span>
-                <Heading as="h2">Team use</Heading>
+                <Heading as="h2">Pro</Heading>
                 <p className={styles.cardText}>
-                  For companies running Spendemon as part of their ongoing cost
-                  reporting and platform workflow.
+                  For companies running Spendemon in production across a handful
+                  of clusters.
                 </p>
-                <div className={styles.price}>Custom</div>
+                <div className={styles.price}>
+                  $29<span className={styles.pricePer}>/mo</span>
+                </div>
                 <ul className={styles.featureList}>
-                  {commercialFeatures.map((feature) => (
+                  {proFeatures.map((feature) => (
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
-                <Link className="button button--primary" to="/contact">
-                  Request pricing
+                <Link className="button button--primary" href={STRIPE_PRO} target="_blank" rel="noreferrer">
+                  Subscribe
+                </Link>
+              </article>
+
+              <article className={styles.card}>
+                <span className={styles.planLabel}>Commercial</span>
+                <Heading as="h2">Unlimited</Heading>
+                <p className={styles.cardText}>
+                  For larger platform teams monitoring many clusters without
+                  worrying about hitting a limit.
+                </p>
+                <div className={styles.price}>
+                  $59<span className={styles.pricePer}>/mo</span>
+                </div>
+                <ul className={styles.featureList}>
+                  {unlimitedFeatures.map((feature) => (
+                    <li key={feature}>{feature}</li>
+                  ))}
+                </ul>
+                <Link className="button button--primary" href={STRIPE_UNLIMITED} target="_blank" rel="noreferrer">
+                  Subscribe
                 </Link>
               </article>
             </div>
@@ -100,11 +133,12 @@ export default function Pricing(): ReactNode {
               Compare options
             </Heading>
             <div className={styles.table}>
-              {comparisonRows.map(([label, free, commercial]) => (
+              {comparisonRows.map(([label, free, pro, unlimited]) => (
                 <div key={label} className={styles.row}>
                   <div className={styles.label}>{label}</div>
                   <div>{free}</div>
-                  <div>{commercial}</div>
+                  <div>{pro}</div>
+                  <div>{unlimited}</div>
                 </div>
               ))}
             </div>
