@@ -43,3 +43,4 @@ settings.yaml
 next-env.d.ts
 
 .codex/
+.claude/
