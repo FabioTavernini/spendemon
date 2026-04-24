@@ -75,12 +75,41 @@ For production-style setups, prefer `LOCAL_ADMIN_PASSWORD_HASH` and `LOCAL_VIEWE
 
 ## OIDC note
 
-OIDC works in Docker too, but you need both:
+OIDC works in Docker too. You need three things:
 
-- an `oidc:` block in `settings.yaml`
-- the environment variables referenced by that block, plus `NEXTAUTH_SECRET` and `NEXTAUTH_URL`
+1. An `oidc:` block in `settings.yaml` with `enabled: true` and your provider values (or `${VAR}` references).
+2. `NEXTAUTH_SECRET` — a long random string used to sign session cookies.
+3. `NEXTAUTH_URL` — the **public base URL** where the app is reachable, including scheme and port. NextAuth uses this to construct the OAuth callback URL (`<NEXTAUTH_URL>/api/auth/callback/oidc`) that is registered with your identity provider. If it is missing or wrong, the OAuth redirect will fail.
 
-For production-style OIDC setups, the [Helm install](./Kubernetes/Helm) path is usually simpler because the chart already supports secret-based wiring.
+Example:
+
+```sh
+docker run \
+  -p 3000:3000 \
+  -e NEXTAUTH_SECRET=replace-with-a-long-random-string \
+  -e NEXTAUTH_URL=http://localhost:3000 \
+  -e OIDC_ISSUER=https://id.example.com/realms/spendemon \
+  -e OIDC_CLIENT_ID=spendemon \
+  -e OIDC_CLIENT_SECRET=replace-me \
+  -v $(pwd)/settings.yaml:/app/settings.yaml \
+  ghcr.io/fabiotavernini/spendemon:latest
+```
+
+The `settings.yaml` for the example above would reference those env vars:
+
+```yaml
+oidc:
+  enabled: true
+  issuer: ${OIDC_ISSUER}
+  clientId: ${OIDC_CLIENT_ID}
+  clientSecret: ${OIDC_CLIENT_SECRET}
+  adminGroup: spendemon-admins
+  viewerGroup: spendemon-viewers
+```
+
+Set `NEXTAUTH_URL` to the URL your browser uses to reach the app — for example `https://spendemon.example.com` in a production deployment.
+
+For production-style OIDC setups, the [Helm install](./Kubernetes/Helm) path is usually simpler because the chart injects `NEXTAUTH_URL` automatically from `settings.oidc.nextAuthUrl` and wires all secrets from a Kubernetes secret reference.
 
 ## Notes
 
