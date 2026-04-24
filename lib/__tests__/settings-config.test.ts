@@ -71,14 +71,14 @@ clusters:
   })
 
   it('resolves env var references in prometheusUrl', () => {
-    vi.stubEnv('PROM_URL', 'http://resolved:9090')
+    vi.stubEnv('PROM_URL', 'https://resolved:9090')
     const content = `\
 clusters:
   - name: cluster-1
     prometheusUrl: \${PROM_URL}
 `
     expect(parseClustersFromSettings(content)).toEqual([
-      { name: 'cluster-1', prometheusUrl: 'http://resolved:9090' },
+      { name: 'cluster-1', prometheusUrl: 'https://resolved:9090' },
     ])
   })
 
