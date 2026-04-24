@@ -59,7 +59,22 @@ For production-style setups, prefer `LOCAL_ADMIN_PASSWORD_HASH` and `LOCAL_VIEWE
 
 ## OIDC note
 
-If your `settings.yaml` uses placeholders such as `${OIDC_ISSUER}`, export those environment variables before starting the app. In production, you should also set `NEXTAUTH_SECRET` and `NEXTAUTH_URL`.
+If your `settings.yaml` has `oidc.enabled: true`, you need three environment variables set before starting the app:
+
+1. The provider env vars referenced by your `oidc:` block (e.g. `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`).
+2. `NEXTAUTH_SECRET` — a long random string used to sign session cookies.
+3. `NEXTAUTH_URL` — the **public base URL** of the app (e.g. `http://localhost:3000` locally). NextAuth uses this to construct the OAuth callback URL (`<NEXTAUTH_URL>/api/auth/callback/oidc`). If it is missing or wrong, the OAuth redirect will fail.
+
+Example:
+
+```sh
+NEXTAUTH_SECRET=replace-with-a-long-random-string \
+NEXTAUTH_URL=http://localhost:3000 \
+OIDC_ISSUER=https://id.example.com/realms/spendemon \
+OIDC_CLIENT_ID=spendemon \
+OIDC_CLIENT_SECRET=replace-me \
+npm run dev
+```
 
 ## Docs-only workflow
 

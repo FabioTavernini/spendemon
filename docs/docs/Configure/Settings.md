@@ -53,6 +53,7 @@ Rules and notes:
 
 - at least one cluster is required
 - every cluster must include both `name` and `prometheusUrl`
+- `prometheusUrl` must use `http` or `https` — other schemes (e.g. `file://`, `ftp://`) are rejected at startup
 - the URL must be reachable from where Spendemon is running
 
 Example:
@@ -115,7 +116,7 @@ The `oidc` block enables authentication and role-based authorization through Nex
 Supported keys:
 
 - `enabled`: turns OIDC on or off
-- `debug`: logs resolved memberships to the server logs during sign-in
+- `debug`: logs resolved memberships **and raw token claims** to the server logs during sign-in — keep this `false` in production as it prints sensitive JWT payload data (groups, roles, email) to stdout and any connected log aggregator
 - `issuer`: OIDC issuer URL
 - `clientId`: client ID
 - `clientSecret`: client secret
@@ -175,8 +176,8 @@ Use these environment variables instead:
 - `AUTH_MODE=credentials`
 - `NEXTAUTH_SECRET`
 - one or more local accounts:
-- `LOCAL_ADMIN_USERNAME` with either `LOCAL_ADMIN_PASSWORD` or `LOCAL_ADMIN_PASSWORD_HASH`
-- `LOCAL_VIEWER_USERNAME` with either `LOCAL_VIEWER_PASSWORD` or `LOCAL_VIEWER_PASSWORD_HASH`
+  - `LOCAL_ADMIN_USERNAME` with either `LOCAL_ADMIN_PASSWORD` or `LOCAL_ADMIN_PASSWORD_HASH`
+  - `LOCAL_VIEWER_USERNAME` with either `LOCAL_VIEWER_PASSWORD` or `LOCAL_VIEWER_PASSWORD_HASH`
 
 Rules and notes:
 
@@ -215,6 +216,7 @@ If some sections are omitted, Spendemon falls back to these defaults:
 Validation rules to keep in mind:
 
 - `clusters` must exist and contain at least one entry
+- `clusters[].prometheusUrl` must be a valid `http` or `https` URL
 - `costs` must be non-negative numbers
 - `oidc.enabled` and `oidc.debug` must be `true` or `false`
 - unknown keys inside supported sections are rejected
