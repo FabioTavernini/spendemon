@@ -77,6 +77,22 @@ function parseNonNegativeNumber(value: unknown, key: string): number {
   return parsed
 }
 
+function validatePrometheusUrl(url: string, entryNumber: number): void {
+  let parsed: URL
+
+  try {
+    parsed = new URL(url)
+  } catch {
+    throw new Error(`Cluster entry ${entryNumber}: "prometheusUrl" is not a valid URL.`)
+  }
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error(
+      `Cluster entry ${entryNumber}: "prometheusUrl" must use http or https (got "${parsed.protocol}").`,
+    )
+  }
+}
+
 function getIndentation(line: string): number {
   return line.length - line.trimStart().length
 }
@@ -133,10 +149,14 @@ export function parseClustersFromSettings(content: string): ClusterSettings[] {
       throw new Error(`Cluster entry ${i + 1} must include "prometheusUrl".`)
     }
 
-    return {
+    const resolved = {
       name: resolveEnvReferences(cluster.name),
       prometheusUrl: resolveEnvReferences(cluster.prometheusUrl),
     }
+
+    validatePrometheusUrl(resolved.prometheusUrl, i + 1)
+
+    return resolved
   })
 }
 

@@ -105,6 +105,33 @@ clusters:
   it('throws on invalid YAML', () => {
     expect(() => parseClustersFromSettings('clusters: [\n  bad: yaml')).toThrow('Invalid YAML')
   })
+
+  it('throws when prometheusUrl is not a valid URL', () => {
+    const content = `\
+clusters:
+  - name: cluster-1
+    prometheusUrl: not-a-url
+`
+    expect(() => parseClustersFromSettings(content)).toThrow('not a valid URL')
+  })
+
+  it('throws when prometheusUrl uses a non-http scheme', () => {
+    const content = `\
+clusters:
+  - name: cluster-1
+    prometheusUrl: file:///etc/passwd
+`
+    expect(() => parseClustersFromSettings(content)).toThrow('http or https')
+  })
+
+  it('throws when prometheusUrl uses ftp scheme', () => {
+    const content = `\
+clusters:
+  - name: cluster-1
+    prometheusUrl: ftp://prometheus:9090
+`
+    expect(() => parseClustersFromSettings(content)).toThrow('http or https')
+  })
 })
 
 // ---------------------------------------------------------------------------
