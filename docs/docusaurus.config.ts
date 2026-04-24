@@ -184,6 +184,27 @@ const config: Config = {
             },
           ],
         },
+        {
+          title: 'Legal',
+          items: [
+            {
+              label: 'Impressum',
+              to: '/impressum',
+            },
+            {
+              label: 'Privacy Policy',
+              to: '/privacy-policy',
+            },
+            {
+              label: 'Terms of Service',
+              to: '/terms',
+            },
+            {
+              label: 'Refund Policy',
+              to: '/refund-policy',
+            },
+          ],
+        },
       ],
       copyright: `Copyright © ${new Date().getFullYear()} Spendemon, Built with Docusaurus.`,
     },
