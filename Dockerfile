@@ -52,10 +52,8 @@ RUN printf '%s\n' \
 
 ENV NODE_ENV=production
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED=1
+# Disable Next.js telemetry at build time.
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build Next.js application
 # If you want to speed up Docker rebuilds, you can cache the build artifacts

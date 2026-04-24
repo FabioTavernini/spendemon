@@ -307,12 +307,12 @@ function getAuthSecret(authMode: AuthMode): string | undefined {
     return process.env.NEXTAUTH_SECRET
   }
 
-  if (process.env.NODE_ENV !== 'production') {
-    return 'spendemon-dev-nextauth-secret-change-me'
+  if (authMode !== 'none') {
+    throw new Error('NEXTAUTH_SECRET must be set when authentication is enabled.')
   }
 
-  if (authMode !== 'none') {
-    throw new Error('NEXTAUTH_SECRET must be set when authentication is enabled in production.')
+  if (process.env.NODE_ENV !== 'production') {
+    return 'spendemon-dev-nextauth-secret-change-me'
   }
 
   return undefined
@@ -626,6 +626,37 @@ function createOidcProvider(oidc: OidcSettings): OAuthConfig<OidcProfile> {
   }
 }
 
+type RateLimitEntry = { failures: number; windowStart: number }
+const loginAttemptStore = new Map<string, RateLimitEntry>()
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
+const RATE_LIMIT_MAX_FAILURES = 5
+
+function isRateLimited(username: string): boolean {
+  const now = Date.now()
+  const entry = loginAttemptStore.get(username)
+
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    return false
+  }
+
+  return entry.failures >= RATE_LIMIT_MAX_FAILURES
+}
+
+function recordLoginFailure(username: string): void {
+  const now = Date.now()
+  const entry = loginAttemptStore.get(username)
+
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    loginAttemptStore.set(username, { failures: 1, windowStart: now })
+  } else {
+    loginAttemptStore.set(username, { ...entry, failures: entry.failures + 1 })
+  }
+}
+
+function clearLoginFailures(username: string): void {
+  loginAttemptStore.delete(username)
+}
+
 function createCredentialsProvider() {
   return CredentialsProvider({
     id: 'credentials',
@@ -649,16 +680,18 @@ function createCredentialsProvider() {
         return null
       }
 
+      if (isRateLimited(username)) {
+        return null
+      }
+
       const account = getCredentialsAccounts().find((entry) => entry.username === username)
 
-      if (!account) {
+      if (!account || !verifyPassword(password, account.password)) {
+        recordLoginFailure(username)
         return null
       }
 
-      if (!verifyPassword(password, account.password)) {
-        return null
-      }
-
+      clearLoginFailures(username)
       return createLocalUser(account)
     },
   })

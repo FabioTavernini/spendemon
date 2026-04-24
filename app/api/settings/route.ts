@@ -21,6 +21,7 @@ export async function GET() {
   try {
     const content = await readSettingsFile();
     const settings = parseSettings(content);
+    const { clientSecret: _redacted, ...oidcPublic } = settings.oidc;
 
     return NextResponse.json(
       {
@@ -29,7 +30,7 @@ export async function GET() {
         clusters: settings.clusters,
         costs: settings.costs,
         sharedNamespaces: settings.sharedNamespaces,
-        oidc: settings.oidc,
+        oidc: oidcPublic,
       },
       { status: 200 },
     );
@@ -66,6 +67,7 @@ export async function PUT(req: Request) {
 
     await writeSettingsFile(content);
     const settings = parseSettings(content);
+    const { clientSecret: _redacted, ...oidcPublic } = settings.oidc;
 
     return NextResponse.json(
       {
@@ -74,7 +76,7 @@ export async function PUT(req: Request) {
         clusters: settings.clusters,
         costs: settings.costs,
         sharedNamespaces: settings.sharedNamespaces,
-        oidc: settings.oidc,
+        oidc: oidcPublic,
       },
       { status: 200 },
     );
