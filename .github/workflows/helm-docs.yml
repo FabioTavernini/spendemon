@@ -1,0 +1,37 @@
+name: Check Helm chart docs
+
+on:
+  pull_request:
+    paths:
+      - 'charts/**'
+      - '.github/workflows/helm-docs.yml'
+      - '.pre-commit-config.yaml'
+  push:
+    branches: ['main']
+    paths:
+      - 'charts/**'
+      - '.github/workflows/helm-docs.yml'
+      - '.pre-commit-config.yaml'
+
+env:
+  HELM_DOCS_IMAGE: jnorwood/helm-docs:v1.14.2
+
+jobs:
+  helm-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Generate Helm chart docs
+        run: |
+          docker run --rm \
+            --volume "$PWD:/helm-docs" \
+            -u "$(id -u):$(id -g)" \
+            "$HELM_DOCS_IMAGE" \
+            --chart-search-root=charts
+
+      - name: Check generated docs are committed
+        run: git diff --exit-code charts/spendemon/README.md
