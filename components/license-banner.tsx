@@ -9,17 +9,17 @@ const STRIPE_UNLIMITED = 'https://buy.stripe.com/test_3cIbJ2g3h57e4No25C5Rm07'
 
 export async function LicenseBanner() {
   const clusters = await getClusters()
-  if (clusters.length <= 1) return null
+  if (clusters.length < 5) return null
 
   const stripeUrl = clusters.length <= 5 ? STRIPE_TEAMS : STRIPE_UNLIMITED
-  const planLabel = clusters.length <= 5 ? '$29/mo — up to 5 clusters' : '$59/mo — unlimited clusters'
+  const planLabel = clusters.length <= 5 ? 'team license' : 'unlimited license'
 
   return (
     <div className="border-b bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:bg-amber-950/20 dark:text-amber-300">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p>
-          You are monitoring <strong>{clusters.length} clusters</strong>. Commercial use with multiple clusters requires a license —{' '}
-          <strong>{planLabel}</strong>.
+          You are monitoring <strong>{clusters.length} clusters</strong>. Free use is intended for personal, non-commercial, and
+          small-scale internal use. Commercial production use requires a <strong>{planLabel}</strong>.
         </p>
         <Button
           asChild

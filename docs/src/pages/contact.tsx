@@ -5,8 +5,6 @@ import Heading from '@theme/Heading';
 
 import styles from './contact.module.css';
 
-const STRIPE_PRO = 'https://buy.stripe.com/test_4gM7sMcR5bvCdjUaC85Rm06';
-
 const infoItems = [
   // {
   //   title: 'Ready to subscribe?',
@@ -30,7 +28,7 @@ const infoItems = [
   {
     title: 'Docs and setup help',
     description:
-      'If you are still evaluating, the docs are the fastest place to get implementation details.',
+      'For personal, educational, non-commercial, or small-scale internal use, the docs are the fastest place to get implementation details.',
     actionLabel: 'Read the docs',
     actionHref: '/docs/intro',
     internal: true,
@@ -97,7 +95,7 @@ export default function Contact(): ReactNode {
                     <select name="topic" defaultValue="commercial">
                       <option value="commercial">Commercial inquiry</option>
                       <option value="support">Support question</option>
-                      <option value="evaluation">Evaluation</option>
+                      <option value="free-use">Free use</option>
                       <option value="other">Other</option>
                     </select>
                   </label>

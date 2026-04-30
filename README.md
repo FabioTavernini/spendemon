@@ -203,12 +203,14 @@ The plain manifest intentionally ships with just the core `ConfigMap`, `Deployme
 
 ## License
 
-Spendemon is free for individual, non-commercial, and evaluation use.
+Spendemon is source-available under a Business Source License (BSL)-style
+license.
 
-Any use by or on behalf of a for-profit company beyond evaluation requires a
-paid commercial license.
+It is free for personal, educational, non-commercial, and small-scale internal
+use. Commercial use requires a paid license from the author.
 
-See [LICENSE](./LICENSE) and [COMMERCIAL.md](./COMMERCIAL.md).
+See [LICENSE](./LICENSE), [LICENSE_SUMMARY.md](./LICENSE_SUMMARY.md), and
+[COMMERCIAL_LICENSE.md](./COMMERCIAL_LICENSE.md).
 
 ## Notes
 

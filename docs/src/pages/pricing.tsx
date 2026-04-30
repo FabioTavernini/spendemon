@@ -11,8 +11,8 @@ const STRIPE_UNLIMITED = 'https://buy.stripe.com/test_3cIbJ2g3h57e4No25C5Rm07';
 const freeFeatures = [
   'Cluster cost visibility',
   'Namespace and pod-level breakdowns',
-  'Personal, learning, and evaluation use',
-  '1 cluster',
+  'Personal, educational, and non-commercial use',
+  'Small-organization internal use',
 ];
 
 const proFeatures = [
@@ -29,8 +29,8 @@ const unlimitedFeatures = [
 ];
 
 const comparisonRows = [
-  ['Usage', 'Personal and evaluation', 'Commercial and production', 'Commercial and production'],
-  ['Clusters', '1', 'Up to 5', 'Unlimited'],
+  ['Usage', 'Personal and small-scale', 'Commercial and production', 'Commercial and production'],
+  ['Scale', 'Fewer than 5 employees or fewer than 5 clusters', 'Up to 5 clusters', 'Unlimited'],
   ['Support', 'Self-serve', 'Email', 'Priority'],
   ['Pricing', 'Free', '$29/mo', '$59/mo'],
 ];
@@ -48,9 +48,9 @@ export default function Pricing(): ReactNode {
               Simple pricing for getting started and growing into production use.
             </Heading>
             <p className={styles.lead}>
-              Spendemon is free for personal use and evaluation. Commercial use
-              with multiple clusters starts at $29/mo — subscribe instantly, no
-              sales call needed.
+              Spendemon is free for personal, educational, non-commercial, and
+              small-scale internal use. Commercial production use requires a
+              paid license.
             </p>
             {/* <div className={styles.actions}>
               <Link className="button button--primary" href={STRIPE_PRO} target="_blank" rel="noreferrer">

@@ -7,9 +7,14 @@ export default function Footer() {
   return (
     <footer className="border-t bg-transparent px-4 py-3 text-sm">
       <div className="flex w-full flex-wrap items-center justify-between gap-3 text-center">
-        <p className="text-black dark:text-white">
-          &copy; {new Date().getFullYear()} Spendemon. All rights reserved.
-        </p>
+        <div className="space-y-1 text-left">
+          <p className="text-black dark:text-white">
+            &copy; {new Date().getFullYear()} Spendemon. All rights reserved.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Free for personal use. Commercial use requires a license.
+          </p>
+        </div>
 
         <Button asChild className="shadow-sm text-black dark:text-white" size="sm" variant="outline">
           <Link

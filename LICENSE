@@ -1,107 +1,86 @@
-Spendemon Personal, Non-Commercial, and Evaluation License 1.0
+Business Source License 1.1
 
-Copyright (c) 2026 Fabio Tavernini
+Licensor: Fabio Tavernini
+Licensed Work: Spendemon
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to use,
-copy, run, and modify the Software, subject to the terms below.
+Additional Use Grant:
 
-1. Free Use
+Subject to the terms of this license, you may use, copy, modify, create
+derivative works from, redistribute, and make production use of the Licensed
+Work only for the following purposes:
 
-You may use the Software without a separate commercial license only for:
+- Personal use by an individual for private, hobby, homelab, learning, or
+  other non-business purposes.
+- Educational use by students, teachers, schools, universities, training
+  programs, or similar educational organizations.
+- Non-commercial use that is not primarily intended for commercial advantage,
+  monetary compensation, revenue generation, or business operations.
+- Internal use at small organizations, meaning organizations with fewer than 5
+  employees or fewer than 5 Kubernetes clusters.
 
-a. Personal Use
-Use by an individual for personal, hobby, homelab, learning, or other private
-non-business purposes.
+Use Limitation:
 
-b. Non-Commercial Use
-Use that is not primarily intended for or directed toward commercial advantage
-or monetary compensation.
+Commercial Use is not allowed unless you have purchased or otherwise received
+a separate commercial license from the Licensor. This restriction does not
+apply to uses expressly permitted by the Additional Use Grant.
 
-c. Evaluation Use
-Use for up to 30 consecutive calendar days to evaluate whether the Software is
-suitable for your needs. Evaluation Use may be carried out by or on behalf of a
-for-profit entity only for internal testing, review, or trial purposes, and not
-for production use or for providing services to third parties.
+"Commercial Use" means any use of the Licensed Work that includes any of the
+following:
 
-2. Commercial Use
+- use by or on behalf of a for-profit entity in a production environment;
+- use that supports business operations;
+- offering the Licensed Work, or functionality substantially provided by the
+  Licensed Work, as part of a paid product or service.
 
-Any use of the Software by or on behalf of a for-profit entity, other than
-permitted Evaluation Use under Section 1(c), requires a separate commercial
-license from the copyright holder.
+Change Date:
 
-Commercial Use includes, without limitation:
+For each version of the Licensed Work, the Change Date is the date 4 years
+after that version is first publicly released.
 
-- internal business operations
-- production deployments
-- consulting, contracting, or client delivery work
-- offering the Software, or its functionality, as a hosted or managed service
-- bundling, resale, sublicensing, or distribution as part of a paid product or
-  service
+Change License:
 
-3. Redistribution
+MIT License.
 
-You may redistribute the Software in source form, with or without
-modifications, only for Personal Use or Non-Commercial Use, provided that:
+Terms:
 
-- this license and all copyright notices are included
-- you clearly identify any modifications you made
-- you do not charge a fee for the Software itself
-- you do not grant others any right to use the Software for Commercial Use
-  without a separate commercial license
+The Licensor hereby grants you the right to copy, modify, create derivative
+works, redistribute, and make non-production use of the Licensed Work.
 
-4. Restrictions
+The Licensor may make an Additional Use Grant, above, permitting limited
+production use.
 
-You may not:
+Effective on the Change Date, or the fourth anniversary of the first publicly
+available distribution of a specific version of the Licensed Work under this
+License, whichever comes first, the Licensor hereby grants you rights under
+the terms of the Change License, and the rights granted in the paragraph above
+terminate.
 
-- use the Software for Commercial Use without a separate commercial license
-- remove or alter any copyright, license, or attribution notices
-- misrepresent the origin of the Software
-- use the name "Spendemon" or the author's names, logos, or trademarks to imply
-  endorsement without prior written permission
+If your use of the Licensed Work does not comply with the requirements
+currently in effect as described in this License, you must purchase a
+commercial license from the Licensor, its affiliated entities, or authorized
+resellers, or you must refrain from using the Licensed Work.
 
-5. Ownership
+All copies of the original and modified Licensed Work, and derivative works of
+the Licensed Work, are subject to this License. This License applies
+separately for each version of the Licensed Work and the Change Date may vary
+for each version.
 
-The Software is licensed, not sold. Except for the limited rights expressly
-granted by this license, all rights are reserved by the copyright holder.
+You must conspicuously display this License on each original or modified copy
+of the Licensed Work. If you receive the Licensed Work in original or modified
+form from a third party, the terms and conditions set forth in this License
+apply to your use of that work.
 
-6. No Warranty
+Any use of the Licensed Work in violation of this License will automatically
+terminate your rights under this License for the current and all other
+versions of the Licensed Work.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+This License does not grant you any right in any trademark or logo of the
+Licensor or its affiliates.
 
-7. Limitation of Liability
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSED WORK IS PROVIDED ON AN
+"AS IS" BASIS. THE LICENSOR HEREBY DISCLAIMS ALL WARRANTIES AND CONDITIONS,
+EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE, NON-INFRINGEMENT, AND TITLE.
 
-TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE
-COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
-OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-8. Termination
-
-Any use of the Software outside the scope of this license automatically
-terminates your rights under it.
-
-If the violation is curable and you cure it within 14 days after receiving
-written notice from the copyright holder, your rights under this license are
-reinstated unless and until a later violation occurs.
-
-9. Definitions
-
-"For-profit entity" means any corporation, company, partnership, sole
-proprietorship, consultancy, agency, contractor, or other organization or
-person acting for commercial gain, business operations, client work, or revenue
-generating activity.
-
-"Production use" means use of the Software in a live or operational business
-environment other than solely for internal evaluation.
-
-10. Commercial Licensing
-
-For commercial licensing, contact Fabio Tavernini via GitHub:
-https://github.com/FabioTavernini
-
-Or via the spendemon.com contact form:
-https://spendemon.com/contact/
+Business Source License 1.1 text is based on the license published by MariaDB
+Corporation Ab at https://mariadb.com/bsl11/.

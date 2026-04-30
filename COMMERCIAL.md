@@ -1,47 +1,16 @@
 # Commercial Licensing
 
-Spendemon is free to use for:
+Spendemon is source-available under a Business Source License (BSL)-style
+license.
 
-- individuals using it personally
-- non-commercial use
-- evaluation for up to 30 consecutive days
+You can use it for free for personal, educational, non-commercial, and
+small-organization internal use as described in [LICENSE](./LICENSE).
 
-Any use by or on behalf of a for-profit company beyond that evaluation period
-requires a separate commercial license.
+Companies using Spendemon commercially must purchase a commercial license.
+That includes production use by a for-profit company, use that supports
+business operations, or offering Spendemon as part of a paid product or
+service.
 
-## Free Use Examples
-
-These are generally covered by the public license:
-
-- personal and homelab use
-- hobby projects
-- individual learning and experimentation
-- classroom or educational use
-- nonprofit or other genuinely non-commercial use
-- a company testing Spendemon internally for up to 30 consecutive days
-
-## Paid Use Examples
-
-These generally require a commercial license:
-
-- a company using Spendemon in production
-- internal business use beyond the evaluation period
-- consulting, contracting, or client delivery work
-- managed hosting or SaaS
-- bundling or resale as part of a commercial offering
-
-## If You Are Unsure
-
-If your use case involves a business, client work, revenue, or ongoing company
-operations, treat it as commercial and get in touch before using Spendemon.
-
-This file is only a plain-English summary. The license text in
-[LICENSE](./LICENSE) controls.
-
-## Contact
-
-To discuss commercial licensing, contact via GitHub:
-[github.com/FabioTavernini](https://github.com/FabioTavernini)
-
-Or via the spendemon.com contact form:
-https://spendemon.com/contact/
+For the full commercial licensing note, see
+[COMMERCIAL_LICENSE.md](./COMMERCIAL_LICENSE.md). For a plain-English overview,
+see [LICENSE_SUMMARY.md](./LICENSE_SUMMARY.md).
