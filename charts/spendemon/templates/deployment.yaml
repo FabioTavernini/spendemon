@@ -40,9 +40,13 @@ spec:
             - -c
             - |
               mkdir -p {{ .Values.persistence.mountPath }}
+              {{- if .Values.persistence.forceOverwrite }}
+              cp /seed/settings.yaml {{ .Values.persistence.mountPath }}/settings.yaml
+              {{- else }}
               if [ ! -f {{ .Values.persistence.mountPath }}/settings.yaml ]; then
                 cp /seed/settings.yaml {{ .Values.persistence.mountPath }}/settings.yaml
               fi
+              {{- end }}
               chown 1000:1000 {{ .Values.persistence.mountPath }} {{ .Values.persistence.mountPath }}/settings.yaml
               chmod 775 {{ .Values.persistence.mountPath }}
               chmod 664 {{ .Values.persistence.mountPath }}/settings.yaml
