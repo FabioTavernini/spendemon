@@ -51,13 +51,6 @@ const config: Config = {
 
   customFields: {
     repoFiles: {
-      helmValues: {
-        ...readRepoFile('charts/spendemon/values.yaml'),
-        language: 'yaml',
-        title: 'Current chart values.yaml',
-        description:
-          'Rendered from the Helm chart in this repository at docs build time.',
-      },
       settingsExample: {
         ...readRepoFile('settings-example.yaml'),
         language: 'yaml',

@@ -3,7 +3,7 @@ sidebar_position: 1
 description: Install Spendemon on Kubernetes with the official Helm chart and live chart defaults.
 ---
 
-import RepoFileCodeBlock from '@site/src/components/RepoFileCodeBlock';
+import RemoteCodeBlock from '@site/src/components/RemoteCodeBlock';
 
 # Helm
 
@@ -62,10 +62,14 @@ helm upgrade --install spendemon \
 
 ## Current chart values
 
-The block below is rendered from the chart in this repository during the docs
-build, so it stays aligned with the current `charts/spendemon/values.yaml`.
+The block below is fetched live from the repository, so it always reflects the latest `charts/spendemon/values.yaml`.
 
-<RepoFileCodeBlock file="helmValues" />
+<RemoteCodeBlock
+  url="https://raw.githubusercontent.com/FabioTavernini/spendemon/refs/heads/main/charts/spendemon/values.yaml"
+  sourceUrl="https://github.com/FabioTavernini/spendemon/blob/main/charts/spendemon/values.yaml"
+  title="Current chart values.yaml"
+  description="Fetched live from the Helm chart in this repository."
+/>
 
 ## What the chart configures
 
