@@ -108,7 +108,7 @@ function PodHistoryChart({ pod }: { pod: PodCostRow }) {
             <button
               key={key}
               data-active={activeMetric === key}
-              className="flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
+              className="hover:cursor-pointer flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
               onClick={() => setActiveMetric(key)}
             >
               <span className="text-xs text-muted-foreground">
@@ -233,7 +233,7 @@ export function PodHistoryDialog({
           </div>
           <Button
             variant="ghost"
-            size="icon"
+            size="lg"
             className="shrink-0"
             onClick={() => setOpen(false)}
           >
