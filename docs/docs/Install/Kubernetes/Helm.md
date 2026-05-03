@@ -48,6 +48,17 @@ helm upgrade --install spendemon \
   oci://ghcr.io/fabiotavernini/charts/spendemon \
   --values ./values.yaml
 ```
+## Upgrade
+```sh
+helm upgrade --install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon --values ./values.yaml
+```
+
+
+```sh
+helm upgrade --install spendemon \
+  oci://ghcr.io/fabiotavernini/charts/spendemon \
+  --values ./values.yaml
+```
 
 ## Current chart values
 
