@@ -67,6 +67,21 @@ export type NamespaceCostRow = {
   avgTotalCost?: number
 }
 
+function getStatusColor(status: string): string {
+  switch (status.toLowerCase()) {
+    case "running":
+    case "completed":
+    case "succeeded":
+      return "text-green-500"
+    case "pending":
+      return "text-orange-500"
+    case "failed":
+      return "text-red-500"
+    default:
+      return "text-red-500"
+  }
+}
+
 function SortableHeader({
   column,
   label,
@@ -119,6 +134,11 @@ export const podCostColumns: ColumnDef<PodCostRow>[] = [
   {
     accessorKey: "status",
     header: "Status",
+    cell: ({ row }) => (
+      <span className={getStatusColor(row.original.status)}>
+        {row.original.status}
+      </span>
+    ),
   },
   {
     accessorKey: "isEstimated",
