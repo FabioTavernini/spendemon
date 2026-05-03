@@ -15,7 +15,7 @@ export async function LicenseBanner() {
   const planLabel = clusters.length <= 5 ? 'Pro license' : 'Unlimited license'
 
   return (
-    <div className="border-b bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:bg-amber-950/20 dark:text-amber-300">
+    <div className="bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:bg-amber-950/20 dark:text-amber-300 rounded-lg m-4 border-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p>
           You are monitoring <strong>{clusters.length} clusters</strong>. Free use is intended for personal, non-commercial, and
