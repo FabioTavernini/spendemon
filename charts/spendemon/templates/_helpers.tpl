@@ -38,4 +38,10 @@ oidc:
   viewerGroup: {{ .Values.settings.oidc.viewerGroup | quote }}
   debug: {{ .Values.settings.oidc.debug }}
   extraScopes: {{ join " " .Values.settings.oidc.extraScopes | quote }}
+
+{{- if .Values.settings.branding }}
+branding:
+  companyName: {{ .Values.settings.branding.companyName | quote }}
+  logoUrl: {{ .Values.settings.branding.logoUrl | quote }}
+{{- end }}
 {{- end }}
