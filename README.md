@@ -167,6 +167,28 @@ Want to develop the app further, just apply the manifests under `dev/manifests.y
 Then run `npm i` and then `npm run dev` to start the development server.
 If you want to simulate a failing or pending pod, just apply `dev/failing-pod.yaml` or `dev/pending-pod.yaml`
 
+## Kubernetes Install With Helm
+
+The Helm chart lives in [`charts/spendemon`](./charts/spendemon), with generated chart documentation in [`charts/spendemon/README.md`](./charts/spendemon/README.md).
+
+Chart docs are generated with `helm-docs`. Regenerate them after changing `Chart.yaml` or `values.yaml`:
+
+```sh
+npm run helm:docs
+```
+
+To regenerate automatically before commits, install the configured pre-commit hook:
+
+```sh
+pre-commit install
+```
+
+CI also runs the same generator and fails when `charts/spendemon/README.md` is out of date. You can run that check locally with:
+
+```sh
+npm run helm:docs:check
+```
+
 ## Kubernetes Install Without Helm
 
 If you prefer a plain manifest over Helm, you can apply the bundled multi-resource manifest directly:

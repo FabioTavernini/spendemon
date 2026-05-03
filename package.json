@@ -10,6 +10,8 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "helm:docs": "docker run --rm --volume \"$PWD:/helm-docs\" -u \"$(id -u):$(id -g)\" jnorwood/helm-docs:v1.14.2 --chart-search-root=charts",
+    "helm:docs:check": "npm run helm:docs && git diff --exit-code charts/spendemon/README.md",
     "typecheck": "tsc --noEmit",
     "test": "vitest"
   },

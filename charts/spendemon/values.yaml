@@ -1,22 +1,22 @@
 # Container image settings for the Spendemon app.
 image:
-  # OCI image repository to deploy.
+  # -- OCI image repository to deploy.
   repository: ghcr.io/fabiotavernini/spendemon
-  # Image tag to deploy. Must be set to a specific version (e.g. "1.2.3"). "latest" is rejected.
+  # -- Image tag to deploy. Must be set to a specific version (e.g. "1.2.3"). "latest" is rejected.
   tag: ""
-  # Kubernetes image pull policy for the application container.
+  # -- Kubernetes image pull policy for the application container.
   pullPolicy: IfNotPresent
-  # Optional image pull secret name for private registries. Leave empty for public images.
+  # -- Optional image pull secret name for private registries. Leave empty for public images.
   imagePullSecret: ""
 
 # Init container used to seed the rendered settings.yaml into the persistent volume.
 seedSettings:
   image:
-    # OCI image repository for the seed-settings init container.
+    # -- OCI image repository for the seed-settings init container.
     repository: busybox
-    # Image tag for the init container.
+    # -- Image tag for the init container.
     tag: "1.36"
-    # Kubernetes image pull policy for the init container.
+    # -- Kubernetes image pull policy for the init container.
     pullPolicy: IfNotPresent
   # Pod resource requests / limits for the init container.
   resources:
@@ -29,159 +29,163 @@ seedSettings:
 
 # Service exposed inside the cluster and used by Ingress / Gateway backends.
 service:
-  # Kubernetes Service type.
+  # -- Kubernetes Service type.
   type: ClusterIP
-  # Service port exposed by the chart. The container itself listens on port 3000.
+  # -- Service port exposed by the chart. The container itself listens on port 3000.
   port: 3000
 
-# Spendemon does not need access to the Kubernetes API by default, so do not
-# mount the service account token unless you explicitly opt in.
+# -- Spendemon does not need access to the Kubernetes API by default, so do not mount the service account token unless you explicitly opt in.
 automountServiceAccountToken: false
 
 # Optional Kubernetes Ingress resource.
 ingress:
-  # Set to true to create an Ingress.
+  # -- Set to true to create an Ingress.
   enabled: false
-  # Optional ingress class name, for example "nginx" or "traefik".
+  # -- Optional ingress class name, for example "nginx" or "traefik".
   className: ""
-  # Optional annotations passed straight through to the Ingress metadata.
+  # -- Optional annotations passed straight through to the Ingress metadata.
+  annotations: {}
   # Example:
   # annotations:
   #   cert-manager.io/cluster-issuer: letsencrypt
   #   nginx.ingress.kubernetes.io/ssl-redirect: "true"
-  annotations: {}
   # Host and path rules for the Ingress. Each path forwards to the service port above.
   hosts:
     - host: spendemon.domain.com
       paths:
-        # URL path to route to Spendemon.
+        # -- URL path to route to Spendemon.
         - path: /
-          # Standard Kubernetes path matching mode.
+          # -- Standard Kubernetes path matching mode.
           pathType: Prefix
 
 # Optional Gateway API HTTPRoute resource.
 gateway:
-  # Set to true to create an HTTPRoute instead of, or alongside, an Ingress.
+  # -- Set to true to create an HTTPRoute instead of, or alongside, an Ingress.
   enabled: false
 
   # Gateway listeners this route should attach to.
   parentRefs:
-    # Name of the Gateway resource.
+    # -- Name of the Gateway resource.
     - name: yourgateway
-      # Namespace of the Gateway. Omit if the Gateway is in the same namespace.
+      # -- Namespace of the Gateway. Omit if the Gateway is in the same namespace.
       namespace: gateway-namespace
 
-  # Hostnames served by the HTTPRoute.
+  # -- Hostnames served by the HTTPRoute.
   hosts:
     - spendemon.domain.com
 
   # HTTPRoute matching rules. Each rule forwards to the service port above.
   rules:
     - matches:
-        # Path match used by the Gateway API HTTPRoute.
+        # -- Path match used by the Gateway API HTTPRoute.
         - path: /
-          # Gateway API path type. Defaults to PathPrefix in the template.
+          # -- Gateway API path type. Defaults to PathPrefix in the template.
           pathType: PathPrefix
 
 # Deployment-level high availability managed by the Helm chart.
 ha:
-  # Set to true to run 2 replicas instead of 1.
+  # -- Set to true to run 2 replicas instead of 1.
   enabled: false
 
 # Pod resource requests / limits for the main container.
 resources:
   requests:
+    # -- CPU requested by the main application container.
     cpu: 100m
+    # -- Memory requested by the main application container.
     memory: 256Mi
+    # -- Ephemeral storage requested by the main application container.
     ephemeral-storage: 256Mi
   limits:
+    # -- CPU limit for the main application container.
     cpu: 500m
+    # -- Memory limit for the main application container.
     memory: 512Mi
+    # -- Ephemeral storage limit for the main application container.
     ephemeral-storage: 512Mi
 
 # Persistent storage used for the generated settings file.
 # Important: an init container copies the rendered settings into this volume on every pod start,
 # so changing values below will replace the stored settings.yaml after the next rollout/restart.
 persistence:
-  # Mount point inside the container for the settings file volume.
+  # -- Mount point inside the container for the settings file volume.
   mountPath: /data
-  # PVC access modes.
+  # -- PVC access modes.
   accessModes:
     - ReadWriteOnce
-  # Requested PVC size.
+  # -- Requested PVC size.
   size: 1Gi
-  # StorageClass for the PVC. Leave empty to use the cluster default.
+  # -- StorageClass for the PVC. Leave empty to use the cluster default.
   storageClassName: ""
 
 # Optional local username/password authentication for internal deployments.
 # Leave disabled when you want no auth or when you use OIDC via settings.oidc below.
 auth:
   credentials:
-    # Set to true to enable local username/password sign-in.
+    # -- Set to true to enable local username/password sign-in.
     enabled: false
     # Existing Secret that contains NEXTAUTH_SECRET and LOCAL_* credentials env values.
     secretRef:
-      # Secret name. Required when credentials auth is enabled.
+      # -- Secret name. Required when credentials auth is enabled.
       name: ""
-      # Secret key containing NEXTAUTH_SECRET.
+      # -- Secret key containing NEXTAUTH_SECRET.
       nextAuthSecretKey: nextauthSecret
-      # Optional secret key containing LOCAL_ADMIN_USERNAME.
+      # -- Optional secret key containing LOCAL_ADMIN_USERNAME.
       adminUsernameKey: localAdminUsername
-      # Optional secret key containing LOCAL_ADMIN_PASSWORD.
+      # -- Optional secret key containing LOCAL_ADMIN_PASSWORD.
       adminPasswordKey: localAdminPassword
-      # Optional secret key containing LOCAL_ADMIN_PASSWORD_HASH.
+      # -- Optional secret key containing LOCAL_ADMIN_PASSWORD_HASH.
       adminPasswordHashKey: localAdminPasswordHash
-      # Optional secret key containing LOCAL_VIEWER_USERNAME.
+      # -- Optional secret key containing LOCAL_VIEWER_USERNAME.
       viewerUsernameKey: localViewerUsername
-      # Optional secret key containing LOCAL_VIEWER_PASSWORD.
+      # -- Optional secret key containing LOCAL_VIEWER_PASSWORD.
       viewerPasswordKey: localViewerPassword
-      # Optional secret key containing LOCAL_VIEWER_PASSWORD_HASH.
+      # -- Optional secret key containing LOCAL_VIEWER_PASSWORD_HASH.
       viewerPasswordHashKey: localViewerPasswordHash
 
 # Application settings rendered into settings.yaml and mounted into the container.
 settings:
   # Prometheus endpoints to query. One entry per monitored cluster.
   clusters:
-    # Friendly cluster name shown in the app.
+    # -- Friendly cluster name shown in the app.
     - name: cluster-1
-      # Base URL of the Prometheus instance for this cluster. Prefer HTTPS endpoints.
+      # -- Base URL of the Prometheus instance for this cluster. Prefer HTTPS endpoints.
       prometheusUrl: https://prometheus.example.com
   # Cost rates used for spend calculations. - use any period, but keep it consistent across CPU/RAM/storage
   costs:
-    # Cost per CPU core.
+    # -- Cost per CPU core.
     cpuCore: 10
-    # Cost per GB of memory.
+    # -- Cost per GB of memory.
     memoryGb: 20
-    # Cost per GB of storage.
+    # -- Cost per GB of storage.
     storageGb: 5
-  # Namespaces that should be treated as shared / platform namespaces in reports.
+  # -- Namespaces that should be treated as shared / platform namespaces in reports.
   sharednamespaces:
     - kube-system
   # Optional OIDC / NextAuth configuration.
   oidc:
-    # Enables OIDC in the rendered settings and injects provider credentials from a Kubernetes Secret.
+    # -- Enables OIDC in the rendered settings and injects provider credentials from a Kubernetes Secret.
     enabled: false
-    # Enables additional auth debug behavior in the application.
+    # -- Enables additional auth debug behavior in the application.
     debug: false
-    # Additional OAuth scopes appended to the default "openid email profile" scopes.
-    # Example: ["groups"]
+    # -- Additional OAuth scopes appended to the default "openid email profile" scopes.
     extraScopes: []
-    # Public application URL used by NextAuth callbacks.
-    # Required when OIDC is enabled.
+    # Example: ["groups"]
+    # -- Public application URL used by NextAuth callbacks. Required when OIDC is enabled.
     nextAuthUrl: ""
-    # Group name whose members receive admin access.
+    # -- Group name whose members receive admin access.
     adminGroup: admin
-    # Group name whose members receive read-only/viewer access.
+    # -- Group name whose members receive read-only/viewer access.
     viewerGroup: viewer
     # Existing Secret that contains the OIDC provider values.
     secretRef:
-      # Secret name. Required when OIDC is enabled.
+      # -- Secret name. Required when OIDC is enabled.
       name: ""
-      # Secret key containing the issuer URL.
+      # -- Secret key containing the issuer URL.
       issuerKey: issuer
-      # Secret key containing the OAuth client ID.
+      # -- Secret key containing the OAuth client ID.
       clientIdKey: clientId
-      # Secret key containing the OAuth client secret.
+      # -- Secret key containing the OAuth client secret.
       clientSecretKey: clientSecret
-      # Secret key containing NEXTAUTH_SECRET.
+      # -- Secret key containing NEXTAUTH_SECRET.
       nextAuthSecretKey: nextauthSecret
