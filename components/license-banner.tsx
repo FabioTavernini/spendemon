@@ -9,7 +9,7 @@ const STRIPE_UNLIMITED = 'https://buy.stripe.com/7sY3cw7vCftg0whcEr7N601'
 
 export async function LicenseBanner() {
   const clusters = await getClusters()
-  if (clusters.length < 5) return null
+  if (clusters.length <= 1) return null
 
   const stripeUrl = clusters.length <= 5 ? STRIPE_PRO : STRIPE_UNLIMITED
   const planLabel = clusters.length <= 5 ? 'Pro license' : 'Unlimited license'
