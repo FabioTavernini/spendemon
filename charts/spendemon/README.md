@@ -70,6 +70,7 @@ Spendemon Next.js app
 | settings.oidc.secretRef.issuerKey | string | `"issuer"` | Secret key containing the issuer URL. |
 | settings.oidc.secretRef.name | string | `""` | Secret name. Required when OIDC is enabled. |
 | settings.oidc.secretRef.nextAuthSecretKey | string | `"nextauthSecret"` | Secret key containing NEXTAUTH_SECRET. |
+| settings.oidc.url | string | `""` | Base URL of the OIDC provider, for example "https://accounts.google.com". Required when OIDC is enabled. |
 | settings.oidc.viewerGroup | string | `"viewer"` | Group name whose members receive read-only/viewer access. |
 | settings.sharednamespaces | list | `["kube-system"]` | Namespaces that should be treated as shared / platform namespaces in reports. |
 
