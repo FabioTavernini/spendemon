@@ -17,8 +17,8 @@ import {
   podCostColumns,
   type NamespaceCostRow,
   type PodCostRow,
-} from "@/components/k8s/cost-reporting-pods-table-columns";
-import { DataTable } from "@/components/k8s/pods-table/data-table";
+} from "@/components/k8s/cost-reporting/pods-table/columns";
+import { DataTable } from "@/components/k8s/data-table";
 import {
   Table,
   TableBody,

@@ -1,8 +1,8 @@
 import {
   columns,
   type NamespaceRow,
-} from "@/components/k8s/namespaces-table-columns"
-import { DataTable } from "@/components/k8s/pods-table/data-table"
+} from "@/components/k8s/overview/namespaces-table/columns"
+import { DataTable } from "@/components/k8s/data-table"
 import { Separator } from "@/components/ui/separator"
 import { fetchInternalApi } from "@/lib/internal-api"
 

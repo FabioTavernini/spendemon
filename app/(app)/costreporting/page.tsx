@@ -1,4 +1,4 @@
-import { CostReporting } from "@/components/k8s/costreporting";
+import { CostReporting } from "@/components/k8s/cost-reporting/costreporting";
 import { SiteHeader } from "@/components/site-header";
 
 export const dynamic = "force-dynamic";

@@ -1,5 +1,5 @@
-import { columns, type NodeRow } from "@/components/k8s/nodes-table-columns"
-import { DataTable } from "@/components/k8s/pods-table/data-table"
+import { columns, type NodeRow } from "@/components/k8s/overview/nodes-table/columns"
+import { DataTable } from "@/components/k8s/data-table"
 import { Separator } from "@/components/ui/separator"
 import { fetchInternalApi } from "@/lib/internal-api"
 import { type NodeItem } from "@/lib/nodes"

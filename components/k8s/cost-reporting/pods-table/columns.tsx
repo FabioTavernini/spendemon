@@ -5,7 +5,7 @@ import { ColumnDef } from "@tanstack/react-table"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { PodHistoryDialog } from "@/components/k8s/pod-history-dialog"
+import { PodHistoryDialog } from "@/components/k8s/cost-reporting/pod-history-dialog"
 
 function formatNumber(value: number) {
   if (value !== 0 && Math.abs(value) < 0.01) {

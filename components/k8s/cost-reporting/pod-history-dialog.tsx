@@ -18,7 +18,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { Button } from "@/components/ui/button"
-import type { PodCostRow } from "@/components/k8s/cost-reporting-pods-table-columns"
+import type { PodCostRow } from "@/components/k8s/cost-reporting/pods-table/columns"
 import type { PodHistoryPoint } from "@/app/api/pod-history/route"
 
 if (typeof window !== "undefined") {

@@ -1,7 +1,7 @@
 import { SectionCards } from "@/components/cards";
-import { NamespacesTable } from "@/components/k8s/namespacestable";
-import { NodesTable } from "@/components/k8s/nodestable";
-import { PodsTable } from "@/components/k8s/podstable";
+import { NamespacesTable } from "@/components/k8s/overview/namespaces-table/namespacestable";
+import { NodesTable } from "@/components/k8s/overview/nodes-table/nodestable";
+import { PodsTable } from "@/components/k8s/overview/pods-table/podstable";
 import { SiteHeader } from "@/components/site-header";
 import { Separator } from "@/components/ui/separator";
 

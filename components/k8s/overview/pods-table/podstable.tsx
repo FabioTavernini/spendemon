@@ -1,6 +1,6 @@
-import { columns, type PodRow } from "@/components/k8s/pods-table/columns"
-import { DataTable } from "@/components/k8s/pods-table/data-table"
-import { Separator } from "../ui/separator"
+import { columns, type PodRow } from "@/components/k8s/overview/pods-table/columns"
+import { DataTable } from "@/components/k8s/data-table"
+import { Separator } from "@/components/ui/separator"
 import { fetchInternalApi } from "@/lib/internal-api"
 
 type ClusterPods = {
