@@ -55,8 +55,8 @@ Spendemon Next.js app
 | seedSettings.resources.requests.memory | string | `"32Mi"` |  |
 | service.port | int | `3000` | Service port exposed by the chart. The container itself listens on port 3000. |
 | service.type | string | `"ClusterIP"` | Kubernetes Service type. |
-| settings.branding.companyName | string | `"Your Company Name"` | Company or organization name shown in the UI header. |
-| settings.branding.logoUrl | string | `"https://placehold.co/100x200/000444/FFFFFF?text=yourlogo"` | URL of the logo image shown in the UI header. |
+| settings.branding.companyName | string | `""` | Company or organization name shown in the UI header. Leave empty to disable branding. |
+| settings.branding.logoUrl | string | `""` | URL of the logo image shown in the UI header. |
 | settings.clusters[0] | object | `{"name":"cluster-1","prometheusUrl":"https://prometheus.example.com:9090"}` | Friendly cluster name shown in the app. |
 | settings.clusters[0].prometheusUrl | string | `"https://prometheus.example.com:9090"` | Base URL of the Prometheus instance for this cluster. Prefer HTTPS endpoints. |
 | settings.costs.cpuCore | int | `10` | Cost per CPU core. |
