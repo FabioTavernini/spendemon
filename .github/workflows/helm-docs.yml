@@ -20,7 +20,7 @@ jobs:
   helm-docs:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -33,5 +33,14 @@ jobs:
             "$HELM_DOCS_IMAGE" \
             --chart-search-root=charts
 
-      - name: Check generated docs are committed
+      - name: Commit updated docs (push to main only)
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet charts/spendemon/README.md || \
+            git commit -am "chore: update helm-docs" && git push
+
+      - name: Check generated docs are committed (PRs only)
+        if: github.event_name == 'pull_request'
         run: git diff --exit-code charts/spendemon/README.md
