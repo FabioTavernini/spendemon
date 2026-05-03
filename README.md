@@ -195,7 +195,39 @@ If you want to simulate a failing or pending pod, just apply `dev/failing-pod.ya
 
 ## Kubernetes Install With Helm
 
-The Helm chart lives in [`charts/spendemon`](./charts/spendemon), with generated chart documentation in [`charts/spendemon/README.md`](./charts/spendemon/README.md).
+The chart is published as an OCI artifact to the GitHub Container Registry. Full chart documentation is in [`charts/spendemon/README.md`](./charts/spendemon/README.md).
+
+Install the latest release into a dedicated namespace:
+
+```sh
+helm install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
+  --namespace spendemon --create-namespace \
+  --version 1.0.1
+```
+
+To customise values, pull the default values file first and edit it:
+
+```sh
+helm show values oci://ghcr.io/fabiotavernini/charts/spendemon --version 1.0.1 > values.yaml
+# edit values.yaml, then:
+helm install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
+  --namespace spendemon --create-namespace \
+  --version 1.0.1 \
+  -f values.yaml
+```
+
+To upgrade an existing installation:
+
+```sh
+helm upgrade spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
+  --namespace spendemon \
+  --version 1.0.1 \
+  -f values.yaml
+```
+
+> **GitOps tip:** set `persistence.forceOverwrite: true` in your values file so that your Helm values are always the source of truth and overwrite the PVC on every rollout.
+
+### Chart development
 
 Chart docs are generated with `helm-docs`. Regenerate them after changing `Chart.yaml` or `values.yaml`:
 
@@ -223,7 +255,7 @@ If you prefer a plain manifest over Helm, you can apply the bundled multi-resour
 kubectl apply -f https://raw.githubusercontent.com/fabiotavernini/spendemon/main/deploy/spendemon.yaml
 ```
 
-The bundled manifest now stores `settings.yaml` on a PVC mounted at `/data/settings.yaml`. On each pod start, an init container copies the templated config into the PVC so Helm-managed values stay in sync with the runtime file.
+The bundled manifest stores `settings.yaml` on a PVC mounted at `/data/settings.yaml`. An init container seeds the config into the PVC on first run only — subsequent restarts preserve any changes you have made via the settings UI.
 
 Before exposing it publicly, open the settings UI or edit the file on the mounted volume with your Prometheus endpoint(s) and pricing values. If you are using Helm, keep replica changes in `ha.enabled`.
 
