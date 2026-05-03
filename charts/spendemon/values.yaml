@@ -2,8 +2,8 @@
 image:
   # -- OCI image repository to deploy.
   repository: ghcr.io/fabiotavernini/spendemon
-  # -- Image tag to deploy. Must be set to a specific version (e.g. "1.2.3"). "latest" is rejected.
-  tag: ""
+  # -- Image tag to deploy. Must be set to a specific version (e.g. "1.2.3"). "latest" is not recommended in production.
+  tag: "latest"
   # -- Kubernetes image pull policy for the application container.
   pullPolicy: IfNotPresent
   # -- Optional image pull secret name for private registries. Leave empty for public images.

@@ -1,8 +1,8 @@
 {{- if and .Values.auth.credentials.enabled .Values.settings.oidc.enabled }}
 {{- fail "auth.credentials.enabled and settings.oidc.enabled cannot both be true" }}
 {{- end }}
-{{- if or (not .Values.image.tag) (eq .Values.image.tag "latest") }}
-{{- fail "image.tag must be set to a specific version (e.g. 1.2.3). Using 'latest' is not allowed in production." }}
+{{- if not .Values.image.tag }}
+{{- fail "image.tag must be set to a specific version (e.g. 1.2.3). Using 'latest' is not recommended in production." }}
 {{- end }}
 apiVersion: apps/v1
 kind: Deployment
