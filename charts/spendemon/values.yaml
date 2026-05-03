@@ -173,6 +173,8 @@ settings:
   oidc:
     # -- Enables OIDC in the rendered settings and injects provider credentials from a Kubernetes Secret.
     enabled: false
+    # -- Base URL of the OIDC provider, for example "https://accounts.google.com". Required when OIDC is enabled.
+    url: ""
     # -- Enables additional auth debug behavior in the application.
     debug: false
     # -- Additional OAuth scopes appended to the default "openid email profile" scopes.
