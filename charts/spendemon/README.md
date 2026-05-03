@@ -36,7 +36,7 @@ Spendemon Next.js app
 | ingress.hosts[0].paths[0] | object | `{"path":"/","pathType":"Prefix"}` | URL path to route to Spendemon. |
 | ingress.hosts[0].paths[0].pathType | string | `"Prefix"` | Standard Kubernetes path matching mode. |
 | persistence.accessModes | list | `["ReadWriteOnce"]` | PVC access modes. |
-| persistence.forceOverwrite | bool | `false` | If true, the init container always overwrites settings.yaml from the Helm values on every pod start. Set to true for GitOps workflows where values.yaml is the source of truth. |
+| persistence.forceOverwrite | bool | `false` | If true, the init container always overwrites settings.yaml from the Helm values on every pod start, ignoring any manual in-cluster edits. The default (false) already auto-applies Helm value changes via checksum tracking — only set this if you want to discard UI edits too. |
 | persistence.mountPath | string | `"/data"` | Mount point inside the container for the settings file volume. |
 | persistence.size | string | `"1Gi"` | Requested PVC size. |
 | persistence.storageClassName | string | `""` | StorageClass for the PVC. Leave empty to use the cluster default. |
