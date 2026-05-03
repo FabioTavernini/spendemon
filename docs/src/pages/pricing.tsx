@@ -5,8 +5,8 @@ import Heading from '@theme/Heading';
 
 import styles from './pricing.module.css';
 
-const STRIPE_PRO = 'https://buy.stripe.com/test_4gM7sMcR5bvCdjUaC85Rm06';
-const STRIPE_UNLIMITED = 'https://buy.stripe.com/test_3cIbJ2g3h57e4No25C5Rm07';
+const STRIPE_PRO = 'https://buy.stripe.com/9B69AUbLSbd02EpfQD7N600';
+const STRIPE_UNLIMITED = 'https://buy.stripe.com/7sY3cw7vCftg0whcEr7N601';
 
 const freeFeatures = [
   'Cluster cost visibility',
@@ -16,6 +16,7 @@ const freeFeatures = [
 ];
 
 const proFeatures = [
+  '30-day free trial',
   'Commercial production use',
   'Up to 5 Prometheus endpoints',
   'Namespace and pod-level breakdowns',
@@ -23,6 +24,7 @@ const proFeatures = [
 ];
 
 const unlimitedFeatures = [
+  '30-day free trial',
   'Everything in Pro',
   'Unlimited Prometheus endpoints',
   'Priority support',
@@ -33,6 +35,7 @@ const comparisonRows = [
   ['Scale', 'Fewer than 5 employees or fewer than 5 clusters', 'Up to 5 clusters', 'Unlimited'],
   ['Support', 'Self-serve', 'Email', 'Priority'],
   ['Pricing', 'Free', '$29/mo', '$59/mo'],
+  ['Free trial', '—', '30 days', '30 days'],
 ];
 
 export default function Pricing(): ReactNode {
@@ -100,7 +103,7 @@ export default function Pricing(): ReactNode {
                   ))}
                 </ul>
                 <Link className="button button--primary" href={STRIPE_PRO} target="_blank" rel="noreferrer">
-                  Subscribe
+                  Start free trial
                 </Link>
               </article>
 
@@ -120,7 +123,7 @@ export default function Pricing(): ReactNode {
                   ))}
                 </ul>
                 <Link className="button button--primary" href={STRIPE_UNLIMITED} target="_blank" rel="noreferrer">
-                  Subscribe
+                  Start free trial
                 </Link>
               </article>
             </div>

@@ -12,7 +12,7 @@ export async function LicenseBanner() {
   if (clusters.length < 5) return null
 
   const stripeUrl = clusters.length <= 5 ? STRIPE_PRO : STRIPE_UNLIMITED
-  const planLabel = clusters.length <= 5 ? 'team license' : 'unlimited license'
+  const planLabel = clusters.length <= 5 ? 'Pro license' : 'Unlimited license'
 
   return (
     <div className="border-b bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:bg-amber-950/20 dark:text-amber-300">
@@ -28,7 +28,7 @@ export async function LicenseBanner() {
           className="shrink-0 border-amber-400 text-amber-800 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/30"
         >
           <Link href={stripeUrl} rel="noreferrer" target="_blank">
-            Subscribe
+            Start 30-day free trial
             <ArrowUpRight className="size-3.5" />
           </Link>
         </Button>

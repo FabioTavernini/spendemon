@@ -19,5 +19,7 @@ FabioTavernini@proton.me
 
 ## Pricing
 
-Pricing is not finalized yet and will be published later. Custom licensing is
-available on request.
+- **Pro** — $29/month, up to 5 clusters, includes a 30-day free trial
+- **Unlimited** — $59/month, unlimited clusters, includes a 30-day free trial
+
+Custom licensing is available on request.
