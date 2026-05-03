@@ -40,16 +40,20 @@ spec:
             - -c
             - |
               mkdir -p {{ .Values.persistence.mountPath }}
-              {{- if .Values.persistence.forceOverwrite }}
-              cp /seed/settings.yaml {{ .Values.persistence.mountPath }}/settings.yaml
-              {{- else }}
-              if [ ! -f {{ .Values.persistence.mountPath }}/settings.yaml ]; then
-                cp /seed/settings.yaml {{ .Values.persistence.mountPath }}/settings.yaml
+              SETTINGS_FILE="{{ .Values.persistence.mountPath }}/settings.yaml"
+              CHECKSUM_FILE="{{ .Values.persistence.mountPath }}/.settings-checksum"
+              NEW_CHECKSUM="{{ include "spendemon.settings" . | sha256sum }}"
+              FORCE="{{ if .Values.persistence.forceOverwrite }}true{{ else }}false{{ end }}"
+              if [ "$FORCE" = "true" ] || \
+                 [ ! -f "$SETTINGS_FILE" ] || \
+                 [ ! -f "$CHECKSUM_FILE" ] || \
+                 [ "$(cat $CHECKSUM_FILE)" != "$NEW_CHECKSUM" ]; then
+                cp /seed/settings.yaml "$SETTINGS_FILE"
+                echo "$NEW_CHECKSUM" > "$CHECKSUM_FILE"
               fi
-              {{- end }}
-              chown 1000:1000 {{ .Values.persistence.mountPath }} {{ .Values.persistence.mountPath }}/settings.yaml
+              chown 1000:1000 {{ .Values.persistence.mountPath }} "$SETTINGS_FILE" "$CHECKSUM_FILE"
               chmod 775 {{ .Values.persistence.mountPath }}
-              chmod 664 {{ .Values.persistence.mountPath }}/settings.yaml
+              chmod 664 "$SETTINGS_FILE" "$CHECKSUM_FILE"
           volumeMounts:
             - name: settings
               mountPath: {{ .Values.persistence.mountPath }}

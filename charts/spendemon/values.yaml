@@ -105,9 +105,11 @@ resources:
     ephemeral-storage: 512Mi
 
 # Persistent storage used for the generated settings file.
-# By default the init container only seeds settings.yaml on first run (when the PVC is empty).
-# Set persistence.forceOverwrite=true to always overwrite the PVC with the Helm values on every
-# rollout — useful for GitOps workflows where the values file is the source of truth.
+# The init container seeds settings.yaml on first run and automatically re-applies it whenever
+# the Helm values change (detected via a stored checksum). Manual edits made through the UI are
+# preserved as long as the Helm values remain unchanged.
+# Set persistence.forceOverwrite=true to always overwrite from Helm values on every pod start,
+# discarding any manual in-cluster edits.
 persistence:
   # -- Mount point inside the container for the settings file volume.
   mountPath: /data
@@ -119,7 +121,8 @@ persistence:
   # -- StorageClass for the PVC. Leave empty to use the cluster default.
   storageClassName: ""
   # -- If true, the init container always overwrites settings.yaml from the Helm values on every
-  # pod start. Set to true for GitOps workflows where values.yaml is the source of truth.
+  # pod start, ignoring any manual in-cluster edits. The default (false) already auto-applies
+  # Helm value changes via checksum tracking — only set this if you want to discard UI edits too.
   forceOverwrite: false
 
 # Optional local username/password authentication for internal deployments.
