@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 
 import { LogoutButton } from '@/components/auth/logout-button'
 import { ClusterSelect } from '@/components/clusterselect'
+import { CompanyBranding } from '@/components/layout/sidebar/company-branding'
 import { SpendemonLogo } from '@/components/logo'
 import { NamespaceSelect } from '@/components/namespaceselect'
 import { ModeToggle } from '@/components/themeselector'
@@ -36,6 +37,10 @@ export async function AppSidebar() {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+
+            <Suspense fallback={null}>
+              <CompanyBranding />
+            </Suspense>
           </SidebarMenu>
         </SidebarHeader>
 

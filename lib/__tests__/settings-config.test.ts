@@ -390,6 +390,7 @@ oidc:
     expect(result.costs.cpuCore).toBe(10)
     expect(result.sharedNamespaces).toEqual(['kube-system'])
     expect(result.oidc.enabled).toBe(false)
+    expect(result.branding).toBeNull()
   })
 })
 

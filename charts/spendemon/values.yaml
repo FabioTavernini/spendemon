@@ -166,9 +166,18 @@ settings:
     memoryGb: 20
     # -- Cost per GB of storage.
     storageGb: 5
+
+  # Optional branding settings for the UI.
+  branding:
+    # -- Company or organization name shown in the UI header.
+    companyName: Your Company Name
+    # -- URL of the logo image shown in the UI header.
+    logoUrl: https://placehold.co/100x200/000444/FFFFFF?text=yourlogo
+
   # -- Namespaces that should be treated as shared / platform namespaces in reports.
   sharednamespaces:
     - kube-system
+
   # Optional OIDC / NextAuth configuration.
   oidc:
     # -- Enables OIDC in the rendered settings and injects provider credentials from a Kubernetes Secret.

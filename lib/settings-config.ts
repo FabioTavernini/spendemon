@@ -11,11 +11,17 @@ export type CostSettings = {
   storageGb: number
 }
 
+export type BrandingSettings = {
+  companyName: string
+  logoUrl: string
+}
+
 export type ParsedSettings = {
   clusters: ClusterSettings[]
   costs: CostSettings
   sharedNamespaces: string[]
   oidc: OidcSettings
+  branding: BrandingSettings | null
 }
 
 export type OidcSettings = {
@@ -250,12 +256,29 @@ export function parseOidcFromSettings(content: string): OidcSettings {
   return result
 }
 
+export function parseBrandingFromSettings(content: string): BrandingSettings | null {
+  const raw = parseRawYaml(content)
+
+  if (!('branding' in raw) || raw.branding === null || typeof raw.branding !== 'object') {
+    return null
+  }
+
+  const branding = raw.branding as Record<string, unknown>
+  const companyName = typeof branding.companyName === 'string' ? branding.companyName.trim() : ''
+  const logoUrl = typeof branding.logoUrl === 'string' ? branding.logoUrl.trim() : ''
+
+  if (!companyName) return null
+
+  return { companyName, logoUrl }
+}
+
 export function parseSettings(content: string): ParsedSettings {
   return {
     clusters: parseClustersFromSettings(content),
     costs: parseCostsFromSettings(content),
     sharedNamespaces: parseSharedNamespacesFromSettings(content),
     oidc: parseOidcFromSettings(content),
+    branding: parseBrandingFromSettings(content),
   }
 }
 
