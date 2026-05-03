@@ -215,7 +215,13 @@ export function PodHistoryDialog({
 
   return (
     <>
-      <span onClick={() => setOpen(true)} className="contents">
+      <span
+        onClick={() => setOpen(true)}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setOpen(true) }}
+        role="button"
+        tabIndex={0}
+        className="contents"
+      >
         {children}
       </span>
       <Modal
