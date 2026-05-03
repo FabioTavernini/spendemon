@@ -1,70 +1,35 @@
-name: Package and publish Helm chart
+name: Release Helm chart
 
 on:
   push:
     branches: ['main']
-    tags: ['v*.*.*']
     paths:
       - 'charts/**'
       - '.github/workflows/helm-publish.yml'
 
 env:
-  REGISTRY: ghcr.io
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  helm:
+  release:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
+      contents: write
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
 
-      - name: Set lowercase owner name
-        id: vars
-        shell: bash
+      - name: Configure Git
         run: |
-          OWNER_LC="$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
-          echo "owner=${OWNER_LC}" >> "$GITHUB_OUTPUT"
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - name: Extract chart versions
-        id: version
-        shell: bash
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            RELEASE_VERSION="${GITHUB_REF#refs/tags/v}"
-            CHART_VERSION="${RELEASE_VERSION}"
-            APP_VERSION="${RELEASE_VERSION}"
-          else
-            CHART_VERSION="0.0.0-dev"
-            APP_VERSION="latest"
-          fi
-
-          echo "chart_version=${CHART_VERSION}" >> "$GITHUB_OUTPUT"
-          echo "app_version=${APP_VERSION}" >> "$GITHUB_OUTPUT"
-
-      - name: Setup Helm
+      - name: Install Helm
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
 
-      - name: Helm login
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
         env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          printf '%s' "$GHCR_TOKEN" | helm registry login ghcr.io \
-            --username "${{ github.actor }}" \
-            --password-stdin
-
-      - name: Set chart version
-        run: |
-          sed -i "s/^version:.*/version: ${{ steps.version.outputs.chart_version }}/" charts/spendemon/Chart.yaml
-          sed -i "s/^appVersion:.*/appVersion: \"${{ steps.version.outputs.app_version }}\"/" charts/spendemon/Chart.yaml
-
-      - name: Package Helm chart
-        run: helm package charts/spendemon
-
-      - name: Push Helm chart
-        run: |
-          helm push spendemon-${{ steps.version.outputs.chart_version }}.tgz \
-            oci://ghcr.io/${{ steps.vars.outputs.owner }}/charts
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
