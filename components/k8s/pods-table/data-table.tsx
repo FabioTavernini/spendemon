@@ -158,7 +158,7 @@ export function DataTable<TData, TValue>({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="max-h-[40rem]">
+      <div className="max-h-[40rem] overflow-y-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -207,7 +207,7 @@ export function DataTable<TData, TValue>({
           <div className="text-muted-foreground">
             Showing {table.getRowModel().rows.length} of {table.getSortedRowModel().rows.length} rows
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center ">
             <label className="flex items-center gap-2 text-muted-foreground">
               <span>Rows per page</span>
               <select
@@ -225,7 +225,7 @@ export function DataTable<TData, TValue>({
             <div className="text-muted-foreground">
               Page {currentPage} of {pageCount}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ">
               <Button
                 variant="outline"
                 size="sm"
