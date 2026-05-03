@@ -1,3 +1,5 @@
+
+
 [![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=FabioTavernini_spendemon)
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/c717f0fe-3d28-49c9-aeca-bbfaa3aaee15/deploy-status)](https://app.netlify.com/projects/spendemon/deploys)
@@ -16,7 +18,37 @@ Spendemon is a small Next.js dashboard for exploring Kubernetes footprint and es
 
 It connects to one or more Prometheus endpoints, discovers clusters, namespaces, and pods, then layers in simple pricing inputs so you can get a fast cost snapshot by cluster, namespace, and pod.
 
-## What It Does
+
+<!-- vscode-markdown-toc -->
+* 1. [What It Does](#WhatItDoes)
+* 2. [Stack](#Stack)
+* 3. [Getting Started](#GettingStarted)
+	* 3.1. [Prerequisites](#Prerequisites)
+	* 3.2. [Install](#Install)
+	* 3.3. [Run the app](#Runtheapp)
+* 4. [Configuration](#Configuration)
+	* 4.1. [Settings fields](#Settingsfields)
+	* 4.2. [Authentication](#Authentication)
+* 5. [Prometheus Metrics Used](#PrometheusMetricsUsed)
+* 6. [App Routes](#AppRoutes)
+* 7. [API Routes](#APIRoutes)
+* 8. [Environment Notes](#EnvironmentNotes)
+* 9. [Project Structure](#ProjectStructure)
+* 10. [Current Assumptions](#CurrentAssumptions)
+* 11. [Development](#Development)
+* 12. [Kubernetes Install With Helm](#KubernetesInstallWithHelm)
+* 13. [Kubernetes Install Without Helm](#KubernetesInstallWithoutHelm)
+* 14. [License](#License)
+* 15. [Notes](#Notes)
+
+<!-- vscode-markdown-toc-config
+	numbering=true
+	autoSave=true
+	/vscode-markdown-toc-config -->
+<!-- /vscode-markdown-toc -->
+
+
+##  1. <a name='WhatItDoes'></a>What It Does
 
 - Shows an overview of connected clusters, namespaces, and pod counts
 - Lets you filter data by cluster and namespace from the sidebar
@@ -25,7 +57,7 @@ It connects to one or more Prometheus endpoints, discovers clusters, namespaces,
 - Stores app configuration in a local `settings.yaml` file, or on a PVC in Kubernetes
 - Includes a settings screen for editing pricing and raw YAML in the browser
 
-## Stack
+##  2. <a name='Stack'></a>Stack
 
 - Next.js App Router
 - React 19
@@ -34,21 +66,21 @@ It connects to one or more Prometheus endpoints, discovers clusters, namespaces,
 - shadcn/ui-style components
 - Prometheus HTTP API as the data source
 
-## Getting Started
+##  3. <a name='GettingStarted'></a>Getting Started
 
-### Prerequisites
+###  3.1. <a name='Prerequisites'></a>Prerequisites
 
 - Node.js 20+
 - npm
 - One or more reachable Prometheus endpoints exposing Kubernetes metrics
 
-### Install
+###  3.2. <a name='Install'></a>Install
 
 ```bash
 npm install
 ```
 
-### Run the app
+###  3.3. <a name='Runtheapp'></a>Run the app
 
 ```bash
 npm run dev
@@ -56,7 +88,7 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Configuration
+##  4. <a name='Configuration'></a>Configuration
 
 Spendemon reads configuration from `settings.yaml` in the project root.
 
@@ -79,7 +111,7 @@ costs:
   storageGb: 0.12
 ```
 
-### Settings fields
+###  4.1. <a name='Settingsfields'></a>Settings fields
 
 - `clusters[].name`: Display name used throughout the UI
 - `clusters[].prometheusUrl`: Base URL for that cluster's Prometheus instance
@@ -94,7 +126,7 @@ You can edit these values either:
 
 Replica count is deployment-level config. When you install with Helm, use `ha.enabled` in chart values instead of `settings.yaml`.
 
-### Authentication
+###  4.2. <a name='Authentication'></a>Authentication
 
 Spendemon supports two optional auth modes:
 
@@ -103,7 +135,7 @@ Spendemon supports two optional auth modes:
 
 Local credentials are env-only and are not stored in `settings.yaml`.
 
-## Prometheus Metrics Used
+##  5. <a name='PrometheusMetricsUsed'></a>Prometheus Metrics Used
 
 Spendemon currently builds its views from standard Kubernetes metrics exposed to Prometheus, including:
 
@@ -115,26 +147,26 @@ Spendemon currently builds its views from standard Kubernetes metrics exposed to
 
 If a cluster cannot be queried, the app logs the error and continues rendering what it can from the remaining clusters.
 
-## App Routes
+##  6. <a name='AppRoutes'></a>App Routes
 
 - `/`: Overview dashboard with summary cards, namespaces, and pods
 - `/costreporting`: Estimated cost rollups and per-pod cost table
 - `/settings`: Pricing inputs and raw YAML editor
 
-## API Routes
+##  7. <a name='APIRoutes'></a>API Routes
 
 - `/api/clusters`: Returns configured clusters
 - `/api/namespaces`: Returns discovered namespaces, optionally filtered
 - `/api/pods`: Returns discovered pods, optionally filtered
 - `/api/settings`: Reads and updates `settings.yaml`
 
-## Environment Notes
+##  8. <a name='EnvironmentNotes'></a>Environment Notes
 
 - The dashboard cards fetch internal API routes using `BASE_URL` when it is set
 - For local development, the app falls back to `http://localhost:3000`
 - Server-rendered pages are configured as dynamic so they always fetch fresh data
 
-## Project Structure
+##  9. <a name='ProjectStructure'></a>Project Structure
 
 ```text
 app/
@@ -153,21 +185,21 @@ dev/
   *.yaml               Local manifests and test fixtures
 ```
 
-## Current Assumptions
+##  10. <a name='CurrentAssumptions'></a>Current Assumptions
 
 - Cost estimates are based on requested resources, not real billing data
 - Pricing is a simple flat-rate model for CPU, memory, and storage
 - Each cluster is represented by a Prometheus base URL in `settings.yaml`
 - The app expects Kubernetes metrics to already be available in Prometheus
 
-## Development
+##  11. <a name='Development'></a>Development
 
 Want to develop the app further, just apply the manifests under `dev/manifests.yaml` in a minikube cluster (or other options).
 
 Then run `npm i` and then `npm run dev` to start the development server.
 If you want to simulate a failing or pending pod, just apply `dev/failing-pod.yaml` or `dev/pending-pod.yaml`
 
-## Kubernetes Install With Helm
+##  12. <a name='KubernetesInstallWithHelm'></a>Kubernetes Install With Helm
 
 The Helm chart lives in [`charts/spendemon`](./charts/spendemon), with generated chart documentation in [`charts/spendemon/README.md`](./charts/spendemon/README.md).
 
@@ -189,7 +221,7 @@ CI also runs the same generator and fails when `charts/spendemon/README.md` is o
 npm run helm:docs:check
 ```
 
-## Kubernetes Install Without Helm
+##  13. <a name='KubernetesInstallWithoutHelm'></a>Kubernetes Install Without Helm
 
 If you prefer a plain manifest over Helm, you can apply the bundled multi-resource manifest directly:
 
@@ -223,7 +255,7 @@ For OIDC, create the same secret with the env vars you reference in `settings.ya
 The plain manifest intentionally ships with just the core `ConfigMap`, `Deployment`, and `Service` so it works in any cluster. Add your own `Ingress` or `HTTPRoute` based on the ingress controller or Gateway API setup you already use.
 
 
-## License
+##  14. <a name='License'></a>License
 
 Spendemon is source-available under a Business Source License (BSL)-style
 license.
@@ -234,7 +266,7 @@ use. Commercial use requires a paid license from the author.
 See [LICENSE](./LICENSE), [LICENSE_SUMMARY.md](./LICENSE_SUMMARY.md), and
 [COMMERCIAL_LICENSE.md](./COMMERCIAL_LICENSE.md).
 
-## Notes
+##  15. <a name='Notes'></a>Notes
 
 ```sh
 kubectl create secret generic spendemon-auth \
