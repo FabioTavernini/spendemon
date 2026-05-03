@@ -2,22 +2,7 @@ name: Build and publish Docker image
 
 on:
   push:
-    branches: ['main']
     tags: ['v*.*.*']
-    paths:
-      - 'app/**'
-      - 'components/**'
-      - 'lib/**'
-      - 'public/**'
-      - 'src/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'next.config.*'
-      - 'tsconfig.json'
-      - 'Dockerfile'
-      - 'settings-example.yaml'
-      - '.dockerignore'
-      - '.github/workflows/docker-publish.yml'
 
 env:
   REGISTRY: ghcr.io
@@ -44,16 +29,8 @@ jobs:
         id: version
         shell: bash
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            IMAGE_TAG="${GITHUB_REF#refs/tags/v}"
-            PUSH_LATEST="false"
-          else
-            IMAGE_TAG="latest"
-            PUSH_LATEST="true"
-          fi
-
+          IMAGE_TAG="${GITHUB_REF#refs/tags/v}"
           echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
-          echo "push_latest=${PUSH_LATEST}" >> "$GITHUB_OUTPUT"
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
