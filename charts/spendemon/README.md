@@ -1,6 +1,6 @@
 # spendemon
 
-![Version: 1.0.2](https://img.shields.io/badge/Version-1.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.2](https://img.shields.io/badge/AppVersion-1.0.2-informational?style=flat-square)
+![Version: 1.0.3](https://img.shields.io/badge/Version-1.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.3](https://img.shields.io/badge/AppVersion-1.0.3-informational?style=flat-square)
 
 Spendemon Next.js app
 
@@ -28,7 +28,7 @@ Spendemon Next.js app
 | image.imagePullSecret | string | `""` | Optional image pull secret name for private registries. Leave empty for public images. |
 | image.pullPolicy | string | `"IfNotPresent"` | Kubernetes image pull policy for the application container. |
 | image.repository | string | `"ghcr.io/fabiotavernini/spendemon"` | OCI image repository to deploy. |
-| image.tag | string | `""` | Image tag to deploy. Must be set to a specific version (e.g. "1.2.3"). "latest" is rejected. |
+| image.tag | string | `"latest"` | Image tag to deploy. Must be set to a specific version (e.g. "1.2.3"). "latest" is not recommended in production. |
 | ingress.annotations | object | `{}` | Optional annotations passed straight through to the Ingress metadata. |
 | ingress.className | string | `""` | Optional ingress class name, for example "nginx" or "traefik". |
 | ingress.enabled | bool | `false` | Set to true to create an Ingress. |
