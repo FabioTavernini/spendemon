@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-load
+spec:
+  automountServiceAccountToken: false
+  restartPolicy: Always
+  containers:
+  - name: stress
+    image: python:3.12-slim
+    command: ["python3", "-c"]
+    args:
+      - |
+        import threading, time
+        mem = bytearray(512 * 1024 * 1024)
+        def cpu_burn():
+            while True:
+                end = time.monotonic() + 0.5
+                while time.monotonic() < end:
+                    pass
+                time.sleep(0.5)
+        t = threading.Thread(target=cpu_burn, daemon=True)
+        t.start()
+        t.join()
+    resources:
+      requests:
+        cpu: "1000m"
+        memory: "1Gi"
+        ephemeral-storage: "100Mi"
+      limits:
+        cpu: "1000m"
+        memory: "1Gi"
+        ephemeral-storage: "100Mi"
