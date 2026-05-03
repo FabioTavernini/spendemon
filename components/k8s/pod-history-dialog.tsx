@@ -177,8 +177,8 @@ function PodHistoryChart({ pod }: { pod: PodCostRow }) {
                   <ChartTooltipContent
                     className="w-45"
                     nameKey={activeMetric}
-                    labelFormatter={(value) =>
-                      new Date(Number(value)).toLocaleString("en-US", {
+                    labelFormatter={(_value, payload) =>
+                      new Date(Number(payload?.[0]?.payload?.timestamp)).toLocaleString("en-US", {
                         month: "short",
                         day: "numeric",
                         hour: "numeric",
