@@ -4,14 +4,14 @@ import { ArrowUpRight } from 'lucide-react'
 import { getClusters } from '@/lib/clusters'
 import { Button } from '@/components/ui/button'
 
-const STRIPE_TEAMS = 'https://buy.stripe.com/test_4gM7sMcR5bvCdjUaC85Rm06'
-const STRIPE_UNLIMITED = 'https://buy.stripe.com/test_3cIbJ2g3h57e4No25C5Rm07'
+const STRIPE_PRO = 'https://buy.stripe.com/9B69AUbLSbd02EpfQD7N600'
+const STRIPE_UNLIMITED = 'https://buy.stripe.com/7sY3cw7vCftg0whcEr7N601'
 
 export async function LicenseBanner() {
   const clusters = await getClusters()
   if (clusters.length < 5) return null
 
-  const stripeUrl = clusters.length <= 5 ? STRIPE_TEAMS : STRIPE_UNLIMITED
+  const stripeUrl = clusters.length <= 5 ? STRIPE_PRO : STRIPE_UNLIMITED
   const planLabel = clusters.length <= 5 ? 'team license' : 'unlimited license'
 
   return (
