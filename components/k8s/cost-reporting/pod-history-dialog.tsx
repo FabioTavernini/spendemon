@@ -98,7 +98,7 @@ function PodHistoryChart({ pod }: { pod: PodCostRow }) {
 
   return (
     <Card className="border-0 shadow-none py-4 sm:py-0">
-      <CardHeader className="flex flex-col items-stretch border-b p-0! sm:flex-row">
+      <CardHeader className="flex flex-col items-stretch border-b p-0! sm:flex-row ">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 pb-3 sm:pb-0">
           <CardTitle>Resource History</CardTitle>
           <CardDescription>Last 24 hours — 5-minute intervals</CardDescription>
@@ -228,7 +228,7 @@ export function PodHistoryDialog({
         isOpen={open}
         onRequestClose={() => setOpen(false)}
         overlayClassName="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-        className="relative bg-background text-foreground rounded-xl shadow-xl w-full max-w-3xl outline-none p-6"
+        className="relative bg-background text-foreground rounded-xl shadow-xl w-full max-w-3xl border-2 outline-none p-6"
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
