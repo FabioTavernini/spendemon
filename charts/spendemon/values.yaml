@@ -169,10 +169,10 @@ settings:
 
   # Optional branding settings for the UI.
   branding:
-    # -- Company or organization name shown in the UI header.
-    companyName: Your Company Name
+    # -- Company or organization name shown in the UI header. Leave empty to disable branding.
+    companyName: ""
     # -- URL of the logo image shown in the UI header.
-    logoUrl: https://placehold.co/100x200/000444/FFFFFF?text=yourlogo
+    logoUrl: ""
 
   # -- Namespaces that should be treated as shared / platform namespaces in reports.
   sharednamespaces:

@@ -39,7 +39,7 @@ oidc:
   debug: {{ .Values.settings.oidc.debug }}
   extraScopes: {{ join " " .Values.settings.oidc.extraScopes | quote }}
 
-{{- if .Values.settings.branding }}
+{{- if .Values.settings.branding.companyName }}
 branding:
   companyName: {{ .Values.settings.branding.companyName | quote }}
   logoUrl: {{ .Values.settings.branding.logoUrl | quote }}
