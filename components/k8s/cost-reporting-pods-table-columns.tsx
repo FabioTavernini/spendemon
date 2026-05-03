@@ -5,6 +5,7 @@ import { ColumnDef } from "@tanstack/react-table"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { PodHistoryDialog } from "@/components/k8s/pod-history-dialog"
 
 function formatNumber(value: number) {
   if (value !== 0 && Math.abs(value) < 0.01) {
@@ -59,6 +60,11 @@ export type NamespaceCostRow = {
   totalMemoryGb: number
   totalStorageGb: number
   totalCost: number
+  avgCpuCores?: number
+  avgMemoryGb?: number
+  avgCpuCost?: number
+  avgMemoryCost?: number
+  avgTotalCost?: number
 }
 
 function SortableHeader({
@@ -102,7 +108,13 @@ export const podCostColumns: ColumnDef<PodCostRow>[] = [
   {
     accessorKey: "pod",
     header: "Pod",
-    cell: ({ row }) => <span className="font-medium">{row.original.pod}</span>,
+    cell: ({ row }) => (
+      <PodHistoryDialog pod={row.original}>
+        <button className="font-medium underline-offset-4 hover:underline cursor-pointer text-left">
+          {row.original.pod}
+        </button>
+      </PodHistoryDialog>
+    ),
   },
   {
     accessorKey: "status",
@@ -226,6 +238,33 @@ export const namespaceCostColumns: ColumnDef<NamespaceCostRow>[] = [
             {row.original.estimatedPodCount === 1 ? "" : "s"}
           </div>
         ) : null}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "avgCpuCost",
+    header: ({ column }) => <SortableHeader column={column} label="Avg CPU Cost" />,
+    cell: ({ row }) => (
+      <div className="text-right text-muted-foreground">
+        {row.original.avgCpuCost != null ? formatCost(row.original.avgCpuCost) : "—"}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "avgMemoryCost",
+    header: ({ column }) => <SortableHeader column={column} label="Avg RAM Cost" />,
+    cell: ({ row }) => (
+      <div className="text-right text-muted-foreground">
+        {row.original.avgMemoryCost != null ? formatCost(row.original.avgMemoryCost) : "—"}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "avgTotalCost",
+    header: ({ column }) => <SortableHeader column={column} label="Avg Cost" />,
+    cell: ({ row }) => (
+      <div className="text-right text-muted-foreground">
+        {row.original.avgTotalCost != null ? formatCost(row.original.avgTotalCost) : "—"}
       </div>
     ),
   },

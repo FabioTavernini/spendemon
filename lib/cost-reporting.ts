@@ -461,6 +461,123 @@ function applySharedNamespaceCosts(
   return nextNamespaces;
 }
 
+export type NamespaceAverage = {
+  avgCpuCores: number;
+  avgMemoryGb: number;
+  avgCpuCost: number;
+  avgMemoryCost: number;
+  avgTotalCost: number;
+};
+
+async function queryFirstAvailableNamespaceMetric(
+  prometheusUrl: string,
+  queries: string[],
+  transformer?: (value: number) => number,
+): Promise<Map<string, number>> {
+  for (const query of queries) {
+    const results = await queryPrometheusVector(prometheusUrl, query);
+    if (results.length === 0) continue;
+
+    const map = new Map<string, number>();
+    for (const item of results) {
+      const ns = item.metric.namespace;
+      const rawValue = Number(item.value?.[1] ?? 0);
+      if (ns && Number.isFinite(rawValue)) {
+        map.set(ns, transformer ? transformer(rawValue) : rawValue);
+      }
+    }
+    if (map.size > 0) return map;
+  }
+  return new Map();
+}
+
+async function buildClusterNamespaceAverages(
+  cluster: { name: string; prometheusUrl: string },
+  rates: CostSettings,
+): Promise<Map<string, NamespaceAverage>> {
+  const cpuQueries = [
+    'avg_over_time(sum by (namespace) (rate(container_cpu_usage_seconds_total{container!="",container!="POD"}[5m]))[24h:5m])',
+    'avg_over_time(sum by (namespace) (rate(container_cpu_usage_seconds_total{image!="",pod!=""}[5m]))[24h:5m])',
+    'avg_over_time(sum by (namespace) (rate(container_cpu_usage_seconds_total{namespace!=""}[5m]))[24h:5m])',
+  ];
+  const memoryQueries = [
+    'avg_over_time(sum by (namespace) (container_memory_working_set_bytes{container!="",container!="POD"})[24h:5m])',
+    'avg_over_time(sum by (namespace) (container_memory_working_set_bytes{image!="",pod!=""})[24h:5m])',
+    'avg_over_time(sum by (namespace) (container_memory_working_set_bytes{namespace!=""})[24h:5m])',
+    'avg_over_time(sum by (namespace) (container_memory_usage_bytes{namespace!=""})[24h:5m])',
+  ];
+
+  const [cpuMap, memMap] = await Promise.all([
+    queryFirstAvailableNamespaceMetric(cluster.prometheusUrl, cpuQueries),
+    queryFirstAvailableNamespaceMetric(
+      cluster.prometheusUrl,
+      memoryQueries,
+      (v) => v / BYTES_PER_GB,
+    ),
+  ]);
+
+  const allNamespaces = new Set([...cpuMap.keys(), ...memMap.keys()]);
+  const result = new Map<string, NamespaceAverage>();
+
+  for (const ns of allNamespaces) {
+    const avgCpuCores = round(cpuMap.get(ns) ?? 0);
+    const avgMemoryGb = round(memMap.get(ns) ?? 0);
+    const avgCpuCost = round(avgCpuCores * rates.cpuCore);
+    const avgMemoryCost = round(avgMemoryGb * rates.memoryGb);
+    result.set(ns, {
+      avgCpuCores,
+      avgMemoryGb,
+      avgCpuCost,
+      avgMemoryCost,
+      avgTotalCost: round(avgCpuCost + avgMemoryCost),
+    });
+  }
+
+  return result;
+}
+
+export async function getNamespaceAverages(
+  clusterFilter?: string[],
+  namespaceFilter?: string[],
+): Promise<Map<string, NamespaceAverage>> {
+  const [clusters, settingsContent] = await Promise.all([
+    getClusters(),
+    readSettingsFile(),
+  ]);
+  const rates = parseCostsFromSettings(settingsContent);
+
+  const selectedClusters =
+    clusterFilter && clusterFilter.length > 0
+      ? clusters.filter((c) => clusterFilter.includes(c.name))
+      : clusters;
+
+  const requestedNamespaces =
+    namespaceFilter && namespaceFilter.length > 0
+      ? new Set(namespaceFilter)
+      : null;
+
+  const perCluster = await Promise.all(
+    selectedClusters.map((cluster) =>
+      buildClusterNamespaceAverages(cluster, rates).then((nsMap) => ({
+        clusterName: cluster.name,
+        nsMap,
+      })),
+    ),
+  );
+
+  const result = new Map<string, NamespaceAverage>();
+
+  for (const { clusterName, nsMap } of perCluster) {
+    for (const [ns, avg] of nsMap) {
+      const key = `${clusterName}:${ns}`;
+      if (requestedNamespaces && !requestedNamespaces.has(key)) continue;
+      result.set(key, avg);
+    }
+  }
+
+  return result;
+}
+
 export async function getCostReport(
   clusterFilter?: string[],
   namespaceFilter?: string[],
