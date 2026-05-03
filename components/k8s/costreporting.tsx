@@ -28,7 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
-import { getCostReport, type CostReport } from "@/lib/cost-reporting";
+import { getCostReport, getNamespaceAverages, type CostReport, type NamespaceAverage } from "@/lib/cost-reporting";
 import {
   parseSharedNamespacesFromSettings,
   readSettingsFile,
@@ -186,14 +186,24 @@ function ClusterSummaryTable({ report }: { report: CostReport }) {
   );
 }
 
-function NamespaceSummaryTable({ report }: { report: CostReport }) {
+function NamespaceSummaryTable({
+  report,
+  namespaceAverages,
+}: {
+  report: CostReport;
+  namespaceAverages: Map<string, NamespaceAverage>;
+}) {
   const rows: NamespaceCostRow[] = Object.entries(report.clusters).flatMap(
     ([clusterName, cluster]) =>
-      Object.entries(cluster.namespaces).map(([namespaceName, namespace]) => ({
-        clusterName,
-        namespaceName,
-        ...namespace,
-      })),
+      Object.entries(cluster.namespaces).map(([namespaceName, namespace]) => {
+        const avg = namespaceAverages.get(`${clusterName}:${namespaceName}`);
+        return {
+          clusterName,
+          namespaceName,
+          ...namespace,
+          ...avg,
+        };
+      }),
   );
 
   return (
@@ -235,22 +245,18 @@ export async function CostReporting({
   clusters?: string;
   namespaces?: string;
 }) {
-  const report = await getCostReport(
-    clusters
-      ? clusters
-          .split(",")
-          .map((cluster) => cluster.trim())
-          .filter(Boolean)
-      : undefined,
-    namespaces
-      ? namespaces
-          .split(",")
-          .map((namespace) => namespace.trim())
-          .filter(Boolean)
-      : undefined,
-  );
+  const clusterList = clusters
+    ? clusters.split(",").map((c) => c.trim()).filter(Boolean)
+    : undefined;
+  const namespaceList = namespaces
+    ? namespaces.split(",").map((n) => n.trim()).filter(Boolean)
+    : undefined;
 
-  const [settingsContent] = await Promise.all([readSettingsFile()]);
+  const [report, namespaceAverages, settingsContent] = await Promise.all([
+    getCostReport(clusterList, namespaceList),
+    getNamespaceAverages(clusterList, namespaceList),
+    readSettingsFile(),
+  ]);
   const sharedNamespaces = new Set(
     parseSharedNamespacesFromSettings(settingsContent),
   );
@@ -320,7 +326,7 @@ export async function CostReporting({
       </div>
 
       <ClusterSummaryTable report={report} />
-      <NamespaceSummaryTable report={report} />
+      <NamespaceSummaryTable report={report} namespaceAverages={namespaceAverages} />
       <PodCostTable report={report} />
     </div>
   );
