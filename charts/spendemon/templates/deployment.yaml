@@ -1,0 +1,157 @@
+{{- if and .Values.auth.credentials.enabled .Values.settings.oidc.enabled }}
+{{- fail "auth.credentials.enabled and settings.oidc.enabled cannot both be true" }}
+{{- end }}
+{{- if not .Values.image.tag }}
+{{- fail "image.tag must be set to a specific version (e.g. 1.2.3). Using 'latest' is not recommended in production." }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spendemon.fullname" . }}
+spec:
+  replicas: {{ ternary 2 1 .Values.ha.enabled }}
+  selector:
+    matchLabels:
+      app: {{ include "spendemon.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "spendemon.name" . }}
+      annotations:
+        checksum/settings: {{ include "spendemon.settings" . | sha256sum }}
+    spec:
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      {{- if .Values.image.imagePullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.image.imagePullSecret }}
+      {{- end }}
+      initContainers:
+        - name: seed-settings
+          image: "{{ .Values.seedSettings.image.repository }}:{{ .Values.seedSettings.image.tag }}"
+          imagePullPolicy: {{ .Values.seedSettings.image.pullPolicy }}
+          resources:
+{{- toYaml .Values.seedSettings.resources | nindent 12 }}
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p {{ .Values.persistence.mountPath }}
+              SETTINGS_FILE="{{ .Values.persistence.mountPath }}/settings.yaml"
+              CHECKSUM_FILE="{{ .Values.persistence.mountPath }}/.settings-checksum"
+              NEW_CHECKSUM="{{ include "spendemon.settings" . | sha256sum }}"
+              FORCE="{{ if .Values.persistence.forceOverwrite }}true{{ else }}false{{ end }}"
+              if [ "$FORCE" = "true" ] || \
+                 [ ! -f "$SETTINGS_FILE" ] || \
+                 [ ! -f "$CHECKSUM_FILE" ] || \
+                 [ "$(cat $CHECKSUM_FILE)" != "$NEW_CHECKSUM" ]; then
+                cp /seed/settings.yaml "$SETTINGS_FILE"
+                echo "$NEW_CHECKSUM" > "$CHECKSUM_FILE"
+              fi
+              chown 1000:1000 {{ .Values.persistence.mountPath }} "$SETTINGS_FILE" "$CHECKSUM_FILE"
+              chmod 775 {{ .Values.persistence.mountPath }}
+              chmod 664 "$SETTINGS_FILE" "$CHECKSUM_FILE"
+          volumeMounts:
+            - name: settings
+              mountPath: {{ .Values.persistence.mountPath }}
+            - name: settings-template
+              mountPath: /seed
+      volumes:
+      - name: settings
+        persistentVolumeClaim:
+          claimName: {{ include "spendemon.fullname" . }}-settings
+      - name: settings-template
+        configMap:
+          name: {{ include "spendemon.fullname" . }}-settings-template
+      containers:
+        - name: spendemon
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            requests:
+              cpu: {{ dig "requests" "cpu" "100m" .Values.resources }}
+              memory: {{ dig "requests" "memory" "256Mi" .Values.resources }}
+              ephemeral-storage: {{ dig "requests" "ephemeral-storage" "256Mi" .Values.resources }}
+            limits:
+              cpu: {{ dig "limits" "cpu" "500m" .Values.resources }}
+              memory: {{ dig "limits" "memory" "512Mi" .Values.resources }}
+              ephemeral-storage: {{ dig "limits" "ephemeral-storage" "512Mi" .Values.resources }}
+          env:
+            - name: SETTINGS_FILE_PATH
+              value: {{ printf "%s/settings.yaml" .Values.persistence.mountPath | quote }}
+          {{- if .Values.auth.credentials.enabled }}
+            - name: AUTH_MODE
+              value: credentials
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ required "auth.credentials.secretRef.nextAuthSecretKey is required when credentials auth is enabled" .Values.auth.credentials.secretRef.nextAuthSecretKey }}
+            - name: LOCAL_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ .Values.auth.credentials.secretRef.adminUsernameKey }}
+                  optional: true
+            - name: LOCAL_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ .Values.auth.credentials.secretRef.adminPasswordKey }}
+                  optional: true
+            - name: LOCAL_ADMIN_PASSWORD_HASH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ .Values.auth.credentials.secretRef.adminPasswordHashKey }}
+                  optional: true
+            - name: LOCAL_VIEWER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ .Values.auth.credentials.secretRef.viewerUsernameKey }}
+                  optional: true
+            - name: LOCAL_VIEWER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ .Values.auth.credentials.secretRef.viewerPasswordKey }}
+                  optional: true
+            - name: LOCAL_VIEWER_PASSWORD_HASH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "auth.credentials.secretRef.name is required when credentials auth is enabled" .Values.auth.credentials.secretRef.name }}
+                  key: {{ .Values.auth.credentials.secretRef.viewerPasswordHashKey }}
+                  optional: true
+          {{- else if .Values.settings.oidc.enabled }}
+            - name: OIDC_ISSUER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "settings.oidc.secretRef.name is required when OIDC is enabled" .Values.settings.oidc.secretRef.name }}
+                  key: {{ required "settings.oidc.secretRef.issuerKey is required when OIDC is enabled" .Values.settings.oidc.secretRef.issuerKey }}
+            - name: OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "settings.oidc.secretRef.name is required when OIDC is enabled" .Values.settings.oidc.secretRef.name }}
+                  key: {{ required "settings.oidc.secretRef.clientIdKey is required when OIDC is enabled" .Values.settings.oidc.secretRef.clientIdKey }}
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "settings.oidc.secretRef.name is required when OIDC is enabled" .Values.settings.oidc.secretRef.name }}
+                  key: {{ required "settings.oidc.secretRef.clientSecretKey is required when OIDC is enabled" .Values.settings.oidc.secretRef.clientSecretKey }}
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "settings.oidc.secretRef.name is required when OIDC is enabled" .Values.settings.oidc.secretRef.name }}
+                  key: {{ required "settings.oidc.secretRef.nextAuthSecretKey is required when OIDC is enabled" .Values.settings.oidc.secretRef.nextAuthSecretKey }}
+            - name: NEXTAUTH_URL
+              value: {{ required "settings.oidc.nextAuthUrl or settings.oidc.url is required when OIDC is enabled" (coalesce .Values.settings.oidc.nextAuthUrl .Values.settings.oidc.url) | quote }}
+          {{- end }}
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: settings
+              mountPath: {{ .Values.persistence.mountPath }}

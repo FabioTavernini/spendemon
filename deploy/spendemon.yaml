@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spendemon-settings-template
+data:
+  settings.yaml: |
+    clusters:
+      - name: "cluster-1"
+        prometheusUrl: "http://prometheus-service.prometheus.svc.cluster.local:80"
+
+    costs:
+      cpuCore: 10
+      memoryGb: 20
+      storageGb: 5
+
+    sharednamespaces:
+      - "kube-system"
+
+    oidc:
+      enabled: false
+      issuer: ""
+      clientId: ""
+      clientSecret: ""
+      adminGroup: "admin"
+      viewerGroup: "viewer"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: spendemon-settings
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spendemon
+  labels:
+    app: spendemon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spendemon
+  template:
+    metadata:
+      labels:
+        app: spendemon
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: seed-settings
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /data
+              if [ ! -f /data/settings.yaml ]; then
+                cp /seed/settings.yaml /data/settings.yaml
+              fi
+              chown 1000:1000 /data /data/settings.yaml
+              chmod 775 /data
+              chmod 664 /data/settings.yaml
+          volumeMounts:
+            - name: settings
+              mountPath: /data
+            - name: settings-template
+              mountPath: /seed
+      containers:
+        - name: spendemon
+          image: ghcr.io/fabiotavernini/spendemon:1.0.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SETTINGS_FILE_PATH
+              value: /data/settings.yaml
+          envFrom:
+            - secretRef:
+                name: spendemon-auth
+                optional: true
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+              ephemeral-storage: 512Mi
+          volumeMounts:
+            - name: settings
+              mountPath: /data
+      volumes:
+        - name: settings
+          persistentVolumeClaim:
+            claimName: spendemon-settings
+        - name: settings-template
+          configMap:
+            name: spendemon-settings-template
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spendemon
+  labels:
+    app: spendemon
+spec:
+  type: ClusterIP
+  selector:
+    app: spendemon
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000

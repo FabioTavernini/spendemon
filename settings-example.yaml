@@ -1,0 +1,27 @@
+clusters:
+  - name: cluster-1
+    prometheusUrl: http://localhost:9090
+
+# Optional: customize the sidebar with your company name and logo
+# branding:
+#   companyName: Acme Corp
+#   logoUrl: https://example.com/logo.svg
+
+costs:
+  cpuCore: 10
+  memoryGb: 20
+  storageGb: 5
+
+oidc:
+  enabled: false
+  debug: false
+  issuer: ${OIDC_ISSUER}
+  clientId: ${OIDC_CLIENT_ID}
+  clientSecret: ${OIDC_CLIENT_SECRET}
+  adminGroup: scientists
+  viewerGroup: mathematicians
+  # if for example using dex idp, use groups as extra scopes to get the user groups in the id token, so that spendemon can use them for authorization
+  extraScopes: ''
+
+sharednamespaces:
+  - kube-system

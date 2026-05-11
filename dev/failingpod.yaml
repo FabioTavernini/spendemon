@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: failing-pod
+spec:
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  containers:
+  - name: fail
+    image: ubuntu:24.04
+    command: ["/bin/sh", "-c"]
+    args: ["echo 'I will fail'; exit 1"]
+    resources:
+      limits:
+        memory: 128Mi

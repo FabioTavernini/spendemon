@@ -1,0 +1,7 @@
+1. Get the application URL by running:
+
+kubectl port-forward svc/{{ include "spendemon.fullname" . }} 3000:3000
+
+Then open http://localhost:3000/
+
+2. Enter prometheus url(s) in settings or configure it in values.yaml
