@@ -77,7 +77,7 @@ spec:
               mountPath: /seed
       containers:
         - name: spendemon
-          image: ghcr.io/fabiotavernini/spendemon:1.1.0
+          image: ghcr.io/fabiotavernini/spendemon:1.1.1
           imagePullPolicy: IfNotPresent
           env:
             - name: SETTINGS_FILE_PATH

@@ -52,7 +52,7 @@ helm upgrade --install spendemon spendemon/spendemon \
   --values ./values.yaml
 ```
 
-Pin a specific chart version with `--version`, e.g. `--version 1.1.0`. List
+Pin a specific chart version with `--version`, e.g. `--version 1.1.1`. List
 available versions with `helm search repo spendemon --versions`.
 
 ## Upgrade

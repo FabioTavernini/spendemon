@@ -213,17 +213,17 @@ helm repo add spendemon https://fabiotavernini.github.io/spendemon
 helm repo update
 helm install spendemon spendemon/spendemon \
   --namespace spendemon --create-namespace \
-  --version 1.1.0
+  --version 1.1.1
 ```
 
 To customise values, pull the default values file first and edit it:
 
 ```sh
-helm show values spendemon/spendemon --version 1.1.0 > values.yaml
+helm show values spendemon/spendemon --version 1.1.1 > values.yaml
 # edit values.yaml, then:
 helm install spendemon spendemon/spendemon \
   --namespace spendemon --create-namespace \
-  --version 1.1.0 \
+  --version 1.1.1 \
   -f values.yaml
 ```
 
@@ -233,7 +233,7 @@ To upgrade an existing installation:
 helm repo update
 helm upgrade spendemon spendemon/spendemon \
   --namespace spendemon \
-  --version 1.1.0 \
+  --version 1.1.1 \
   -f values.yaml
 ```
 
@@ -242,7 +242,7 @@ Prefer OCI? The same chart is available without `helm repo add`:
 ```sh
 helm upgrade --install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
   --namespace spendemon --create-namespace \
-  --version 1.1.0 \
+  --version 1.1.1 \
   -f values.yaml
 ```
 
