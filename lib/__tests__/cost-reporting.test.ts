@@ -116,7 +116,7 @@ function settingsYaml({
     : ''
   return `clusters:
   - name: placeholder
-    prometheusUrl: http://placeholder:9090
+    prometheusUrl: https://placeholder:9090
 costs:
   cpuCore: ${cpuCore}
   memoryGb: ${memoryGb}
@@ -168,7 +168,7 @@ describe('getCostReport — cost math and unit conversion', () => {
       storage: [{ namespace: 'app', pod: 'web-1', value: 10 * GB }],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10, memoryGb: 5, storageGb: 1 }),
     )
 
@@ -204,7 +204,7 @@ describe('getCostReport — cost math and unit conversion', () => {
       ],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10 }),
     )
 
@@ -239,8 +239,8 @@ describe('getCostReport — cost math and unit conversion', () => {
     }
     configure(
       [
-        { name: 'prod', prometheusUrl: 'http://prod:9090' },
-        { name: 'staging', prometheusUrl: 'http://staging:9090' },
+        { name: 'prod', prometheusUrl: 'https://prod:9090' },
+        { name: 'staging', prometheusUrl: 'https://staging:9090' },
       ],
       settingsYaml({ cpuCore: 10 }),
     )
@@ -259,7 +259,7 @@ describe('getCostReport — cost math and unit conversion', () => {
       cpuRequest: [{ namespace: 'app', pod: 'web-1', value: 0.123456789 }],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 1 }),
     )
 
@@ -284,7 +284,7 @@ describe('getCostReport — estimation fallback', () => {
       memoryUsage: [{ namespace: 'jobs', pod: 'batch-1', value: 2 * GB }],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10, memoryGb: 5 }),
     )
 
@@ -310,7 +310,7 @@ describe('getCostReport — estimation fallback', () => {
       cpuUsage: [{ namespace: 'app', pod: 'web-1', value: 0.3 }],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10 }),
     )
 
@@ -342,7 +342,7 @@ describe('getCostReport — shared namespace allocation', () => {
       ],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10, shared: ['shared'] }),
     )
 
@@ -351,7 +351,10 @@ describe('getCostReport — shared namespace allocation', () => {
 
     // the shared namespace is removed from the output
     expect(namespaces.shared).toBeUndefined()
-    expect(Object.keys(namespaces).sort()).toEqual(['app', 'app2'])
+    expect(Object.keys(namespaces).sort((a, b) => a.localeCompare(b))).toEqual([
+      'app',
+      'app2',
+    ])
 
     // shared cost (40) split evenly across the two recipients (20 each)
     expect(namespaces.app.totalCost).toBe(30) // 10 + 20
@@ -369,7 +372,7 @@ describe('getCostReport — shared namespace allocation', () => {
       cpuRequest: [{ namespace: 'shared', pod: 'ingress-1', value: 4 }],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10, shared: ['shared'] }),
     )
 
@@ -396,8 +399,8 @@ describe('getCostReport — filtering', () => {
     }
     configure(
       [
-        { name: 'prod', prometheusUrl: 'http://prod:9090' },
-        { name: 'staging', prometheusUrl: 'http://staging:9090' },
+        { name: 'prod', prometheusUrl: 'https://prod:9090' },
+        { name: 'staging', prometheusUrl: 'https://staging:9090' },
       ],
       settingsYaml({ cpuCore: 10 }),
     )
@@ -440,8 +443,8 @@ describe('getCostReport — resilience', () => {
     fixtures.broken = { fail: true }
     configure(
       [
-        { name: 'prod', prometheusUrl: 'http://prod:9090' },
-        { name: 'broken', prometheusUrl: 'http://broken:9090' },
+        { name: 'prod', prometheusUrl: 'https://prod:9090' },
+        { name: 'broken', prometheusUrl: 'https://broken:9090' },
       ],
       settingsYaml({ cpuCore: 10 }),
     )
@@ -466,7 +469,7 @@ describe('getNamespaceAverages', () => {
       nsAvgMem: [{ namespace: 'app', value: 4 * GB }],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10, memoryGb: 5 }),
     )
 
@@ -493,7 +496,7 @@ describe('getNamespaceAverages', () => {
       ],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10, memoryGb: 5 }),
     )
 
@@ -514,7 +517,7 @@ describe('getCostReport — time range', () => {
       cpuRequest: [{ namespace: 'app', pod: 'web-1', value: 2 }],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10 }),
     )
 
@@ -532,7 +535,7 @@ describe('getCostReport — time range', () => {
       storage: [{ namespace: 'app', pod: 'web-1', value: 10 * GB }],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10, memoryGb: 5, storageGb: 1 }),
     )
 
@@ -569,7 +572,7 @@ describe('getCostReport — time range', () => {
       cpuRequest: [{ namespace: 'app', pod: 'web-1', value: 1 }],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10 }),
     )
 
@@ -577,7 +580,7 @@ describe('getCostReport — time range', () => {
 
     const monthQuery = capturedQueries.find((q) => q.includes('avg_over_time(('))
     expect(monthQuery).toBeDefined()
-    const window = monthQuery!.match(/\[(\d+)s:1h\]/)
+    const window = /\[(\d+)s:1h\]/.exec(monthQuery!)
     expect(window).not.toBeNull()
     expect(Number(window![1])).toBeGreaterThan(0)
   })
@@ -589,7 +592,7 @@ describe('getNamespaceAverages — time range', () => {
       nsAvgCpu: [{ namespace: 'app', value: 2 }],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10 }),
     )
 
@@ -607,7 +610,7 @@ describe('getNamespaceAverages — time range', () => {
       nsAvgCpu: [{ namespace: 'app', value: 2 }],
     }
     configure(
-      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      [{ name: 'prod', prometheusUrl: 'https://prod:9090' }],
       settingsYaml({ cpuCore: 10 }),
     )
 

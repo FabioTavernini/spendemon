@@ -253,6 +253,42 @@ async function queryStorageMetrics(
   ], window, (value) => value / BYTES_PER_GB);
 }
 
+type ResourceKey = "cpuCores" | "memoryGb" | "storageGb";
+
+// Direct assignment of a requested-resource metric (cpu/memory/storage).
+function applyRequestMetric(
+  podMap: Map<string, ClusterPodState>,
+  clusterName: string,
+  values: MetricValue[],
+  key: ResourceKey,
+): void {
+  for (const item of values) {
+    const podState = upsertPodState(podMap, clusterName, item.namespace, item.pod);
+    podState[key] = item.value;
+  }
+}
+
+// cAdvisor usage fallback: only fills a resource the request metric left at zero,
+// and flags it as estimated when a non-zero usage value is substituted.
+function applyUsageFallback(
+  podMap: Map<string, ClusterPodState>,
+  clusterName: string,
+  values: MetricValue[],
+  key: "cpuCores" | "memoryGb",
+  resourceName: string,
+): void {
+  for (const item of values) {
+    const podState = upsertPodState(podMap, clusterName, item.namespace, item.pod);
+    if (podState[key] > 0) {
+      continue;
+    }
+    podState[key] = item.value;
+    if (item.value > 0) {
+      podState.estimatedResources.add(resourceName);
+    }
+  }
+}
+
 async function buildClusterPodStates(
   cluster: {
     name: string;
@@ -334,70 +370,16 @@ async function buildClusterPodStates(
     podState.status = item.metric.phase ?? "Unknown";
   }
 
-  for (const item of parseMetricValues(cpuResults)) {
-    const podState = upsertPodState(
-      podMap,
-      cluster.name,
-      item.namespace,
-      item.pod,
-    );
-    podState.cpuCores = item.value;
-  }
-
-  for (const item of parseMetricValues(
-    memoryResults,
-    (value) => value / BYTES_PER_GB,
-  )) {
-    const podState = upsertPodState(
-      podMap,
-      cluster.name,
-      item.namespace,
-      item.pod,
-    );
-    podState.memoryGb = item.value;
-  }
-
-  for (const item of cpuUsageResults) {
-    const podState = upsertPodState(
-      podMap,
-      cluster.name,
-      item.namespace,
-      item.pod,
-    );
-
-    if (podState.cpuCores <= 0) {
-      podState.cpuCores = item.value;
-      if (item.value > 0) {
-        podState.estimatedResources.add("cpu");
-      }
-    }
-  }
-
-  for (const item of memoryUsageResults) {
-    const podState = upsertPodState(
-      podMap,
-      cluster.name,
-      item.namespace,
-      item.pod,
-    );
-
-    if (podState.memoryGb <= 0) {
-      podState.memoryGb = item.value;
-      if (item.value > 0) {
-        podState.estimatedResources.add("memory");
-      }
-    }
-  }
-
-  for (const item of storageResults) {
-    const podState = upsertPodState(
-      podMap,
-      cluster.name,
-      item.namespace,
-      item.pod,
-    );
-    podState.storageGb = item.value;
-  }
+  applyRequestMetric(podMap, cluster.name, parseMetricValues(cpuResults), "cpuCores");
+  applyRequestMetric(
+    podMap,
+    cluster.name,
+    parseMetricValues(memoryResults, (value) => value / BYTES_PER_GB),
+    "memoryGb",
+  );
+  applyUsageFallback(podMap, cluster.name, cpuUsageResults, "cpuCores", "cpu");
+  applyUsageFallback(podMap, cluster.name, memoryUsageResults, "memoryGb", "memory");
+  applyRequestMetric(podMap, cluster.name, storageResults, "storageGb");
 
   return Array.from(podMap.values());
 }

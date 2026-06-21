@@ -235,7 +235,7 @@ function flattenPodRows(report: CostReport): PodCostRow[] {
   );
 }
 
-function PodCostTable({ rows }: { rows: PodCostRow[] }) {
+function PodCostTable({ rows }: Readonly<{ rows: PodCostRow[] }>) {
   return (
     <div className="rounded-xl border bg-card p-4">
       <h2 className="text-xl font-semibold">Pod Costs</h2>

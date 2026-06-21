@@ -39,7 +39,7 @@ const CSV_COLUMNS = [
 
 function escapeCsv(value: string | number): string {
   const text = String(value);
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
 function toCsv(rows: PodCostRow[]): string {
@@ -75,7 +75,7 @@ function download(filename: string, mimeType: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
-export function CostExport(props: CostExportProps) {
+export function CostExport(props: Readonly<CostExportProps>) {
   const stamp = new Date().toISOString().slice(0, 10);
   const baseName = `spendemon-cost-${props.range}-${stamp}`;
   const disabled = props.rows.length === 0;
