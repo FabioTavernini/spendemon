@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  spendemon:
+  - apiVersion: v2
+    appVersion: 1.1.1
+    created: "2026-06-21T21:12:26.141182188Z"
+    description: Spendemon Next.js app
+    digest: 005548fc0a1bbf15491453bda234947d3fdc3a3ad22a8d7add7cccebca7b04db
+    name: spendemon
+    type: application
+    urls:
+    - https://github.com/FabioTavernini/spendemon/releases/download/spendemon-1.1.1/spendemon-1.1.1.tgz
+    version: 1.1.1
+generated: "2026-06-21T21:12:26.141187247Z"
