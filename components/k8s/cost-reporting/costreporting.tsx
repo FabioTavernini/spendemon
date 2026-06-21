@@ -40,6 +40,7 @@ import {
   readSettingsFile,
 } from "@/lib/settings";
 import { TimeRangeSelect } from "@/components/k8s/cost-reporting/time-range-select";
+import { CostExport } from "@/components/k8s/cost-reporting/cost-export";
 
 function formatNumber(value: number) {
   if (value !== 0 && Math.abs(value) < 0.01) {
@@ -222,18 +223,19 @@ function NamespaceSummaryTable({
   );
 }
 
-function PodCostTable({ report }: { report: CostReport }) {
-  const rows: PodCostRow[] = Object.entries(report.clusters).flatMap(
-    ([clusterName, cluster]) =>
-      Object.entries(cluster.namespaces).flatMap(([namespaceName, namespace]) =>
-        namespace.pods.map((pod) => ({
-          clusterName,
-          namespaceName,
-          ...pod,
-        })),
-      ),
+function flattenPodRows(report: CostReport): PodCostRow[] {
+  return Object.entries(report.clusters).flatMap(([clusterName, cluster]) =>
+    Object.entries(cluster.namespaces).flatMap(([namespaceName, namespace]) =>
+      namespace.pods.map((pod) => ({
+        clusterName,
+        namespaceName,
+        ...pod,
+      })),
+    ),
   );
+}
 
+function PodCostTable({ rows }: { rows: PodCostRow[] }) {
   return (
     <div className="rounded-xl border bg-card p-4">
       <h2 className="text-xl font-semibold">Pod Costs</h2>
@@ -283,6 +285,7 @@ export async function CostReporting({
   const estimatedCostTitle = report.estimatedPodCount > 0
     ? `Aggregated across the selected clusters, including ${report.estimatedPodCount} estimated pod${podSuffix}`
     : "Aggregated across the selected clusters"
+  const podRows = flattenPodRows(report)
 
   return (
     <div className="space-y-6">
@@ -298,8 +301,14 @@ export async function CostReporting({
               {report.estimatedPodCount === 1 ? "" : "s"}
             </Badge>
           ) : null}
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             <TimeRangeSelect />
+            <CostExport
+              generatedAt={report.generatedAt}
+              range={costRange}
+              rates={report.rates}
+              rows={podRows}
+            />
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -345,7 +354,7 @@ export async function CostReporting({
 
       <ClusterSummaryTable report={report} />
       <NamespaceSummaryTable report={report} namespaceAverages={namespaceAverages} />
-      <PodCostTable report={report} />
+      <PodCostTable rows={podRows} />
     </div>
   );
 }
