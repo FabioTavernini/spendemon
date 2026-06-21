@@ -9,6 +9,80 @@ import {
 
 const BYTES_PER_GB = 1024 * 1024 * 1024;
 
+// Time-range selection. "now" keeps the original point-in-time snapshot
+// (instant vector queries); the other presets wrap each instant expression in an
+// avg_over_time/max_over_time subquery so a range collapses back into a single
+// scalar per series, leaving the entire downstream cost pipeline unchanged.
+export type CostRange = "now" | "24h" | "7d" | "30d" | "month";
+
+export const COST_RANGES: readonly CostRange[] = [
+  "now",
+  "24h",
+  "7d",
+  "30d",
+  "month",
+];
+
+export function parseCostRange(value: string | undefined | null): CostRange {
+  return value && (COST_RANGES as readonly string[]).includes(value)
+    ? (value as CostRange)
+    : "now";
+}
+
+type RangeWindow = { windowSeconds: number; step: string };
+
+const SECONDS_PER_DAY = 24 * 60 * 60;
+
+function startOfMonthSeconds(now: number): number {
+  const date = new Date(now * 1000);
+  const start = new Date(date.getFullYear(), date.getMonth(), 1);
+  return Math.floor(start.getTime() / 1000);
+}
+
+// Resolve a preset into a subquery window + resolution step. Steps are chosen to
+// keep the number of evaluated points bounded (~150-300) regardless of window.
+// Returns null for "now", which signals the instant (unwrapped) query path.
+function resolveRange(range: CostRange, nowSeconds: number): RangeWindow | null {
+  switch (range) {
+    case "now":
+      return null;
+    case "24h":
+      return { windowSeconds: SECONDS_PER_DAY, step: "5m" };
+    case "7d":
+      return { windowSeconds: 7 * SECONDS_PER_DAY, step: "1h" };
+    case "30d":
+      return { windowSeconds: 30 * SECONDS_PER_DAY, step: "6h" };
+    case "month": {
+      const windowSeconds = Math.max(
+        nowSeconds - startOfMonthSeconds(nowSeconds),
+        60,
+      );
+      return { windowSeconds, step: "1h" };
+    }
+  }
+}
+
+// Wrap an instant expression in an aggregation-over-time subquery. When `window`
+// is null the expression is returned verbatim (the snapshot / instant path).
+function wrapOverTime(
+  fn: "avg_over_time" | "max_over_time",
+  expr: string,
+  window: RangeWindow | null,
+): string {
+  if (!window) {
+    return expr;
+  }
+  return `${fn}((${expr})[${window.windowSeconds}s:${window.step}])`;
+}
+
+function withRange(expr: string, window: RangeWindow | null): string {
+  return wrapOverTime("avg_over_time", expr, window);
+}
+
+function withRangeMax(expr: string, window: RangeWindow | null): string {
+  return wrapOverTime("max_over_time", expr, window);
+}
+
 type QueryResult = {
   metric: {
     namespace?: string;
@@ -151,10 +225,14 @@ function upsertPodState(
 async function queryFirstAvailableMetric(
   prometheusUrl: string,
   queries: string[],
+  window: RangeWindow | null,
   transformer?: (value: number) => number,
 ): Promise<MetricValue[]> {
   for (const query of queries) {
-    const results = await queryPrometheusVector(prometheusUrl, query);
+    const results = await queryPrometheusVector(
+      prometheusUrl,
+      withRange(query, window),
+    );
 
     if (results.length > 0) {
       return parseMetricValues(results, transformer);
@@ -166,23 +244,31 @@ async function queryFirstAvailableMetric(
 
 async function queryStorageMetrics(
   prometheusUrl: string,
+  window: RangeWindow | null,
 ): Promise<MetricValue[]> {
   return queryFirstAvailableMetric(prometheusUrl, [
     'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="ephemeral_storage",unit="byte"})',
     'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="ephemeral-storage",unit="byte"})',
     "sum by (namespace, pod) (kube_pod_ephemeral_storage_request_bytes)",
-  ], (value) => value / BYTES_PER_GB);
+  ], window, (value) => value / BYTES_PER_GB);
 }
 
-async function buildClusterPodStates(cluster: {
-  name: string;
-  prometheusUrl: string;
-}) {
-  const podStatusQuery = "kube_pod_status_phase == 1";
-  const cpuQuery =
-    'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="cpu",unit="core"})';
-  const memoryQuery =
-    'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="memory",unit="byte"})';
+async function buildClusterPodStates(
+  cluster: {
+    name: string;
+    prometheusUrl: string;
+  },
+  window: RangeWindow | null,
+) {
+  const podStatusQuery = withRangeMax("kube_pod_status_phase == 1", window);
+  const cpuQuery = withRange(
+    'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="cpu",unit="core"})',
+    window,
+  );
+  const memoryQuery = withRange(
+    'sum by (namespace, pod) (kube_pod_container_resource_requests{resource="memory",unit="byte"})',
+    window,
+  );
   const cpuUsageQueries = [
     'sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{container!="",container!="POD"}[5m]))',
     'sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{image!="",pod!=""}[5m]))',
@@ -224,13 +310,14 @@ async function buildClusterPodStates(cluster: {
       queryPrometheusVector(cluster.prometheusUrl, podStatusQuery),
       queryPrometheusVector(cluster.prometheusUrl, cpuQuery),
       queryPrometheusVector(cluster.prometheusUrl, memoryQuery),
-      queryFirstAvailableMetric(cluster.prometheusUrl, cpuUsageQueries),
+      queryFirstAvailableMetric(cluster.prometheusUrl, cpuUsageQueries, window),
       queryFirstAvailableMetric(
         cluster.prometheusUrl,
         memoryUsageQueries,
+        window,
         (value) => value / BYTES_PER_GB,
       ),
-      queryStorageMetrics(cluster.prometheusUrl),
+      queryStorageMetrics(cluster.prometheusUrl, window),
     ]);
 
   const podMap = new Map<string, ClusterPodState>();
@@ -446,18 +533,19 @@ async function queryFirstAvailableNamespaceMetric(
 async function buildClusterNamespaceAverages(
   cluster: { name: string; prometheusUrl: string },
   rates: CostSettings,
+  window: RangeWindow,
 ): Promise<Map<string, NamespaceAverage>> {
   const cpuQueries = [
-    'avg_over_time(sum by (namespace) (rate(container_cpu_usage_seconds_total{container!="",container!="POD"}[5m]))[24h:5m])',
-    'avg_over_time(sum by (namespace) (rate(container_cpu_usage_seconds_total{image!="",pod!=""}[5m]))[24h:5m])',
-    'avg_over_time(sum by (namespace) (rate(container_cpu_usage_seconds_total{namespace!=""}[5m]))[24h:5m])',
-  ];
+    'sum by (namespace) (rate(container_cpu_usage_seconds_total{container!="",container!="POD"}[5m]))',
+    'sum by (namespace) (rate(container_cpu_usage_seconds_total{image!="",pod!=""}[5m]))',
+    'sum by (namespace) (rate(container_cpu_usage_seconds_total{namespace!=""}[5m]))',
+  ].map((expr) => withRange(expr, window));
   const memoryQueries = [
-    'avg_over_time(sum by (namespace) (container_memory_working_set_bytes{container!="",container!="POD"})[24h:5m])',
-    'avg_over_time(sum by (namespace) (container_memory_working_set_bytes{image!="",pod!=""})[24h:5m])',
-    'avg_over_time(sum by (namespace) (container_memory_working_set_bytes{namespace!=""})[24h:5m])',
-    'avg_over_time(sum by (namespace) (container_memory_usage_bytes{namespace!=""})[24h:5m])',
-  ];
+    'sum by (namespace) (container_memory_working_set_bytes{container!="",container!="POD"})',
+    'sum by (namespace) (container_memory_working_set_bytes{image!="",pod!=""})',
+    'sum by (namespace) (container_memory_working_set_bytes{namespace!=""})',
+    'sum by (namespace) (container_memory_usage_bytes{namespace!=""})',
+  ].map((expr) => withRange(expr, window));
 
   const [cpuMap, memMap] = await Promise.all([
     queryFirstAvailableNamespaceMetric(cluster.prometheusUrl, cpuQueries),
@@ -488,15 +576,26 @@ async function buildClusterNamespaceAverages(
   return result;
 }
 
+// A "snapshot" has no meaningful averaging window, so the namespace-average
+// panel falls back to the original 24h/5m behavior when range is "now".
+const DEFAULT_NAMESPACE_AVERAGE_WINDOW: RangeWindow = {
+  windowSeconds: SECONDS_PER_DAY,
+  step: "5m",
+};
+
 export async function getNamespaceAverages(
   clusterFilter?: string[],
   namespaceFilter?: string[],
+  range: CostRange = "now",
 ): Promise<Map<string, NamespaceAverage>> {
   const [clusters, settingsContent] = await Promise.all([
     getClusters(),
     readSettingsFile(),
   ]);
   const rates = parseCostsFromSettings(settingsContent);
+  const window =
+    resolveRange(range, Math.floor(Date.now() / 1000)) ??
+    DEFAULT_NAMESPACE_AVERAGE_WINDOW;
 
   const selectedClusters =
     clusterFilter && clusterFilter.length > 0
@@ -510,7 +609,7 @@ export async function getNamespaceAverages(
 
   const perCluster = await Promise.all(
     selectedClusters.map((cluster) =>
-      buildClusterNamespaceAverages(cluster, rates).then((nsMap) => ({
+      buildClusterNamespaceAverages(cluster, rates, window).then((nsMap) => ({
         clusterName: cluster.name,
         nsMap,
       })),
@@ -533,6 +632,7 @@ export async function getNamespaceAverages(
 export async function getCostReport(
   clusterFilter?: string[],
   namespaceFilter?: string[],
+  range: CostRange = "now",
 ): Promise<CostReport> {
   const [clusters, settingsContent] = await Promise.all([
     getClusters(),
@@ -542,6 +642,7 @@ export async function getCostReport(
   const sharedNamespaces = new Set(
     parseSharedNamespacesFromSettings(settingsContent),
   );
+  const window = resolveRange(range, Math.floor(Date.now() / 1000));
 
   const selectedClusters =
     clusterFilter && clusterFilter.length > 0
@@ -551,7 +652,7 @@ export async function getCostReport(
   const clusterStates = await Promise.all(
     selectedClusters.map(async (cluster) => {
       try {
-        const podStates = await buildClusterPodStates(cluster);
+        const podStates = await buildClusterPodStates(cluster, window);
         return { clusterName: cluster.name, podStates };
       } catch (error) {
         console.error(`Error building cost report for ${cluster.name}:`, error);

@@ -28,11 +28,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
-import { getCostReport, getNamespaceAverages, type CostReport, type NamespaceAverage } from "@/lib/cost-reporting";
+import {
+  getCostReport,
+  getNamespaceAverages,
+  parseCostRange,
+  type CostReport,
+  type NamespaceAverage,
+} from "@/lib/cost-reporting";
 import {
   parseSharedNamespacesFromSettings,
   readSettingsFile,
 } from "@/lib/settings";
+import { TimeRangeSelect } from "@/components/k8s/cost-reporting/time-range-select";
 
 function formatNumber(value: number) {
   if (value !== 0 && Math.abs(value) < 0.01) {
@@ -236,12 +243,22 @@ function PodCostTable({ report }: { report: CostReport }) {
   );
 }
 
+const RANGE_DESCRIPTIONS: Record<string, string> = {
+  now: "Snapshot estimate based on configured pricing and current Prometheus resource requests.",
+  "24h": "Estimate based on configured pricing and resource requests averaged over the last 24 hours.",
+  "7d": "Estimate based on configured pricing and resource requests averaged over the last 7 days.",
+  "30d": "Estimate based on configured pricing and resource requests averaged over the last 30 days.",
+  month: "Estimate based on configured pricing and resource requests averaged over the current month.",
+};
+
 export async function CostReporting({
   clusters,
   namespaces,
+  range,
 }: {
   clusters?: string;
   namespaces?: string;
+  range?: string;
 }) {
   const clusterList = clusters
     ? clusters.split(",").map((c) => c.trim()).filter(Boolean)
@@ -249,10 +266,11 @@ export async function CostReporting({
   const namespaceList = namespaces
     ? namespaces.split(",").map((n) => n.trim()).filter(Boolean)
     : undefined;
+  const costRange = parseCostRange(range);
 
   const [report, namespaceAverages, settingsContent] = await Promise.all([
-    getCostReport(clusterList, namespaceList),
-    getNamespaceAverages(clusterList, namespaceList),
+    getCostReport(clusterList, namespaceList, costRange),
+    getNamespaceAverages(clusterList, namespaceList, costRange),
     readSettingsFile(),
   ]);
   const sharedNamespaces = new Set(
@@ -280,12 +298,14 @@ export async function CostReporting({
               {report.estimatedPodCount === 1 ? "" : "s"}
             </Badge>
           ) : null}
+          <div className="ml-auto">
+            <TimeRangeSelect />
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          Snapshot estimate based on configured pricing and current Prometheus
-          resource requests. When kube-state-metrics reports missing or zero CPU
-          or memory requests, cAdvisor usage is used as a fallback and those pod
-          costs are flagged as estimates.
+          {RANGE_DESCRIPTIONS[costRange]} When kube-state-metrics reports missing
+          or zero CPU or memory requests, cAdvisor usage is used as a fallback and
+          those pod costs are flagged as estimates.
         </p>
         <p className="text-xs text-muted-foreground">
           Rates: CPU {formatCost(report.rates.cpuCore)} / core, RAM{" "}

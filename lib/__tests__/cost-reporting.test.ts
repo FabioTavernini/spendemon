@@ -64,7 +64,15 @@ function vec(entries: Entry[] = []): RawResult[] {
 function resultsFor(fx: ClusterFixture, query: string): RawResult[] {
   if (query.includes('kube_pod_status_phase')) return vec(fx.status)
 
-  if (query.includes('avg_over_time')) {
+  // Namespace-average panel: aggregated by namespace only (no pod) and wrapped
+  // in avg_over_time. The pod-level range queries below also use avg_over_time,
+  // but aggregate by (namespace, pod) — so they fall through to the metric
+  // family branches and route by their inner metric name.
+  if (
+    query.includes('avg_over_time') &&
+    query.includes('by (namespace)') &&
+    !query.includes('by (namespace, pod)')
+  ) {
     if (query.includes('container_cpu_usage')) return vec(fx.nsAvgCpu)
     return vec(fx.nsAvgMem)
   }
@@ -85,6 +93,9 @@ function resultsFor(fx: ClusterFixture, query: string): RawResult[] {
 }
 
 let fixtures: Record<string, ClusterFixture> = {}
+// Every PromQL string issued during a test, in order — lets range tests assert
+// the subquery wrapping (avg_over_time / max_over_time) actually went out.
+let capturedQueries: string[] = []
 
 function configure(
   clusters: { name: string; prometheusUrl: string }[],
@@ -115,6 +126,7 @@ ${sharedBlock}`
 
 beforeEach(() => {
   fixtures = {}
+  capturedQueries = []
   vi.clearAllMocks()
   // The shared Prometheus layer caches by request URL; clear it between tests
   // so a cluster's fixture changes are never served stale from a prior test.
@@ -129,6 +141,7 @@ beforeEach(() => {
     }
 
     const query = url.searchParams.get('query') ?? ''
+    capturedQueries.push(query)
     const result = resultsFor(fx, query)
 
     return {
@@ -487,5 +500,123 @@ describe('getNamespaceAverages', () => {
     const averages = await getNamespaceAverages(['prod'], ['prod:app'])
 
     expect([...averages.keys()]).toEqual(['prod:app'])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Time-range selection
+// ---------------------------------------------------------------------------
+
+describe('getCostReport — time range', () => {
+  it('issues instant (unwrapped) queries for the default "now" range', async () => {
+    fixtures.prod = {
+      status: [{ namespace: 'app', pod: 'web-1', phase: 'Running', value: 1 }],
+      cpuRequest: [{ namespace: 'app', pod: 'web-1', value: 2 }],
+    }
+    configure(
+      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      settingsYaml({ cpuCore: 10 }),
+    )
+
+    await getCostReport(undefined, undefined, 'now')
+
+    expect(capturedQueries.some((q) => q.includes('over_time'))).toBe(false)
+    expect(capturedQueries).toContain('kube_pod_status_phase == 1')
+  })
+
+  it('wraps pod-level queries in avg/max_over_time subqueries for a range', async () => {
+    fixtures.prod = {
+      status: [{ namespace: 'app', pod: 'web-1', phase: 'Running', value: 1 }],
+      cpuRequest: [{ namespace: 'app', pod: 'web-1', value: 2 }],
+      memoryRequest: [{ namespace: 'app', pod: 'web-1', value: 4 * GB }],
+      storage: [{ namespace: 'app', pod: 'web-1', value: 10 * GB }],
+    }
+    configure(
+      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      settingsYaml({ cpuCore: 10, memoryGb: 5, storageGb: 1 }),
+    )
+
+    const report = await getCostReport(undefined, undefined, '7d')
+
+    // 7 days -> 604800s window, 1h step
+    expect(
+      capturedQueries.some(
+        (q) =>
+          q.startsWith('max_over_time((kube_pod_status_phase == 1)[604800s:1h]'),
+      ),
+    ).toBe(true)
+    expect(
+      capturedQueries.some(
+        (q) =>
+          q.includes('avg_over_time((') &&
+          q.includes('resource="cpu"') &&
+          q.includes('[604800s:1h]'),
+      ),
+    ).toBe(true)
+
+    // The wrapping is transparent to the cost math: scalar-per-series in,
+    // identical totals out.
+    const pod = report.clusters.prod.namespaces.app.pods[0]
+    expect(pod.cpuCost).toBe(20)
+    expect(pod.memoryCost).toBe(20)
+    expect(pod.storageCost).toBe(10)
+    expect(pod.totalCost).toBe(50)
+  })
+
+  it('resolves the "this month" window to a positive duration', async () => {
+    fixtures.prod = {
+      status: [{ namespace: 'app', pod: 'web-1', phase: 'Running', value: 1 }],
+      cpuRequest: [{ namespace: 'app', pod: 'web-1', value: 1 }],
+    }
+    configure(
+      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      settingsYaml({ cpuCore: 10 }),
+    )
+
+    await getCostReport(undefined, undefined, 'month')
+
+    const monthQuery = capturedQueries.find((q) => q.includes('avg_over_time(('))
+    expect(monthQuery).toBeDefined()
+    const window = monthQuery!.match(/\[(\d+)s:1h\]/)
+    expect(window).not.toBeNull()
+    expect(Number(window![1])).toBeGreaterThan(0)
+  })
+})
+
+describe('getNamespaceAverages — time range', () => {
+  it('uses the 24h/5m window for the default "now" range', async () => {
+    fixtures.prod = {
+      nsAvgCpu: [{ namespace: 'app', value: 2 }],
+    }
+    configure(
+      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      settingsYaml({ cpuCore: 10 }),
+    )
+
+    await getNamespaceAverages(undefined, undefined, 'now')
+
+    expect(
+      capturedQueries.some(
+        (q) => q.includes('avg_over_time((') && q.includes('[86400s:5m]'),
+      ),
+    ).toBe(true)
+  })
+
+  it('tracks the selected range window for the average panel', async () => {
+    fixtures.prod = {
+      nsAvgCpu: [{ namespace: 'app', value: 2 }],
+    }
+    configure(
+      [{ name: 'prod', prometheusUrl: 'http://prod:9090' }],
+      settingsYaml({ cpuCore: 10 }),
+    )
+
+    await getNamespaceAverages(undefined, undefined, '30d')
+
+    expect(
+      capturedQueries.some(
+        (q) => q.includes('avg_over_time((') && q.includes('[2592000s:6h]'),
+      ),
+    ).toBe(true)
   })
 })

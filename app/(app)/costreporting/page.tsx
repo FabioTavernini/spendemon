@@ -6,7 +6,11 @@ export const dynamic = "force-dynamic";
 export default async function CostReportingPage({
   searchParams,
 }: Readonly<{
-  searchParams: Promise<{ clusters?: string; namespaces?: string }>;
+  searchParams: Promise<{
+    clusters?: string;
+    namespaces?: string;
+    range?: string;
+  }>;
 }>) {
   const params = await searchParams;
 
@@ -18,6 +22,7 @@ export default async function CostReportingPage({
         <CostReporting
           clusters={params.clusters}
           namespaces={params.namespaces}
+          range={params.range}
         />
       </div>
     </div>
