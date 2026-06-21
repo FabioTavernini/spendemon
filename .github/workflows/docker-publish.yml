@@ -3,6 +3,12 @@ name: Build and publish Docker image
 on:
   push:
     tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to build/push (e.g. 1.1.0). Defaults to package.json version.'
+        required: false
+        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -29,7 +35,13 @@ jobs:
         id: version
         shell: bash
         run: |
-          IMAGE_TAG="${GITHUB_REF#refs/tags/v}"
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            IMAGE_TAG="${GITHUB_REF#refs/tags/v}"
+          elif [[ -n "${{ inputs.image_tag }}" ]]; then
+            IMAGE_TAG="${{ inputs.image_tag }}"
+          else
+            IMAGE_TAG="$(node -p "require('./package.json').version")"
+          fi
           echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Setup Node.js

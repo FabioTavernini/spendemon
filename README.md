@@ -211,17 +211,17 @@ Install the latest release into a dedicated namespace:
 ```sh
 helm install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
   --namespace spendemon --create-namespace \
-  --version 1.0.4
+  --version 1.1.0
 ```
 
 To customise values, pull the default values file first and edit it:
 
 ```sh
-helm show values oci://ghcr.io/fabiotavernini/charts/spendemon --version 1.0.4 > values.yaml
+helm show values oci://ghcr.io/fabiotavernini/charts/spendemon --version 1.1.0 > values.yaml
 # edit values.yaml, then:
 helm install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
   --namespace spendemon --create-namespace \
-  --version 1.0.4 \
+  --version 1.1.0 \
   -f values.yaml
 ```
 
@@ -230,7 +230,7 @@ To upgrade an existing installation:
 ```sh
 helm upgrade spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
   --namespace spendemon \
-  --version 1.0.4 \
+  --version 1.1.0 \
   -f values.yaml
 ```
 
