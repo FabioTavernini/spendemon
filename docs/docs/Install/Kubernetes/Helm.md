@@ -43,16 +43,31 @@ The chart lives in:
 
 ## Install
 
+Add the Helm repository, then install (or upgrade) the release with your values:
+
 ```sh
-helm upgrade --install spendemon \
-  oci://ghcr.io/fabiotavernini/charts/spendemon \
+helm repo add spendemon https://fabiotavernini.github.io/spendemon
+helm repo update
+helm upgrade --install spendemon spendemon/spendemon \
   --values ./values.yaml
 ```
+
+Pin a specific chart version with `--version`, e.g. `--version 1.1.0`. List
+available versions with `helm search repo spendemon --versions`.
+
 ## Upgrade
+
+Pull the latest chart metadata, then re-run the same command:
+
 ```sh
-helm upgrade --install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon --values ./values.yaml
+helm repo update
+helm upgrade --install spendemon spendemon/spendemon \
+  --values ./values.yaml
 ```
 
+## Install from the OCI registry (alternative)
+
+The chart is also published as an OCI artifact, which needs no `helm repo add`:
 
 ```sh
 helm upgrade --install spendemon \

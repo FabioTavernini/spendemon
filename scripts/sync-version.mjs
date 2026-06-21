@@ -40,6 +40,10 @@ const edits = [
     [[/--version [\d.]+/g, `--version ${version}`]],
   ],
   [
+    'docs/docs/Install/Kubernetes/Helm.md',
+    [[/--version [\d.]+/g, `--version ${version}`]],
+  ],
+  [
     'deploy/spendemon.yaml',
     [[/(spendemon):[\d.]+/g, `$1:${version}`]],
   ],

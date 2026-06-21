@@ -1,0 +1,40 @@
+name: Release Helm chart to Pages repo
+
+# Publishes the chart to a classic, index.yaml-based Helm repository on the
+# gh-pages branch (served via GitHub Pages) so users can `helm repo add`.
+# This is in addition to the OCI artifact published by helm-publish.yml.
+# chart-releaser only cuts a release when charts/spendemon/Chart.yaml has a
+# version that has not been released yet, so it is safe to run on every push.
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'charts/**'
+      - '.github/workflows/release-chart.yml'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Helm
+        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f # v1.7.0
+        with:
+          charts_dir: charts
+        env:
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}

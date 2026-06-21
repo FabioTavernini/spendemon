@@ -204,12 +204,14 @@ If you want to simulate a failing or pending pod, just apply `dev/failing-pod.ya
 
 ## Kubernetes Install With Helm
 
-The chart is published as an OCI artifact to the GitHub Container Registry. Full chart documentation is in [`charts/spendemon/README.md`](./charts/spendemon/README.md).
+The chart is published both to a Helm repository (GitHub Pages) and as an OCI artifact (GitHub Container Registry). Full chart documentation is in [`charts/spendemon/README.md`](./charts/spendemon/README.md).
 
-Install the latest release into a dedicated namespace:
+Add the repository and install the latest release into a dedicated namespace:
 
 ```sh
-helm install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
+helm repo add spendemon https://fabiotavernini.github.io/spendemon
+helm repo update
+helm install spendemon spendemon/spendemon \
   --namespace spendemon --create-namespace \
   --version 1.1.0
 ```
@@ -217,9 +219,9 @@ helm install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
 To customise values, pull the default values file first and edit it:
 
 ```sh
-helm show values oci://ghcr.io/fabiotavernini/charts/spendemon --version 1.1.0 > values.yaml
+helm show values spendemon/spendemon --version 1.1.0 > values.yaml
 # edit values.yaml, then:
-helm install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
+helm install spendemon spendemon/spendemon \
   --namespace spendemon --create-namespace \
   --version 1.1.0 \
   -f values.yaml
@@ -228,8 +230,18 @@ helm install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
 To upgrade an existing installation:
 
 ```sh
-helm upgrade spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
+helm repo update
+helm upgrade spendemon spendemon/spendemon \
   --namespace spendemon \
+  --version 1.1.0 \
+  -f values.yaml
+```
+
+Prefer OCI? The same chart is available without `helm repo add`:
+
+```sh
+helm upgrade --install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
+  --namespace spendemon --create-namespace \
   --version 1.1.0 \
   -f values.yaml
 ```
