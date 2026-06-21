@@ -34,11 +34,13 @@ jobs:
       - name: Extract image version
         id: version
         shell: bash
+        env:
+          INPUT_IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             IMAGE_TAG="${GITHUB_REF#refs/tags/v}"
-          elif [[ -n "${{ inputs.image_tag }}" ]]; then
-            IMAGE_TAG="${{ inputs.image_tag }}"
+          elif [[ -n "${INPUT_IMAGE_TAG}" ]]; then
+            IMAGE_TAG="${INPUT_IMAGE_TAG}"
           else
             IMAGE_TAG="$(node -p "require('./package.json').version")"
           fi
