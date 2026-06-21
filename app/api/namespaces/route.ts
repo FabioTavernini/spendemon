@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 import { requireApiRole } from '@/lib/authorization'
 import { getClusters } from '@/lib/clusters'
+import { queryPrometheusVector } from '@/lib/prometheus'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -15,13 +16,6 @@ type Cluster = {
 type PrometheusNamespaceResult = {
   metric: {
     namespace?: string
-  }
-}
-
-type PrometheusResponse = {
-  status?: string
-  data?: {
-    result?: PrometheusNamespaceResult[]
   }
 }
 
@@ -60,29 +54,22 @@ export async function GET(req: Request) {
 
     const responses = await Promise.all(
       selectedClusters.map(async (cluster) => {
-        try {
-          const res = await fetch(
-            `${cluster.prometheusUrl}/api/v1/query?query=${encodeURIComponent(query)}`,
-            { cache: 'no-store' }
-          )
+        const { results } = await queryPrometheusVector<PrometheusNamespaceResult>(
+          cluster.prometheusUrl,
+          query,
+          { logPrefix: 'namespaces' }
+        )
 
-          const data = (await res.json()) as PrometheusResponse
-          if (data.status !== 'success') return []
-
-          return (data.data?.result ?? []).flatMap((item) =>
-            item.metric.namespace
-              ? [
-                  {
-                    cluster: cluster.name,
-                    namespace: item.metric.namespace,
-                  },
-                ]
-              : []
-          )
-        } catch (err) {
-          console.error(`Error querying namespaces for ${cluster.name}:`, err)
-          return []
-        }
+        return results.flatMap((item) =>
+          item.metric.namespace
+            ? [
+                {
+                  cluster: cluster.name,
+                  namespace: item.metric.namespace,
+                },
+              ]
+            : []
+        )
       })
     )
 

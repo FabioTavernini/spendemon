@@ -1,18 +1,7 @@
 import { getClusters, type Cluster } from '@/lib/clusters'
+import { queryPrometheusVector } from '@/lib/prometheus'
 
 const BYTES_PER_GB = 1024 * 1024 * 1024
-
-type QueryOutcome<Result> = {
-  success: boolean
-  results: Result[]
-}
-
-type PrometheusResponse<Result> = {
-  status?: string
-  data?: {
-    result?: Result[]
-  }
-}
 
 type NodeMetric = {
   node?: string
@@ -260,56 +249,6 @@ function selectClusters(allClusters: Cluster[], clusterNames?: string[]) {
   return allClusters.filter((cluster) => requested.has(cluster.name))
 }
 
-async function queryPrometheusVector<Result>(
-  prometheusUrl: string,
-  query: string
-): Promise<QueryOutcome<Result>> {
-  let requestUrl: string
-
-  try {
-    requestUrl = new URL(
-      `/api/v1/query?query=${encodeURIComponent(query)}`,
-      prometheusUrl
-    ).toString()
-  } catch (error) {
-    console.warn(`[nodes] Invalid Prometheus URL "${prometheusUrl}":`, error)
-    return { success: false, results: [] }
-  }
-
-  let response: Response
-
-  try {
-    response = await fetch(requestUrl, { cache: 'no-store' })
-  } catch (error) {
-    console.warn(
-      `[nodes] Failed to query Prometheus at "${prometheusUrl}":`,
-      error
-    )
-    return { success: false, results: [] }
-  }
-
-  let payload: PrometheusResponse<Result>
-
-  try {
-    payload = (await response.json()) as PrometheusResponse<Result>
-  } catch (error) {
-    console.warn(
-      `[nodes] Invalid Prometheus response from "${prometheusUrl}":`,
-      error
-    )
-    return { success: false, results: [] }
-  }
-
-  if (!response.ok || payload.status !== 'success') {
-    return { success: false, results: [] }
-  }
-
-  return {
-    success: true,
-    results: payload.data?.result ?? [],
-  }
-}
-
 async function listClusterNodes(cluster: Cluster): Promise<NodeItem[]> {
   const [
     infoOutcome,
@@ -320,23 +259,28 @@ async function listClusterNodes(cluster: Cluster): Promise<NodeItem[]> {
   ] = await Promise.all([
     queryPrometheusVector<NodeInfoResult>(
       cluster.prometheusUrl,
-      NODE_INFO_QUERY
+      NODE_INFO_QUERY,
+      { logPrefix: 'nodes' }
     ),
     queryPrometheusVector<NodeReadyResult>(
       cluster.prometheusUrl,
-      NODE_READY_QUERY
+      NODE_READY_QUERY,
+      { logPrefix: 'nodes' }
     ),
     queryPrometheusVector<NodeRoleResult>(
       cluster.prometheusUrl,
-      NODE_ROLE_QUERY
+      NODE_ROLE_QUERY,
+      { logPrefix: 'nodes' }
     ),
     queryPrometheusVector<NodeResourceResult>(
       cluster.prometheusUrl,
-      NODE_CAPACITY_QUERY
+      NODE_CAPACITY_QUERY,
+      { logPrefix: 'nodes' }
     ),
     queryPrometheusVector<NodeResourceResult>(
       cluster.prometheusUrl,
-      NODE_ALLOCATABLE_QUERY
+      NODE_ALLOCATABLE_QUERY,
+      { logPrefix: 'nodes' }
     ),
   ])
 

@@ -7,63 +7,20 @@
 import { NextResponse } from 'next/server'
 import { requireApiRole } from '@/lib/authorization'
 import { getClusters } from '@/lib/clusters'
+import {
+  queryPrometheusRange,
+  type PrometheusRangeResult,
+} from '@/lib/prometheus'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const BYTES_PER_GB = 1024 * 1024 * 1024
 
-type RangeQueryResult = {
-  metric: Record<string, string>
-  values: [number, string][]
-}
-
-type PrometheusRangeResponse = {
-  status?: string
-  data?: {
-    resultType?: string
-    result?: RangeQueryResult[]
-  }
-}
-
 export type PodHistoryPoint = {
   timestamp: number
   cpuCores: number | null
   memoryGb: number | null
-}
-
-async function queryPrometheusRange(
-  prometheusUrl: string,
-  query: string,
-  start: number,
-  end: number,
-  step: string,
-): Promise<RangeQueryResult[]> {
-  let requestUrl: string
-
-  try {
-    const url = new URL('/api/v1/query_range', prometheusUrl)
-    url.searchParams.set('query', query)
-    url.searchParams.set('start', String(start))
-    url.searchParams.set('end', String(end))
-    url.searchParams.set('step', step)
-    requestUrl = url.toString()
-  } catch {
-    return []
-  }
-
-  try {
-    const response = await fetch(requestUrl, { cache: 'no-store' })
-    const payload = (await response.json()) as PrometheusRangeResponse
-
-    if (!response.ok || payload.status !== 'success') {
-      return []
-    }
-
-    return payload.data?.result ?? []
-  } catch {
-    return []
-  }
 }
 
 async function queryFirstRangeMetric(
@@ -72,9 +29,16 @@ async function queryFirstRangeMetric(
   start: number,
   end: number,
   step: string,
-): Promise<RangeQueryResult[]> {
+): Promise<PrometheusRangeResult[]> {
   for (const query of queries) {
-    const results = await queryPrometheusRange(prometheusUrl, query, start, end, step)
+    const { results } = await queryPrometheusRange(
+      prometheusUrl,
+      query,
+      start,
+      end,
+      step,
+      { logPrefix: 'pod-history' },
+    )
     if (results.length > 0) {
       return results
     }

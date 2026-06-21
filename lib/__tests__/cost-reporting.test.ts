@@ -17,6 +17,7 @@ vi.mock('@/lib/settings', async (importActual) => {
 })
 
 import { getClusters } from '@/lib/clusters'
+import { clearPrometheusCache } from '@/lib/prometheus'
 import { readSettingsFile } from '@/lib/settings'
 
 const mockGetClusters = vi.mocked(getClusters)
@@ -115,6 +116,9 @@ ${sharedBlock}`
 beforeEach(() => {
   fixtures = {}
   vi.clearAllMocks()
+  // The shared Prometheus layer caches by request URL; clear it between tests
+  // so a cluster's fixture changes are never served stale from a prior test.
+  clearPrometheusCache()
 
   global.fetch = vi.fn(async (input: string | URL | Request) => {
     const url = new URL(String(input))

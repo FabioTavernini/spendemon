@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 import { requireApiRole } from '@/lib/authorization'
 import { getClusters } from '@/lib/clusters'
+import { queryPrometheusVector } from '@/lib/prometheus'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -24,13 +25,6 @@ type PrometheusPodResult = {
     namespace?: string
     pod?: string
     phase?: string
-  }
-}
-
-type PrometheusResponse = {
-  status?: string
-  data?: {
-    result?: PrometheusPodResult[]
   }
 }
 
@@ -69,30 +63,24 @@ export async function GET(req: Request) {
 
     const responses = await Promise.all(
       selectedClusters.map(async (cluster): Promise<PodItem[]> => {
-        try {
-          const res = await fetch(
-            `${cluster.prometheusUrl}/api/v1/query?query=${encodeURIComponent(query)}`
-          )
-          const data = (await res.json()) as PrometheusResponse
+        const { results } = await queryPrometheusVector<PrometheusPodResult>(
+          cluster.prometheusUrl,
+          query,
+          { logPrefix: 'pods' }
+        )
 
-          if (data.status !== 'success') return []
-
-          return (data.data?.result ?? []).flatMap((item) =>
-            item.metric.namespace && item.metric.pod
-              ? [
-                  {
-                    cluster: cluster.name,
-                    namespace: item.metric.namespace,
-                    pod: item.metric.pod,
-                    status: item.metric.phase ?? 'Unknown',
-                  },
-                ]
-              : []
-          )
-        } catch (err) {
-          console.error(`Error querying cluster ${cluster.name}:`, err)
-          return []
-        }
+        return results.flatMap((item) =>
+          item.metric.namespace && item.metric.pod
+            ? [
+                {
+                  cluster: cluster.name,
+                  namespace: item.metric.namespace,
+                  pod: item.metric.pod,
+                  status: item.metric.phase ?? 'Unknown',
+                },
+              ]
+            : []
+        )
       })
     )
 
