@@ -6,6 +6,7 @@ import {
   parseOidcFromSettings,
   parseSettings,
   parseSharedNamespacesFromSettings,
+  redactSettingsSecrets,
   upsertCostsInSettings,
   upsertSharedNamespacesInSettings,
 } from '../settings-config'
@@ -491,5 +492,18 @@ sharednamespaces:
   it('leaves the clusters section intact', () => {
     const result = upsertSharedNamespacesInSettings(BASE, ['kube-system'])
     expect(parseClustersFromSettings(result)[0].name).toBe('cluster-1')
+  })
+})
+
+describe('redactSettingsSecrets', () => {
+  it('masks a literal clientSecret', () => {
+    expect(redactSettingsSecrets("oidc:\n  clientSecret: abc123\n  enabled: true")).toBe(
+      "oidc:\n  clientSecret: '***'\n  enabled: true",
+    )
+  })
+
+  it('keeps env placeholders and empty values', () => {
+    const content = "  clientSecret: ${OIDC_CLIENT_SECRET}\n  clientSecret: ''\n  clientSecret: \"\""
+    expect(redactSettingsSecrets(content)).toBe(content)
   })
 })

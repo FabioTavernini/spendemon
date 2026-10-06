@@ -3,10 +3,11 @@ import {
   parseCostsFromSettings,
   parseSharedNamespacesFromSettings,
   readSettingsFile,
+  redactSettingsSecrets,
 } from "@/lib/settings";
 import { requirePageRole } from "@/lib/authorization";
 
-import { SettingsEditor } from "./settings-editor";
+import { SettingsViewer } from "./settings-viewer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,8 +22,8 @@ export default async function SettingsPage() {
     parseSharedNamespacesFromSettings(initialContent);
 
   return (
-    <SettingsEditor
-      initialContent={initialContent}
+    <SettingsViewer
+      initialContent={redactSettingsSecrets(initialContent)}
       initialCosts={initialCosts}
       initialSharedNamespaces={initialSharedNamespaces}
       initialPath={initialPath}

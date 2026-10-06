@@ -24,11 +24,11 @@ The chart lives in:
     </p>
   </div>
   <div className="doc-card">
-    <p className="doc-card__eyebrow">Built-in persistence</p>
-    <h3>Keep `settings.yaml` on a PVC</h3>
+    <p className="doc-card__eyebrow">Stateless</p>
+    <h3>Settings from Helm values</h3>
     <p>
-      The chart mounts a persistent volume and seeds the initial runtime config
-      without forcing you to rebuild the container image.
+      The chart renders `settings.yaml` into a ConfigMap, so no volume is needed
+      and the config can change without rebuilding the container image.
     </p>
   </div>
   <div className="doc-card">
@@ -96,7 +96,6 @@ The chart exposes these major value groups:
 - `gateway`: optional Gateway API `HTTPRoute`
 - `ha`: deployment replica behavior managed by the chart
 - `resources`: pod requests and limits
-- `persistence`: PVC size, storage class, and mount path for `settings.yaml`
 - `auth.credentials`: optional local username/password auth secret wiring
 - `settings`: the runtime config rendered into `settings.yaml`
 
@@ -112,7 +111,6 @@ Most teams only need to touch a few areas for the first working deployment:
 - `ingress` or `gateway`: expose the UI inside your environment
 - `ha.enabled`: run two replicas instead of one when you want chart-managed HA
 - `auth.credentials.*` or `settings.oidc.*`: choose one auth mode if you want login
-- `persistence.*`: align the PVC with your cluster storage defaults
 
 ## Runtime settings vs Helm values
 
@@ -188,15 +186,16 @@ kubectl create secret generic oidc-secret \
   --from-literal=nextauthSecret='replace-with-a-long-random-string'
 ```
 
-## Important persistence behavior
+## Important configuration behavior
 
-The chart stores `settings.yaml` on a PVC and seeds it from the rendered
-template only when the file does not already exist.
+The chart renders `settings.yaml` into a ConfigMap and mounts it read-only at
+`/config/settings.yaml`. Helm values are the single source of truth:
 
-That means:
+- changing `settings.*` and running `helm upgrade` rolls the pods with the new config
+- the `/settings` page in Spendemon is a read-only viewer
+- no PersistentVolumeClaim is created
 
-- the first install creates the initial file from chart values
-- later edits through the Spendemon UI persist on the PVC
-- changing Helm values does not overwrite an existing `settings.yaml` automatically
-
-If you want the chart-rendered settings to take effect again, recreate the persisted file or the PVC for that release.
+Upgrading from a chart version that used a PVC: the `persistence.*` and
+`seedSettings.*` values are removed, and the old `<release>-settings` PVC is
+no longer managed. Move any edits made through the old settings UI into your
+values, then delete the PVC once you no longer need it.

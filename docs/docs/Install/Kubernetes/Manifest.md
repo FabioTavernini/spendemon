@@ -17,20 +17,17 @@ kubectl apply -f https://raw.githubusercontent.com/FabioTavernini/spendemon/main
 The manifest creates:
 
 - a `ConfigMap` containing a starter `settings.yaml`
-- a `PersistentVolumeClaim` for persisted settings
 - a single-replica `Deployment`
 - a `ClusterIP` `Service`
 
 ## How configuration works
 
-The deployment mounts `/data/settings.yaml` and seeds it from the `ConfigMap` only if the file does not already exist on the PVC.
-
-That means the manifest gives you a sensible first boot, then the persisted file becomes the source of truth.
+The deployment mounts the `ConfigMap` read-only at `/config/settings.yaml`, so the `ConfigMap` is the single source of truth. There is no volume to manage.
 
 After deployment, update the config in one of these ways:
 
-- open `/settings` in Spendemon and edit the file from the UI
-- edit the file on the mounted volume yourself
+- edit the `spendemon-settings` `ConfigMap` and run `kubectl rollout restart deployment/spendemon`
+- open `/settings` in Spendemon to view the active configuration (read-only)
 
 See [Settings](../../Configure/Settings) for the exact format.
 

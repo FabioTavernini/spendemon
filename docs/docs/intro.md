@@ -18,7 +18,7 @@ Spendemon currently lets you:
 - estimate cost from requested CPU, memory, and ephemeral storage
 - fall back to observed CPU and memory usage when requests are missing, and mark those pods as estimated
 - redistribute costs from shared namespaces such as `kube-system` across the remaining namespaces in the same cluster
-- edit pricing, shared namespace settings, and raw YAML from the in-app settings screen
+- view the active pricing, shared namespace settings, and raw YAML on the read-only in-app settings screen
 - customize branding with your own logo from url and company name
 - optionally enable local username/password auth or OIDC with `viewer` and `admin` role-based authorization
 - view pod resource usage history 
@@ -29,7 +29,7 @@ Once the app is running, these are the main surfaces:
 
 - `/` for overview cards, namespace inventory, and pod inventory
 - `/costreporting` for cost rollups and pod-level cost detail
-- `/settings` for admins to edit pricing and raw configuration
+- `/settings` for admins to view pricing and raw configuration (read-only)
 - `/login` and `/unauthorized` when authentication is enabled
 
 ## What you need

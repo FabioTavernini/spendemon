@@ -29,43 +29,10 @@ spec:
       imagePullSecrets:
       - name: {{ .Values.image.imagePullSecret }}
       {{- end }}
-      initContainers:
-        - name: seed-settings
-          image: "{{ .Values.seedSettings.image.repository }}:{{ .Values.seedSettings.image.tag }}"
-          imagePullPolicy: {{ .Values.seedSettings.image.pullPolicy }}
-          resources:
-{{- toYaml .Values.seedSettings.resources | nindent 12 }}
-          command:
-            - sh
-            - -c
-            - |
-              mkdir -p {{ .Values.persistence.mountPath }}
-              SETTINGS_FILE="{{ .Values.persistence.mountPath }}/settings.yaml"
-              CHECKSUM_FILE="{{ .Values.persistence.mountPath }}/.settings-checksum"
-              NEW_CHECKSUM="{{ include "spendemon.settings" . | sha256sum }}"
-              FORCE="{{ if .Values.persistence.forceOverwrite }}true{{ else }}false{{ end }}"
-              if [ "$FORCE" = "true" ] || \
-                 [ ! -f "$SETTINGS_FILE" ] || \
-                 [ ! -f "$CHECKSUM_FILE" ] || \
-                 [ "$(cat $CHECKSUM_FILE)" != "$NEW_CHECKSUM" ]; then
-                cp /seed/settings.yaml "$SETTINGS_FILE"
-                echo "$NEW_CHECKSUM" > "$CHECKSUM_FILE"
-              fi
-              chown 1000:1000 {{ .Values.persistence.mountPath }} "$SETTINGS_FILE" "$CHECKSUM_FILE"
-              chmod 775 {{ .Values.persistence.mountPath }}
-              chmod 664 "$SETTINGS_FILE" "$CHECKSUM_FILE"
-          volumeMounts:
-            - name: settings
-              mountPath: {{ .Values.persistence.mountPath }}
-            - name: settings-template
-              mountPath: /seed
       volumes:
       - name: settings
-        persistentVolumeClaim:
-          claimName: {{ include "spendemon.fullname" . }}-settings
-      - name: settings-template
         configMap:
-          name: {{ include "spendemon.fullname" . }}-settings-template
+          name: {{ include "spendemon.fullname" . }}-settings
       containers:
         - name: spendemon
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -81,7 +48,7 @@ spec:
               ephemeral-storage: {{ dig "limits" "ephemeral-storage" "512Mi" .Values.resources }}
           env:
             - name: SETTINGS_FILE_PATH
-              value: {{ printf "%s/settings.yaml" .Values.persistence.mountPath | quote }}
+              value: {{ "/config/settings.yaml" | quote }}
           {{- if .Values.auth.credentials.enabled }}
             - name: AUTH_MODE
               value: credentials
@@ -154,4 +121,5 @@ spec:
             - containerPort: 3000
           volumeMounts:
             - name: settings
-              mountPath: {{ .Values.persistence.mountPath }}
+              mountPath: /config
+              readOnly: true
