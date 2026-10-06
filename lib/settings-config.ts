@@ -345,3 +345,10 @@ export function upsertSharedNamespacesInSettings(
 
   return `${updatedLines.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd()}\n`
 }
+
+export function redactSettingsSecrets(content: string): string {
+  return content.replace(
+    /^(\s*clientSecret\s*:\s*)(?!\$\{)(?!['"]{2}\s*$)(?!$)\S.*$/gm,
+    "$1'***'",
+  )
+}

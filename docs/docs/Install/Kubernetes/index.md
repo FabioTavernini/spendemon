@@ -13,7 +13,7 @@ Spendemon ships with two Kubernetes installation paths.
 
 Choose Helm when you want:
 
-- built-in persistence for `settings.yaml`
+- `settings.yaml` rendered from values into a ConfigMap
 - configurable Ingress or Gateway API routing
 - credentials or OIDC secret wiring through chart values
 - easier upgrades and environment-specific values files

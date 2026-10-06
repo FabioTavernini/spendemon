@@ -56,8 +56,8 @@ Cost Overview             |  Pod-Histoy
 - Lets you filter data by cluster and namespace from the sidebar
 - Builds cost estimates from requested CPU, memory, and ephemeral storage
 - Breaks cost reporting down by cluster, namespace, and individual pod
-- Stores app configuration in a local `settings.yaml` file, or on a PVC in Kubernetes
-- Includes a settings screen for editing pricing and raw YAML in the browser
+- Stores app configuration in a local `settings.yaml` file, or in a ConfigMap in Kubernetes
+- Includes a read-only settings screen showing the active pricing and raw YAML
 
 ## Stack
 
@@ -153,7 +153,7 @@ If a cluster cannot be queried, the app logs the error and continues rendering w
 
 - `/`: Overview dashboard with summary cards, namespaces, and pods
 - `/costreporting`: Estimated cost rollups and per-pod cost table
-- `/settings`: Pricing inputs and raw YAML editor
+- `/settings`: Read-only view of pricing inputs and raw YAML
 
 ## API Routes
 
@@ -175,7 +175,7 @@ If a cluster cannot be queried, the app logs the error and continues rendering w
 app/
   api/                 Next.js route handlers
   costreporting/       Cost reporting page
-  settings/            Settings UI and editor
+  settings/            Settings viewer
 components/
   k8s/                 Kubernetes-specific tables and reporting UI
   layout/              Sidebar and shared layout pieces
@@ -246,7 +246,7 @@ helm upgrade --install spendemon oci://ghcr.io/fabiotavernini/charts/spendemon \
   -f values.yaml
 ```
 
-> **GitOps tip:** set `persistence.forceOverwrite: true` in your values file so that your Helm values are always the source of truth and overwrite the PVC on every rollout.
+> **Note:** `settings.yaml` is rendered into a read-only ConfigMap from your Helm values, and pods roll automatically when it changes. The `/settings` page is a read-only viewer.
 
 ### Chart development
 
@@ -276,9 +276,9 @@ If you prefer a plain manifest over Helm, you can apply the bundled multi-resour
 kubectl apply -f https://raw.githubusercontent.com/fabiotavernini/spendemon/main/deploy/spendemon.yaml
 ```
 
-The bundled manifest stores `settings.yaml` on a PVC mounted at `/data/settings.yaml`. An init container seeds the config into the PVC on first run only — subsequent restarts preserve any changes you have made via the settings UI.
+The bundled manifest stores `settings.yaml` in a `ConfigMap` mounted read-only at `/config/settings.yaml`. The settings UI is a read-only viewer, so edit the ConfigMap and restart the deployment to apply changes.
 
-Before exposing it publicly, open the settings UI or edit the file on the mounted volume with your Prometheus endpoint(s) and pricing values. If you are using Helm, keep replica changes in `ha.enabled`.
+Before exposing it publicly, edit the `spendemon-settings` ConfigMap with your Prometheus endpoint(s) and pricing values. If you are using Helm, keep replica changes in `ha.enabled`.
 
 The manifest includes an optional `envFrom.secretRef` for a secret named `spendemon-auth`.
 

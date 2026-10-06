@@ -2,8 +2,6 @@ import { access, readFile, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { parseSettings } from "@/lib/settings-config";
-
 export * from "@/lib/settings-config";
 
 const SETTINGS_FILE =
@@ -114,11 +112,28 @@ function readDefaultSettingsSync(): string {
   return FALLBACK_DEFAULT_SETTINGS;
 }
 
+// The settings file is typically a read-only ConfigMap mount, so writes are best-effort.
+async function tryWriteFile(content: string): Promise<void> {
+  try {
+    await writeFile(SETTINGS_FILE, content, "utf8");
+  } catch {
+    // Read-only filesystem: fall through and use the content in memory.
+  }
+}
+
+function tryWriteFileSync(content: string): void {
+  try {
+    writeFileSync(SETTINGS_FILE, content, "utf8");
+  } catch {
+    // Read-only filesystem: fall through and use the content in memory.
+  }
+}
+
 export async function ensureSettingsFile(): Promise<void> {
   try {
     await access(SETTINGS_FILE);
   } catch {
-    await writeFile(SETTINGS_FILE, await readDefaultSettings(), "utf8");
+    await tryWriteFile(await readDefaultSettings());
   }
 }
 
@@ -128,7 +143,7 @@ export async function readSettingsFile(): Promise<string> {
   const normalizedContent = normalizeSettingsContent(content);
 
   if (normalizedContent !== content) {
-    await writeFile(SETTINGS_FILE, normalizedContent, "utf8");
+    await tryWriteFile(normalizedContent);
   }
 
   return normalizedContent;
@@ -136,7 +151,7 @@ export async function readSettingsFile(): Promise<string> {
 
 export function ensureSettingsFileSync(): void {
   if (!existsSync(SETTINGS_FILE)) {
-    writeFileSync(SETTINGS_FILE, readDefaultSettingsSync(), "utf8");
+    tryWriteFileSync(readDefaultSettingsSync());
   }
 }
 
@@ -146,17 +161,10 @@ export function readSettingsFileSync(): string {
   const normalizedContent = normalizeSettingsContent(content);
 
   if (normalizedContent !== content) {
-    writeFileSync(SETTINGS_FILE, normalizedContent, "utf8");
+    tryWriteFileSync(normalizedContent);
   }
 
   return normalizedContent;
-}
-
-export async function writeSettingsFile(content: string): Promise<void> {
-  const normalizedContent = normalizeSettingsContent(content);
-
-  parseSettings(normalizedContent);
-  await writeFile(SETTINGS_FILE, normalizedContent, "utf8");
 }
 
 export function getSettingsFilePath(): string {

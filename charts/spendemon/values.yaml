@@ -9,24 +9,6 @@ image:
   # -- Optional image pull secret name for private registries. Leave empty for public images.
   imagePullSecret: ""
 
-# Init container used to seed the rendered settings.yaml into the persistent volume.
-seedSettings:
-  image:
-    # -- OCI image repository for the seed-settings init container.
-    repository: busybox
-    # -- Image tag for the init container.
-    tag: "1.36"
-    # -- Kubernetes image pull policy for the init container.
-    pullPolicy: IfNotPresent
-  # Pod resource requests / limits for the init container.
-  resources:
-    requests:
-      cpu: 10m
-      memory: 32Mi
-    limits:
-      cpu: 50m
-      memory: 64Mi
-
 # Service exposed inside the cluster and used by Ingress / Gateway backends.
 service:
   # -- Kubernetes Service type.
@@ -103,27 +85,6 @@ resources:
     memory: 512Mi
     # -- Ephemeral storage limit for the main application container.
     ephemeral-storage: 512Mi
-
-# Persistent storage used for the generated settings file.
-# The init container seeds settings.yaml on first run and automatically re-applies it whenever
-# the Helm values change (detected via a stored checksum). Manual edits made through the UI are
-# preserved as long as the Helm values remain unchanged.
-# Set persistence.forceOverwrite=true to always overwrite from Helm values on every pod start,
-# discarding any manual in-cluster edits.
-persistence:
-  # -- Mount point inside the container for the settings file volume.
-  mountPath: /data
-  # -- PVC access modes.
-  accessModes:
-    - ReadWriteOnce
-  # -- Requested PVC size.
-  size: 1Gi
-  # -- StorageClass for the PVC. Leave empty to use the cluster default.
-  storageClassName: ""
-  # -- If true, the init container always overwrites settings.yaml from the Helm values on every
-  # pod start, ignoring any manual in-cluster edits. The default (false) already auto-applies
-  # Helm value changes via checksum tracking — only set this if you want to discard UI edits too.
-  forceOverwrite: false
 
 # Optional local username/password authentication for internal deployments.
 # Leave disabled when you want no auth or when you use OIDC via settings.oidc below.

@@ -35,24 +35,12 @@ Spendemon Next.js app
 | ingress.hosts[0].host | string | `"spendemon.domain.com"` |  |
 | ingress.hosts[0].paths[0] | object | `{"path":"/","pathType":"Prefix"}` | URL path to route to Spendemon. |
 | ingress.hosts[0].paths[0].pathType | string | `"Prefix"` | Standard Kubernetes path matching mode. |
-| persistence.accessModes | list | `["ReadWriteOnce"]` | PVC access modes. |
-| persistence.forceOverwrite | bool | `false` | If true, the init container always overwrites settings.yaml from the Helm values on every pod start, ignoring any manual in-cluster edits. The default (false) already auto-applies Helm value changes via checksum tracking — only set this if you want to discard UI edits too. |
-| persistence.mountPath | string | `"/data"` | Mount point inside the container for the settings file volume. |
-| persistence.size | string | `"1Gi"` | Requested PVC size. |
-| persistence.storageClassName | string | `""` | StorageClass for the PVC. Leave empty to use the cluster default. |
 | resources.limits.cpu | string | `"500m"` | CPU limit for the main application container. |
 | resources.limits.ephemeral-storage | string | `"512Mi"` | Ephemeral storage limit for the main application container. |
 | resources.limits.memory | string | `"512Mi"` | Memory limit for the main application container. |
 | resources.requests.cpu | string | `"100m"` | CPU requested by the main application container. |
 | resources.requests.ephemeral-storage | string | `"256Mi"` | Ephemeral storage requested by the main application container. |
 | resources.requests.memory | string | `"256Mi"` | Memory requested by the main application container. |
-| seedSettings.image.pullPolicy | string | `"IfNotPresent"` | Kubernetes image pull policy for the init container. |
-| seedSettings.image.repository | string | `"busybox"` | OCI image repository for the seed-settings init container. |
-| seedSettings.image.tag | string | `"1.36"` | Image tag for the init container. |
-| seedSettings.resources.limits.cpu | string | `"50m"` |  |
-| seedSettings.resources.limits.memory | string | `"64Mi"` |  |
-| seedSettings.resources.requests.cpu | string | `"10m"` |  |
-| seedSettings.resources.requests.memory | string | `"32Mi"` |  |
 | service.port | int | `3000` | Service port exposed by the chart. The container itself listens on port 3000. |
 | service.type | string | `"ClusterIP"` | Kubernetes Service type. |
 | settings.branding.companyName | string | `""` | Company or organization name shown in the UI header. Leave empty to disable branding. |
